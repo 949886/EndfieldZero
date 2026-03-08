@@ -7,44 +7,92 @@ namespace EndfieldZero.World;
 /// Procedural world generator. Given a seed and chunk coordinate, deterministically
 /// generates terrain using Godot's FastNoiseLite. Stateless per-chunk — safe for
 /// async or deferred generation.
+///
+/// Key parameters:
+/// - BiomeScale: controls biome size (higher = larger biomes). Default 1.0.
+/// - BiomeSpacing: controls distance between different biomes (higher = more spread).
 /// </summary>
 public sealed class WorldGenerator
 {
     private readonly FastNoiseLite _elevationNoise;
     private readonly FastNoiseLite _moistureNoise;
+    private readonly FastNoiseLite _continentNoise;  // Large-scale continent shape
     private readonly FastNoiseLite _oreNoise;
     private readonly FastNoiseLite _detailNoise;
     private readonly BiomeProvider _biomeProvider;
     private readonly int _seed;
 
-    public WorldGenerator(int seed)
+    /// <summary>
+    /// Controls the overall size of biomes.
+    /// Higher = larger biomes. 1.0 = default, 3.0 = 3× larger biomes.
+    /// Internally divides noise frequency by this value.
+    /// </summary>
+    public float BiomeScale { get; }
+
+    /// <summary>
+    /// Controls the number of fractal octaves for biome noise.
+    /// Fewer octaves = smoother transitions, less fragmentation.
+    /// Range: 1-6. Default: 2.
+    /// </summary>
+    public int BiomeOctaves { get; }
+
+    /// <summary>
+    /// Controls continent-level variation scale.
+    /// Higher = very large landmass features (ocean vs land).
+    /// Default: 5.0.
+    /// </summary>
+    public float ContinentScale { get; }
+
+    /// <summary>Base elevation frequency before scaling.</summary>
+    private const float BaseElevationFrequency = 0.005f;
+
+    /// <summary>Base moisture frequency before scaling.</summary>
+    private const float BaseMoistureFrequency = 0.003f;
+
+    /// <summary>Continent noise frequency (very low for huge features).</summary>
+    private const float BaseContinentFrequency = 0.001f;
+
+    public WorldGenerator(int seed, float biomeScale = 3.0f, int biomeOctaves = 2,
+                          float continentScale = 5.0f)
     {
         _seed = seed;
+        BiomeScale = Mathf.Max(biomeScale, 0.1f);
+        BiomeOctaves = Mathf.Clamp(biomeOctaves, 1, 6);
+        ContinentScale = Mathf.Max(continentScale, 1.0f);
         _biomeProvider = new BiomeProvider();
 
-        // Elevation noise — large-scale terrain shape
+        // Elevation noise — divide frequency by BiomeScale for larger biomes
         _elevationNoise = new FastNoiseLite
         {
             Seed = seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
-            FractalOctaves = 4,
-            Frequency = 0.005f,
+            FractalOctaves = BiomeOctaves,
+            Frequency = BaseElevationFrequency / BiomeScale,
             FractalLacunarity = 2.0f,
-            FractalGain = 0.5f,
+            FractalGain = 0.4f,  // Lower gain = less high-frequency detail = smoother
         };
 
-        // Moisture noise — biome variation
+        // Moisture noise — also scaled for consistent biome regions
         _moistureNoise = new FastNoiseLite
         {
             Seed = seed + 1000,
             NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
-            FractalOctaves = 3,
-            Frequency = 0.003f,
+            FractalOctaves = BiomeOctaves,
+            Frequency = BaseMoistureFrequency / BiomeScale,
             FractalLacunarity = 2.0f,
-            FractalGain = 0.5f,
+            FractalGain = 0.4f,
         };
 
-        // Ore vein noise — clustered deposits
+        // Continent noise — very large-scale shapes (ocean vs land)
+        _continentNoise = new FastNoiseLite
+        {
+            Seed = seed + 4000,
+            NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
+            FractalOctaves = 1,
+            Frequency = BaseContinentFrequency / ContinentScale,
+        };
+
+        // Ore vein noise — clustered deposits (independent of biome scale)
         _oreNoise = new FastNoiseLite
         {
             Seed = seed + 2000,
@@ -79,7 +127,14 @@ public sealed class WorldGenerator
                 int worldX = origin.X + lx;
                 int worldZ = origin.Y + lz;
 
-                float elevation = _elevationNoise.GetNoise2D(worldX, worldZ);
+                // Continent noise adds large-scale elevation bias
+                float continent = _continentNoise.GetNoise2D(worldX, worldZ);
+
+                // Combine continent + elevation for final height
+                // continent influence: 40% continent, 60% local elevation
+                float localElevation = _elevationNoise.GetNoise2D(worldX, worldZ);
+                float elevation = continent * 0.4f + localElevation * 0.6f;
+
                 float moisture = _moistureNoise.GetNoise2D(worldX, worldZ);
 
                 BiomeType biome = _biomeProvider.GetBiome(elevation, moisture);

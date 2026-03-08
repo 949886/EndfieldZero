@@ -32,9 +32,18 @@ public partial class WorldManager : Node2D
 
     [Export] public int Seed { get; set; } = Constants.DefaultSeed;
 
+    /// <summary>Controls biome size. Higher = larger biomes. Default: 3.0.</summary>
+    [Export(PropertyHint.Range, "0.5,20.0,0.5")] public float BiomeScale { get; set; } = 3.0f;
+
+    /// <summary>Fractal octaves for biome noise. Fewer = smoother. Default: 2.</summary>
+    [Export(PropertyHint.Range, "1,6,1")] public int BiomeOctaves { get; set; } = 2;
+
+    /// <summary>Continent-level scale. Higher = larger landmasses. Default: 5.0.</summary>
+    [Export(PropertyHint.Range, "1.0,30.0,0.5")] public float ContinentScale { get; set; } = 5.0f;
+
     public override void _Ready()
     {
-        _generator = new WorldGenerator(Seed);
+        _generator = new WorldGenerator(Seed, BiomeScale, BiomeOctaves, ContinentScale);
         _camera = GetViewport().GetCamera2D();
     }
 
