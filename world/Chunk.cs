@@ -69,9 +69,10 @@ public class Chunk
     /// <summary>World-space origin of this chunk in block coordinates.</summary>
     public Vector2I WorldOrigin => ChunkCoord * Constants.ChunkSize;
 
-    /// <summary>World-space origin of this chunk in pixel coordinates.</summary>
-    public Vector2 PixelOrigin => new(
+    /// <summary>World-space origin of this chunk in 3D coordinates (XZ plane, Y=0).</summary>
+    public Vector3 WorldPosition3D => new(
         ChunkCoord.X * Constants.ChunkPixelSize,
+        0f,
         ChunkCoord.Y * Constants.ChunkPixelSize
     );
 }

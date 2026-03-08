@@ -1,15 +1,17 @@
-[gd_scene load_steps=3 format=3 uid="uid://cqn4icys44pn4"]
+[gd_scene format=3 uid="uid://cqn4icys44pn4"]
 
-[ext_resource type="Script" path="res://world/WorldManager.cs" id="1_world"]
-[ext_resource type="Script" path="res://world/GameCamera.cs" id="2_camera"]
+[ext_resource type="Script" uid="uid://c2ij8gq1dt43j" path="res://world/WorldManager.cs" id="1_world"]
+[ext_resource type="Script" uid="uid://tvm7tvhi6uui" path="res://world/GameCamera.cs" id="2_camera"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node3D" unique_id=484124882]
 
-[node name="WorldManager" type="Node2D" parent="."]
+[node name="WorldManager" type="Node3D" parent="." unique_id=1055668992]
 script = ExtResource("1_world")
 
-[node name="GameCamera" type="Camera2D" parent="."]
+[node name="GameCamera" type="Camera3D" parent="." unique_id=2039960281]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)
+size = 3000.0
+far = 2000.0
 script = ExtResource("2_camera")
-zoom = Vector2(0.5, 0.5)
 
-[node name="EntityContainer" type="Node2D" parent="."]
+[node name="EntityContainer" type="Node3D" parent="." unique_id=1888753201]

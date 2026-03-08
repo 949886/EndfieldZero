@@ -3,7 +3,7 @@ using Godot;
 namespace EndfieldZero.UI;
 
 /// <summary>
-/// Debug overlay showing chunk loading stats, camera position, and FPS.
+/// Debug overlay showing camera position, zoom level, and FPS.
 /// Displayed in the top-left corner during development.
 /// </summary>
 public partial class DebugHud : Label
@@ -18,8 +18,6 @@ public partial class DebugHud : Label
         AddThemeColorOverride("font_color", Colors.White);
         AddThemeFontSizeOverride("font_size", 14);
 
-        // Add a semi-transparent background
-        var panel = new PanelContainer();
         // Position at top-left with some margin
         Position = new Vector2(10, 10);
     }
@@ -36,15 +34,15 @@ public partial class DebugHud : Label
             _fpsTimer = 0;
         }
 
-        // Camera info
-        var camera = GetViewport()?.GetCamera2D();
+        // Camera info (Camera3D)
+        var camera = GetViewport()?.GetCamera3D();
         string cameraPos = camera != null
-            ? $"({camera.GlobalPosition.X:F0}, {camera.GlobalPosition.Y:F0})"
+            ? $"({camera.GlobalPosition.X:F0}, {camera.GlobalPosition.Z:F0})"
             : "(N/A)";
         string cameraZoom = camera != null
-            ? $"{camera.Zoom.X:F2}x"
+            ? $"{camera.Size:F0}"
             : "N/A";
 
-        Text = $"FPS: {_currentFps:F0}\nCamera: {cameraPos}\nZoom: {cameraZoom}";
+        Text = $"FPS: {_currentFps:F0}\nCamera XZ: {cameraPos}\nOrtho Size: {cameraZoom}";
     }
 }

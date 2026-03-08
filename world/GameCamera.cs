@@ -3,34 +3,53 @@ using Godot;
 namespace EndfieldZero.World;
 
 /// <summary>
-/// Fixed top-down camera with WASD/arrow key movement, mouse drag panning,
-/// and scroll wheel zoom. Provides the camera position that WorldManager
-/// uses to determine which chunks to load.
+/// Fixed top-down orthographic Camera3D. Looks straight down (-Y).
+/// WASD/arrow key movement on XZ plane, mouse drag panning,
+/// scroll wheel zoom (adjusts orthographic size).
+/// Provides the camera position that WorldManager uses to determine chunk loading.
 /// </summary>
-public partial class GameCamera : Camera2D
+public partial class GameCamera : Camera3D
 {
-    /// <summary>Camera movement speed in pixels per second.</summary>
+    /// <summary>Camera movement speed in units per second.</summary>
     [Export] public float MoveSpeed { get; set; } = 800f;
 
     /// <summary>Zoom speed factor.</summary>
     [Export] public float ZoomSpeed { get; set; } = 0.1f;
 
-    /// <summary>Minimum zoom level (zoomed in).</summary>
-    [Export] public float MinZoom { get; set; } = 0.2f;
+    /// <summary>Minimum orthographic size (zoomed in).</summary>
+    [Export] public float MinOrthoSize { get; set; } = 50f;
 
-    /// <summary>Maximum zoom level (zoomed out).</summary>
-    [Export] public float MaxZoom { get; set; } = 5.0f;
+    /// <summary>Maximum orthographic size (zoomed out).</summary>
+    [Export] public float MaxOrthoSize { get; set; } = 20000f;
 
     /// <summary>Camera move speed boost when holding Shift.</summary>
     [Export] public float SprintMultiplier { get; set; } = 2.5f;
 
+    /// <summary>Camera height above the XZ plane.</summary>
+    [Export] public float CameraHeight { get; set; } = 1000f;
+
+    /// <summary>Initial orthographic size.</summary>
+    [Export] public float InitialOrthoSize { get; set; } = 3000f;
+
     private bool _isDragging;
-    private Vector2 _dragStart;
+    private float _currentOrthoSize;
 
     public override void _Ready()
     {
-        // Start at world origin, zoomed out a bit
-        Zoom = Vector2.One * 0.5f;
+        // Set up orthographic top-down view
+        Projection = ProjectionType.Orthogonal;
+        _currentOrthoSize = InitialOrthoSize;
+        Size = _currentOrthoSize;
+
+        // Look straight down: rotate -90° around X axis
+        RotationDegrees = new Vector3(-90f, 0f, 0f);
+
+        // Position above origin
+        Position = new Vector3(0f, CameraHeight, 0f);
+
+        // Near/far planes
+        Near = 0.1f;
+        Far = CameraHeight * 2f;
     }
 
     public override void _Process(double delta)
@@ -43,54 +62,56 @@ public partial class GameCamera : Camera2D
     {
         HandleMouseZoom(@event);
         HandleMouseDrag(@event);
-        HandleEdgeScroll(@event);
     }
 
     private void HandleKeyboardMovement(float dt)
     {
-        var direction = Vector2.Zero;
+        var direction = Vector3.Zero;
 
+        // Movement on XZ plane (W = -Z, S = +Z, A = -X, D = +X)
         if (Input.IsKeyPressed(Key.W) || Input.IsKeyPressed(Key.Up))
-            direction.Y -= 1;
+            direction.Z -= 1;
         if (Input.IsKeyPressed(Key.S) || Input.IsKeyPressed(Key.Down))
-            direction.Y += 1;
+            direction.Z += 1;
         if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left))
             direction.X -= 1;
         if (Input.IsKeyPressed(Key.D) || Input.IsKeyPressed(Key.Right))
             direction.X += 1;
 
-        if (direction != Vector2.Zero)
+        if (direction != Vector3.Zero)
         {
             float speed = MoveSpeed;
             if (Input.IsKeyPressed(Key.Shift))
                 speed *= SprintMultiplier;
 
-            // Scale movement by zoom so it feels consistent at all zoom levels
-            float zoomFactor = 1f / Zoom.X;
-            GlobalPosition += direction.Normalized() * speed * zoomFactor * dt;
+            // Scale movement by ortho size for consistent feel at all zoom levels
+            float zoomFactor = _currentOrthoSize / InitialOrthoSize;
+            var move = direction.Normalized() * speed * zoomFactor * dt;
+
+            // Move on XZ, keep Y fixed at CameraHeight
+            GlobalPosition = new Vector3(
+                GlobalPosition.X + move.X,
+                CameraHeight,
+                GlobalPosition.Z + move.Z
+            );
         }
     }
 
     private void HandleMouseZoom(InputEvent @event)
     {
-        if (@event is InputEventMouseButton mouseButton)
+        if (@event is InputEventMouseButton mouseButton && mouseButton.Pressed)
         {
-            if (mouseButton.Pressed)
+            if (mouseButton.ButtonIndex == MouseButton.WheelUp)
             {
-                float currentZoom = Zoom.X;
-
-                if (mouseButton.ButtonIndex == MouseButton.WheelUp)
-                {
-                    currentZoom *= (1f + ZoomSpeed);
-                }
-                else if (mouseButton.ButtonIndex == MouseButton.WheelDown)
-                {
-                    currentZoom *= (1f - ZoomSpeed);
-                }
-
-                currentZoom = Mathf.Clamp(currentZoom, MinZoom, MaxZoom);
-                Zoom = Vector2.One * currentZoom;
+                _currentOrthoSize *= (1f - ZoomSpeed);
             }
+            else if (mouseButton.ButtonIndex == MouseButton.WheelDown)
+            {
+                _currentOrthoSize *= (1f + ZoomSpeed);
+            }
+
+            _currentOrthoSize = Mathf.Clamp(_currentOrthoSize, MinOrthoSize, MaxOrthoSize);
+            Size = _currentOrthoSize;
         }
     }
 
@@ -100,26 +121,25 @@ public partial class GameCamera : Camera2D
         {
             if (mouseButton.ButtonIndex == MouseButton.Middle)
             {
-                if (mouseButton.Pressed)
-                {
-                    _isDragging = true;
-                    _dragStart = mouseButton.GlobalPosition;
-                }
-                else
-                {
-                    _isDragging = false;
-                }
+                _isDragging = mouseButton.Pressed;
             }
         }
         else if (@event is InputEventMouseMotion mouseMotion && _isDragging)
         {
-            float zoomFactor = 1f / Zoom.X;
-            GlobalPosition -= mouseMotion.Relative * zoomFactor;
-        }
-    }
+            // Convert screen-space drag to world-space XZ movement
+            // In orthographic, pixels map linearly to world units
+            var viewport = GetViewport();
+            Vector2 viewportSize = viewport.GetVisibleRect().Size;
+            float pixelsToWorld = _currentOrthoSize * 2f / viewportSize.Y;
 
-    private void HandleEdgeScroll(InputEvent @event)
-    {
-        // Edge scrolling can be added here if desired
+            float dx = -mouseMotion.Relative.X * pixelsToWorld;
+            float dz = -mouseMotion.Relative.Y * pixelsToWorld;
+
+            GlobalPosition = new Vector3(
+                GlobalPosition.X + dx,
+                CameraHeight,
+                GlobalPosition.Z + dz
+            );
+        }
     }
 }

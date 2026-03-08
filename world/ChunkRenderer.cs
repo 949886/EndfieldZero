@@ -5,12 +5,11 @@ using Godot;
 namespace EndfieldZero.World;
 
 /// <summary>
-/// Generates and renders a mesh for a single chunk using ArrayMesh.
-/// Each non-air block becomes a colored quad. Adjacent same-type blocks
-/// are merged into larger rectangles using a greedy meshing algorithm
-/// to minimize vertex count and draw calls.
+/// Generates and renders a mesh for a single chunk using ArrayMesh + MeshInstance3D.
+/// Each non-air block becomes a colored quad on the XZ plane (Y=0).
+/// Adjacent same-type blocks are merged via greedy meshing to minimize vertices.
 /// </summary>
-public partial class ChunkRenderer : MeshInstance2D
+public partial class ChunkRenderer : MeshInstance3D
 {
     private Chunk _chunk;
     private static ShaderMaterial _sharedMaterial;
@@ -19,22 +18,26 @@ public partial class ChunkRenderer : MeshInstance2D
     {
         _chunk = chunk;
         // Apply vertex color material
-        Material = GetSharedMaterial();
+        MaterialOverride = GetSharedMaterial();
     }
 
-    /// <summary>Shared material that renders vertex colors.</summary>
+    /// <summary>Shared material that renders vertex colors, unlit (no shading).</summary>
     private static ShaderMaterial GetSharedMaterial()
     {
         if (_sharedMaterial != null) return _sharedMaterial;
 
         var shader = new Shader();
         shader.Code = @"
-shader_type canvas_item;
+shader_type spatial;
+render_mode unshaded, cull_disabled;
+
 void vertex() {
-    COLOR = COLOR;
+    // Pass vertex color through
 }
+
 void fragment() {
-    COLOR = COLOR;
+    ALBEDO = COLOR.rgb;
+    ALPHA = COLOR.a;
 }";
         _sharedMaterial = new ShaderMaterial { Shader = shader };
         return _sharedMaterial;
@@ -43,7 +46,7 @@ void fragment() {
     /// <summary>
     /// Rebuild the mesh from chunk data. Call when chunk.IsDirty is true.
     /// Uses greedy meshing to merge adjacent same-type blocks into larger quads.
-    /// Constructs ArrayMesh directly with vertex arrays for reliable vertex colors.
+    /// Quads are placed on the XZ plane at Y=0.
     /// </summary>
     public void RebuildMesh()
     {
@@ -54,7 +57,7 @@ void fragment() {
         float px = Constants.BlockPixelSize;
 
         // Collect vertices and colors via greedy meshing on layer 0
-        var vertices = new List<Vector2>();
+        var vertices = new List<Vector3>();
         var colors = new List<Color>();
 
         bool[,] merged = new bool[size, size];
@@ -102,18 +105,19 @@ void fragment() {
                     for (int dx = 0; dx < width; dx++)
                         merged[x + dx, z + dz] = true;
 
-                // Add quad for this merged rectangle (2 triangles, 6 vertices)
+                // Add quad on XZ plane (Y=0) for this merged rectangle
                 float qx = x * px;
-                float qy = z * px;
+                float qz = z * px;
                 float qw = width * px;
                 float qh = height * px;
 
-                Vector2 tl = new(qx, qy);
-                Vector2 tr = new(qx + qw, qy);
-                Vector2 br = new(qx + qw, qy + qh);
-                Vector2 bl = new(qx, qy + qh);
+                // Corners on XZ plane, Y = 0
+                Vector3 tl = new(qx, 0, qz);
+                Vector3 tr = new(qx + qw, 0, qz);
+                Vector3 br = new(qx + qw, 0, qz + qh);
+                Vector3 bl = new(qx, 0, qz + qh);
 
-                // Triangle 1: TL → BL → BR
+                // Triangle 1: TL → BL → BR (counter-clockwise when viewed from +Y)
                 vertices.Add(tl); colors.Add(def.Color);
                 vertices.Add(bl); colors.Add(def.Color);
                 vertices.Add(br); colors.Add(def.Color);
@@ -136,8 +140,8 @@ void fragment() {
         var arrays = new Godot.Collections.Array();
         arrays.Resize((int)Mesh.ArrayType.Max);
 
-        // Convert to packed arrays (Vector2 for 2D)
-        var packedVerts = new Vector2[vertices.Count];
+        // Convert to packed arrays (Vector3 for 3D)
+        var packedVerts = new Vector3[vertices.Count];
         var packedColors = new Color[colors.Count];
         for (int i = 0; i < vertices.Count; i++)
         {

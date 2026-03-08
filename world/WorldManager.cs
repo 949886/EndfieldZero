@@ -9,8 +9,9 @@ namespace EndfieldZero.World;
 /// Manages the chunk lifecycle: loading, unloading, and rendering chunks
 /// around the camera. Chunks are loaded in a spiral pattern from the center
 /// outward, with a maximum of N loads per frame to avoid stuttering.
+/// Uses Node3D — chunks are placed on the XZ plane.
 /// </summary>
-public partial class WorldManager : Node2D
+public partial class WorldManager : Node3D
 {
     /// <summary>Currently loaded chunks keyed by chunk coordinate.</summary>
     private readonly Dictionary<Vector2I, Chunk> _loadedChunks = new();
@@ -25,7 +26,7 @@ public partial class WorldManager : Node2D
     private readonly Queue<Vector2I> _loadQueue = new();
 
     /// <summary>Reference to the camera for determining load center.</summary>
-    private Camera2D _camera;
+    private Camera3D _camera;
 
     /// <summary>Last known camera chunk position, to avoid redundant recalculation.</summary>
     private Vector2I _lastCameraChunkCoord = new(int.MinValue, int.MinValue);
@@ -44,17 +45,18 @@ public partial class WorldManager : Node2D
     public override void _Ready()
     {
         _generator = new WorldGenerator(Seed, BiomeScale, BiomeOctaves, ContinentScale);
-        _camera = GetViewport().GetCamera2D();
+        _camera = GetViewport().GetCamera3D();
     }
 
     public override void _Process(double delta)
     {
         if (_camera == null)
         {
-            _camera = GetViewport().GetCamera2D();
+            _camera = GetViewport().GetCamera3D();
             if (_camera == null) return;
         }
 
+        // Camera looks down -Y, so its XZ position maps to chunk coordinates
         Vector2I currentChunkCoord = WorldToChunkCoord(_camera.GlobalPosition);
 
         // Recalculate load queue when camera moves to a new chunk
@@ -107,7 +109,7 @@ public partial class WorldManager : Node2D
         // Create renderer node
         var renderer = new ChunkRenderer();
         renderer.SetChunk(chunk);
-        renderer.Position = chunk.PixelOrigin;
+        renderer.Position = chunk.WorldPosition3D;
         AddChild(renderer);
         _renderers[chunkCoord] = renderer;
 
@@ -177,18 +179,17 @@ public partial class WorldManager : Node2D
 
     // --- Coordinate Utilities ---
 
-    /// <summary>Convert world pixel position to chunk coordinate.</summary>
-    public static Vector2I WorldToChunkCoord(Vector2 worldPos)
+    /// <summary>Convert 3D world position (XZ plane) to chunk coordinate.</summary>
+    public static Vector2I WorldToChunkCoord(Vector3 worldPos)
     {
         int cx = Mathf.FloorToInt(worldPos.X / Constants.ChunkPixelSize);
-        int cy = Mathf.FloorToInt(worldPos.Y / Constants.ChunkPixelSize);
-        return new Vector2I(cx, cy);
+        int cz = Mathf.FloorToInt(worldPos.Z / Constants.ChunkPixelSize);
+        return new Vector2I(cx, cz);
     }
 
     /// <summary>Convert world block coordinate to chunk coordinate.</summary>
     public static Vector2I BlockToChunkCoord(int worldX, int worldZ)
     {
-        // Arithmetic right shift for correct negative coordinate handling
         int cx = worldX >= 0 ? worldX / Constants.ChunkSize : (worldX - Constants.ChunkSize + 1) / Constants.ChunkSize;
         int cz = worldZ >= 0 ? worldZ / Constants.ChunkSize : (worldZ - Constants.ChunkSize + 1) / Constants.ChunkSize;
         return new Vector2I(cx, cz);
