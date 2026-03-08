@@ -23,6 +23,10 @@ config/icon="res://icon.svg"
 
 project/assembly_name="EndfieldZero"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/AS2P/plugin.cfg")
+
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true
