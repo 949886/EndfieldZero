@@ -1,3 +1,15 @@
-[gd_scene format=3 uid="uid://cqn4icys44pn4"]
+[gd_scene load_steps=3 format=3 uid="uid://cqn4icys44pn4"]
 
-[node name="Node2D" type="Node2D"]
+[ext_resource type="Script" path="res://world/WorldManager.cs" id="1_world"]
+[ext_resource type="Script" path="res://world/GameCamera.cs" id="2_camera"]
+
+[node name="Main" type="Node2D"]
+
+[node name="WorldManager" type="Node2D" parent="."]
+script = ExtResource("1_world")
+
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("2_camera")
+zoom = Vector2(0.5, 0.5)
+
+[node name="EntityContainer" type="Node2D" parent="."]
