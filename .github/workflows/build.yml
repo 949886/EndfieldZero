@@ -1,0 +1,183 @@
+name: Build
+
+on: 
+  workflow_call:
+
+env:
+  GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ github.workspace }}/release.keystore 
+  GODOT_ANDROID_KEYSTORE_RELEASE_USER: Unknown
+  GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: 123456
+
+jobs:
+  check:
+    name: Check C# Status
+    runs-on: ubuntu-latest
+    outputs:
+      using_dotnet: ${{ steps.check_dotnet.outputs.using_dotnet }}
+      web_csharp: ${{ steps.check_dotnet.outputs.web_csharp }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if project is using C#
+        id: check_dotnet
+        run: | 
+          if [ -f *.csproj ]; then
+            echo "using_dotnet=true" >> $GITHUB_OUTPUT
+            echo "C# project found, C# workflow will be executed in the next job."
+          else
+            echo "using_dotnet=false" >> $GITHUB_OUTPUT
+            echo "Non-C# project, C# workflow will be skipped in the next job."
+          fi
+          
+  build:
+    name: Build
+    needs: check
+    runs-on: ${{ matrix.platform.system }}
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: 
+          - name: Windows
+            system: "macos-latest"
+            extension: ".exe"
+            csharp: ${{ needs.check.outputs.using_dotnet }}
+          - name: macOS
+            system: "macos-latest"
+            extension: ".app"
+            csharp: ${{ needs.check.outputs.using_dotnet }}
+          - name: Linux
+            system: "macos-latest"
+            extension: ".x86_64"
+            csharp: ${{ needs.check.outputs.using_dotnet }}
+          - name: Web
+            system: "macos-latest"
+            extension: ".html"
+            csharp: ${{ needs.check.outputs.using_dotnet }}
+          - name: Android
+            system: "macos-latest"
+            extension: ".apk"
+            csharp: ${{ needs.check.outputs.using_dotnet }}
+          # - name: iOS
+          #   system: "macos-latest"
+          #   extension: ".ipa"
+        exclude:
+          # Web platform does not support C# projects.
+          - platform: 
+              name: Web
+              csharp: 'true'
+    steps:
+        # Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt update
+            sudo apt install -y blender
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install --cask blender
+          fi
+          blender --version
+
+      - name: Set Blender path
+        run: |
+          which blender
+          echo "BLENDER_PATH=$(which blender)" >> $GITHUB_ENV
+
+#      - name: Install xorg & xz-utils
+#        if: matrix.platform.name != 'macOS'
+#        run: |
+#          sudo apt update
+#          sudo apt install -y xorg
+#          sudo apt install -y xz-utils
+      
+      # Setup .NET
+      - name: Setup .NET SDK
+        if: needs.check.outputs.using_dotnet == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+
+      - name: Build C# Projects
+        if: needs.check.outputs.using_dotnet == 'true'
+        run: |
+            dotnet restore
+            dotnet build
+
+      # Setup Godot
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          # Version must include major, minor, and patch, and be >= 4.0.0
+          # Pre-release label is optional.
+          version: 4.6.1 # also valid: 4.0.0.rc1 or 4.0.0, etc
+          use-dotnet: ${{ needs.check.outputs.using_dotnet }}
+          include-templates: true
+
+      - name: Verify Godot Version
+        run: |
+          godot --version
+
+      # Setup android
+      - name: Set up JDK 17
+        if: matrix.platform.name == 'Android'
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        if: matrix.platform.name == 'Android'
+        uses: android-actions/setup-android@v3
+
+      - name: Generate Keystore
+        if: matrix.platform.name == 'Android'
+        run: |
+          if [ ! -f $GODOT_ANDROID_KEYSTORE_RELEASE_PATH ]; then
+            keytool -genkey -v -keystore release.keystore -alias $GODOT_ANDROID_KEYSTORE_RELEASE_USER -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass $GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD -keypass $GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, S=Unknown, C=Unknown"
+          fi
+          env
+
+      # Build the project for each platform
+      # - name: Build Godot Solutions
+      #   run: godot --headless --build-solutions --quit || exit 0
+        
+      - name: Export Project
+        run: |
+          mkdir -v -p build
+          godot --headless --verbose --export-release "${{ matrix.platform.name }}" ./build/${{ github.event.repository.name }}${{ matrix.platform.extension }}
+
+      # Compress the build files and upload them as an artifact
+      - name: Compress build files
+        run: |
+          cd build
+          sudo zip -r ./${{ matrix.platform.name }}.zip *
+
+      - name: Display structure of build files
+        run: ls -R ./build
+
+      - name: Display structure of workspace
+        run: |
+          ls -aR | perl -ne 'if(/^(.+):$/){$d=$1;next}next if /^\s*$/||$_ eq ".\n"||$_ eq "..\n";chomp;$p=$d?"$d/$_":$_;$p=~s/[^-][^\/]*\//    /g;$p=~s/^    (\S)/└── \1/;$p=~s/(^    |    (?= ))/│   /g;$p=~s/    (\S)/└── \1/;print "$p\n"'
+          echo "└── [END]"
+
+      # Upload artifact
+      - name : Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: matrix.platform.name != 'Android'
+        with:
+          name: Build-${{ matrix.platform.name }}
+          path: ./build/${{ matrix.platform.name }}.zip
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: matrix.platform.name == 'Android'
+        with:
+          name: Build-${{ matrix.platform.name }}
+          path: ./build/${{ github.event.repository.name }}.apk

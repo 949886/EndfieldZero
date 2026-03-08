@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      tags:
+        type: boolean
+        required: false
+
+jobs:
+  release:
+    # if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    # permissions:
+    #   contents: write
+    steps:
+      # Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      # Download 
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Display structure of build files
+        run: ls -R artifacts/**/*.*
+
+      # Get latest tag
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
+        # with:
+        #   fallback: 1.0.0 
+      
+      # Check tag
+      - name: Check tag
+        id: check_tag
+        run: |
+          TAGS=$(git tag --points-at HEAD)
+          if [ -n "$TAGS" ]; then
+            echo "Tagged commit with tags: $TAGS"
+            echo "has_tag=true" >> $GITHUB_OUTPUT
+            echo "tag=$TAGS" >> $GITHUB_OUTPUT
+          else
+            echo "No tag found on this commit."
+            echo "has_tag=false" >> $GITHUB_OUTPUT
+            echo "tag=dev" >> $GITHUB_OUTPUT
+          fi
+      
+      # Release when a tag is present
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        # if: startsWith(github.ref, 'refs/tags/')
+        continue-on-error: true
+        with:
+          files: |
+            artifacts/**/*.zip
+            artifacts/**/*.apk
+          #tag_name: ${{ steps.previoustag.outputs.tag }}
+          tag_name: ${{ steps.check_tag.outputs.tag }}

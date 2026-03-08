@@ -1,0 +1,24 @@
+name: Main
+
+on: 
+  push:
+    # tags:
+    #   - "*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Build project
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+        
+  # Create Release
+  release:
+    name: Release
+    needs: build
+    uses: ./.github/workflows/release.yml
+    if: github.event_name != 'pull_request'
+    secrets: inherit
