@@ -33,10 +33,10 @@ public partial class WorldManager : Node2D
     [Export] public int Seed { get; set; } = Constants.DefaultSeed;
 
     /// <summary>Controls biome size. Higher = larger biomes. Default: 3.0.</summary>
-    [Export(PropertyHint.Range, "0.5,20.0,0.5")] public float BiomeScale { get; set; } = 3.0f;
+    [Export(PropertyHint.Range, "0.5,20.0,0.5")] public float BiomeScale { get; set; } = 1.0f;
 
     /// <summary>Fractal octaves for biome noise. Fewer = smoother. Default: 2.</summary>
-    [Export(PropertyHint.Range, "1,6,1")] public int BiomeOctaves { get; set; } = 2;
+    [Export(PropertyHint.Range, "1,6,1")] public int BiomeOctaves { get; set; } = 4;
 
     /// <summary>Continent-level scale. Higher = larger landmasses. Default: 5.0.</summary>
     [Export(PropertyHint.Range, "1.0,30.0,0.5")] public float ContinentScale { get; set; } = 5.0f;

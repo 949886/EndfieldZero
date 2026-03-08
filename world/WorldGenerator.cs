@@ -4,53 +4,42 @@ using Godot;
 namespace EndfieldZero.World;
 
 /// <summary>
-/// Procedural world generator. Given a seed and chunk coordinate, deterministically
-/// generates terrain using Godot's FastNoiseLite. Stateless per-chunk — safe for
-/// async or deferred generation.
+/// Procedural world generator using 4 climate noise layers matching
+/// Minecraft's multi-noise biome source:
+///   1. Temperature  — cold vs hot
+///   2. Humidity     — dry vs wet
+///   3. Continentalness — ocean vs inland
+///   4. Erosion      — flat vs mountainous
+/// Plus detail/ore noises for resource placement.
 ///
-/// Key parameters:
-/// - BiomeScale: controls biome size (higher = larger biomes). Default 1.0.
-/// - BiomeSpacing: controls distance between different biomes (higher = more spread).
+/// Deterministic: same seed + chunkCoord = same output.
 /// </summary>
 public sealed class WorldGenerator
 {
-    private readonly FastNoiseLite _elevationNoise;
-    private readonly FastNoiseLite _moistureNoise;
-    private readonly FastNoiseLite _continentNoise;  // Large-scale continent shape
+    private readonly FastNoiseLite _temperatureNoise;
+    private readonly FastNoiseLite _humidityNoise;
+    private readonly FastNoiseLite _continentalnessNoise;
+    private readonly FastNoiseLite _erosionNoise;
     private readonly FastNoiseLite _oreNoise;
     private readonly FastNoiseLite _detailNoise;
+    private readonly FastNoiseLite _vegetationNoise;
     private readonly BiomeProvider _biomeProvider;
     private readonly int _seed;
 
-    /// <summary>
-    /// Controls the overall size of biomes.
-    /// Higher = larger biomes. 1.0 = default, 3.0 = 3× larger biomes.
-    /// Internally divides noise frequency by this value.
-    /// </summary>
+    /// <summary>Controls biome size. Higher = larger biomes. Default 3.0.</summary>
     public float BiomeScale { get; }
 
-    /// <summary>
-    /// Controls the number of fractal octaves for biome noise.
-    /// Fewer octaves = smoother transitions, less fragmentation.
-    /// Range: 1-6. Default: 2.
-    /// </summary>
+    /// <summary>Fractal octaves for biome noise. Fewer = smoother. Default 2.</summary>
     public int BiomeOctaves { get; }
 
-    /// <summary>
-    /// Controls continent-level variation scale.
-    /// Higher = very large landmass features (ocean vs land).
-    /// Default: 5.0.
-    /// </summary>
+    /// <summary>Continent-level scale. Higher = larger landmasses. Default 5.0.</summary>
     public float ContinentScale { get; }
 
-    /// <summary>Base elevation frequency before scaling.</summary>
-    private const float BaseElevationFrequency = 0.005f;
-
-    /// <summary>Base moisture frequency before scaling.</summary>
-    private const float BaseMoistureFrequency = 0.003f;
-
-    /// <summary>Continent noise frequency (very low for huge features).</summary>
-    private const float BaseContinentFrequency = 0.001f;
+    // --- Base frequencies (before scaling) ---
+    private const float BaseTempFreq = 0.004f;
+    private const float BaseHumidFreq = 0.0035f;
+    private const float BaseContinentFreq = 0.002f;
+    private const float BaseErosionFreq = 0.006f;
 
     public WorldGenerator(int seed, float biomeScale = 3.0f, int biomeOctaves = 2,
                           float continentScale = 5.0f)
@@ -61,54 +50,76 @@ public sealed class WorldGenerator
         ContinentScale = Mathf.Max(continentScale, 1.0f);
         _biomeProvider = new BiomeProvider();
 
-        // Elevation noise — divide frequency by BiomeScale for larger biomes
-        _elevationNoise = new FastNoiseLite
+        // Temperature — gradual north-to-south like real climate
+        _temperatureNoise = new FastNoiseLite
         {
             Seed = seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
             FractalOctaves = BiomeOctaves,
-            Frequency = BaseElevationFrequency / BiomeScale,
+            Frequency = BaseTempFreq / BiomeScale,
             FractalLacunarity = 2.0f,
-            FractalGain = 0.4f,  // Lower gain = less high-frequency detail = smoother
+            FractalGain = 0.35f,
         };
 
-        // Moisture noise — also scaled for consistent biome regions
-        _moistureNoise = new FastNoiseLite
+        // Humidity — perpendicular variation to temperature
+        _humidityNoise = new FastNoiseLite
         {
             Seed = seed + 1000,
             NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
             FractalOctaves = BiomeOctaves,
-            Frequency = BaseMoistureFrequency / BiomeScale,
+            Frequency = BaseHumidFreq / BiomeScale,
+            FractalLacunarity = 2.0f,
+            FractalGain = 0.35f,
+        };
+
+        // Continentalness — very large features (ocean vs land)
+        _continentalnessNoise = new FastNoiseLite
+        {
+            Seed = seed + 2000,
+            NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
+            FractalOctaves = Mathf.Max(1, BiomeOctaves - 1),
+            Frequency = BaseContinentFreq / ContinentScale,
+            FractalLacunarity = 2.0f,
+            FractalGain = 0.3f,
+        };
+
+        // Erosion — terrain roughness / elevation variation
+        _erosionNoise = new FastNoiseLite
+        {
+            Seed = seed + 3000,
+            NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
+            FractalOctaves = BiomeOctaves + 1,
+            Frequency = BaseErosionFreq / BiomeScale,
             FractalLacunarity = 2.0f,
             FractalGain = 0.4f,
         };
 
-        // Continent noise — very large-scale shapes (ocean vs land)
-        _continentNoise = new FastNoiseLite
-        {
-            Seed = seed + 4000,
-            NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
-            FractalOctaves = 1,
-            Frequency = BaseContinentFrequency / ContinentScale,
-        };
-
-        // Ore vein noise — clustered deposits (independent of biome scale)
+        // Ore vein noise — clustered deposits
         _oreNoise = new FastNoiseLite
         {
-            Seed = seed + 2000,
+            Seed = seed + 4000,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
             Frequency = 0.04f,
             CellularDistanceFunction = FastNoiseLite.CellularDistanceFunctionEnum.Euclidean,
             CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.Distance,
         };
 
-        // Detail noise — small-scale variation (trees, rocks scatter)
+        // Detail noise — small-scale scatter (trees, vegetation)
         _detailNoise = new FastNoiseLite
         {
-            Seed = seed + 3000,
+            Seed = seed + 5000,
             NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
             FractalOctaves = 2,
             Frequency = 0.1f,
+        };
+
+        // Vegetation noise — separate from detail for independent scatter
+        _vegetationNoise = new FastNoiseLite
+        {
+            Seed = seed + 6000,
+            NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth,
+            FractalOctaves = 2,
+            Frequency = 0.15f,
         };
     }
 
@@ -127,50 +138,57 @@ public sealed class WorldGenerator
                 int worldX = origin.X + lx;
                 int worldZ = origin.Y + lz;
 
-                // Continent noise adds large-scale elevation bias
-                float continent = _continentNoise.GetNoise2D(worldX, worldZ);
+                // Sample 4 climate parameters
+                float temperature = _temperatureNoise.GetNoise2D(worldX, worldZ);
+                float humidity = _humidityNoise.GetNoise2D(worldX, worldZ);
+                float continentalness = _continentalnessNoise.GetNoise2D(worldX, worldZ);
+                float erosion = _erosionNoise.GetNoise2D(worldX, worldZ);
 
-                // Combine continent + elevation for final height
-                // continent influence: 40% continent, 60% local elevation
-                float localElevation = _elevationNoise.GetNoise2D(worldX, worldZ);
-                float elevation = continent * 0.4f + localElevation * 0.6f;
+                // Select biome
+                BiomeType biome = _biomeProvider.GetBiome(temperature, humidity, continentalness, erosion);
 
-                float moisture = _moistureNoise.GetNoise2D(worldX, worldZ);
+                // Get ground block
+                ushort blockType = _biomeProvider.GetGroundBlock(biome);
 
-                BiomeType biome = _biomeProvider.GetBiome(elevation, moisture);
-                ushort groundBlock = _biomeProvider.GetGroundBlock(biome);
-
-                // Start with ground block
-                ushort blockType = groundBlock;
-
-                // Water at low elevation
-                if (elevation < -0.15f)
+                // --- Feature placement ---
+                // Trees
+                float treeDensity = _biomeProvider.GetTreeDensity(biome);
+                if (treeDensity > 0f)
                 {
-                    blockType = elevation < -0.35f ? BlockRegistry.DeepWaterId : BlockRegistry.WaterId;
-                }
-                else
-                {
-                    // Tree placement
-                    float treeDensity = _biomeProvider.GetTreeDensity(biome);
-                    if (treeDensity > 0f)
+                    float treeNoise = (_detailNoise.GetNoise2D(worldX, worldZ) + 1f) * 0.5f;
+                    if (treeNoise < treeDensity)
                     {
-                        float treeNoise = (_detailNoise.GetNoise2D(worldX, worldZ) + 1f) * 0.5f;
-                        if (treeNoise < treeDensity)
+                        ushort treeBlock = _biomeProvider.GetTreeBlock(biome);
+                        if (treeBlock != BlockRegistry.AirId)
+                            blockType = treeBlock;
+                    }
+                }
+
+                // Vegetation (flowers, tall grass, cactus, etc.)
+                // Only place if not already a tree
+                if (blockType == _biomeProvider.GetGroundBlock(biome))
+                {
+                    float vegDensity = _biomeProvider.GetVegetationDensity(biome);
+                    if (vegDensity > 0f)
+                    {
+                        float vegNoise = (_vegetationNoise.GetNoise2D(worldX, worldZ) + 1f) * 0.5f;
+                        if (vegNoise < vegDensity)
                         {
-                            blockType = BlockRegistry.TreeId;
+                            ushort vegBlock = _biomeProvider.GetVegetationBlock(biome);
+                            if (vegBlock != BlockRegistry.AirId)
+                                blockType = vegBlock;
                         }
                     }
+                }
 
-                    // Ore placement (only in mountain/stone areas)
-                    if (blockType == BlockRegistry.StoneId)
+                // Ore placement (only in stone/mountain biomes)
+                if (blockType == BlockRegistry.StoneId || blockType == BlockRegistry.GravelId)
+                {
+                    float oreDensity = _biomeProvider.GetOreDensity(biome);
+                    float oreValue = _oreNoise.GetNoise2D(worldX, worldZ);
+                    if (oreValue < -0.65f && oreDensity > 0.03f)
                     {
-                        float oreValue = _oreNoise.GetNoise2D(worldX, worldZ);
-                        if (oreValue < -0.7f)
-                        {
-                            // Use detail noise to decide iron vs gold
-                            float oreTypeNoise = _detailNoise.GetNoise2D(worldX + 500, worldZ + 500);
-                            blockType = oreTypeNoise > 0.3f ? BlockRegistry.OreGoldId : BlockRegistry.OreIronId;
-                        }
+                        blockType = SelectOreType(worldX, worldZ);
                     }
                 }
 
@@ -180,5 +198,18 @@ public sealed class WorldGenerator
 
         chunk.IsGenerated = true;
         chunk.IsDirty = true;
+    }
+
+    /// <summary>Select ore type based on detail noise (weighted distribution).</summary>
+    private ushort SelectOreType(int worldX, int worldZ)
+    {
+        float n = (_detailNoise.GetNoise2D(worldX + 500, worldZ + 500) + 1f) * 0.5f;
+
+        // Distribution: Coal 40%, Iron 25%, Copper 20%, Gold 10%, Diamond 5%
+        if (n < 0.40f) return BlockRegistry.OreCoalId;
+        if (n < 0.65f) return BlockRegistry.OreIronId;
+        if (n < 0.85f) return BlockRegistry.OreCopperId;
+        if (n < 0.95f) return BlockRegistry.OreGoldId;
+        return BlockRegistry.OreDiamondId;
     }
 }
