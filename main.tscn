@@ -2,17 +2,37 @@
 
 [ext_resource type="Script" uid="uid://c2ij8gq1dt43j" path="res://scripts/world/WorldManager.cs" id="1_world"]
 [ext_resource type="Script" uid="uid://tvm7tvhi6uui" path="res://scripts/world/GameCamera.cs" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/core/TimeManager.cs" id="3_time"]
+[ext_resource type="Script" path="res://scripts/managers/PawnManager.cs" id="4_pawnmgr"]
+[ext_resource type="Script" path="res://scripts/ui/DebugHud.cs" id="5_debughud"]
+[ext_resource type="PackedScene" path="res://scenes/pawn/pawn.tscn" id="6_pawnscene"]
 
-[node name="Main" type="Node3D" unique_id=484124882]
+[node name="Main" type="Node3D"]
 
-[node name="WorldManager" type="Node3D" parent="." unique_id=1055668992]
+[node name="TimeManager" type="Node" parent="."]
+script = ExtResource("3_time")
+
+[node name="WorldManager" type="Node3D" parent="."]
 script = ExtResource("1_world")
 
-[node name="GameCamera" type="Camera3D" parent="." unique_id=2039960281]
+[node name="GameCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)
 projection = 1
 size = 3000.0
 far = 2000.0
 script = ExtResource("2_camera")
 
-[node name="EntityContainer" type="Node3D" parent="." unique_id=1888753201]
+[node name="PawnManager" type="Node3D" parent="."]
+script = ExtResource("4_pawnmgr")
+PawnScene = ExtResource("6_pawnscene")
+
+[node name="EntityContainer" type="Node3D" parent="."]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="DebugHud" type="Label" parent="UILayer"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 80.0
+script = ExtResource("5_debughud")

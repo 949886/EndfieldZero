@@ -22,4 +22,9 @@ public static class Constants
 
     // --- World Generation ---
     public const int DefaultSeed = 42;
+
+    // --- Pawn ---
+    public const int AIEvalInterval = 30;         // AI 每 30 ticks 重新评估 (~0.5 秒)
+    public const float PawnWanderRadius = 512f;   // 游荡半径（像素）
+    public const float PawnBaseMoveSpeed = 100f;  // 基础移动速度
 }

@@ -1,10 +1,10 @@
+using EndfieldZero.Managers;
 using Godot;
 
 namespace EndfieldZero.UI;
 
 /// <summary>
-/// Debug overlay showing camera position, zoom level, and FPS.
-/// Displayed in the top-left corner during development.
+/// Debug overlay showing FPS, game time, camera position, and pawn count.
 /// </summary>
 public partial class DebugHud : Label
 {
@@ -14,17 +14,12 @@ public partial class DebugHud : Label
 
     public override void _Ready()
     {
-        // Styling
         AddThemeColorOverride("font_color", Colors.White);
         AddThemeFontSizeOverride("font_size", 14);
-
-        // Position at top-left with some margin
-        Position = new Vector2(10, 10);
     }
 
     public override void _Process(double delta)
     {
-        // FPS counter
         _frameCount++;
         _fpsTimer += delta;
         if (_fpsTimer >= 0.5)
@@ -34,15 +29,23 @@ public partial class DebugHud : Label
             _fpsTimer = 0;
         }
 
-        // Camera info (Camera3D)
         var camera = GetViewport()?.GetCamera3D();
         string cameraPos = camera != null
             ? $"({camera.GlobalPosition.X:F0}, {camera.GlobalPosition.Z:F0})"
             : "(N/A)";
-        string cameraZoom = camera != null
-            ? $"{camera.Size:F0}"
+
+        var time = Core.TimeManager.Instance;
+        string timeStr = time != null
+            ? $"Day {time.CurrentDay} {time.CurrentHour:D2}:00 ({time.GameSpeed}×)"
             : "N/A";
 
-        Text = $"FPS: {_currentFps:F0}\nCamera XZ: {cameraPos}\nOrtho Size: {cameraZoom}";
+        int pawnCount = 0;
+        if (PawnManager.Instance != null)
+        {
+            foreach (var _ in PawnManager.Instance.GetAllPawns())
+                pawnCount++;
+        }
+
+        Text = $"FPS: {_currentFps:F0} | {timeStr}\nCamera: {cameraPos}\nColonists: {pawnCount}";
     }
 }

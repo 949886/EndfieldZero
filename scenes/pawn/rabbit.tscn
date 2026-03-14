@@ -1,18 +1,14 @@
-[gd_scene format=3 uid="uid://cn2new4w286a7"]
+[gd_scene format=3 uid="uid://bbemhwbv2iw5w"]
 
-[ext_resource type="SpriteFrames" uid="uid://iy6vpiau7not" path="res://scenes/pawn/rabbit_animations.tres" id="1_5dqq3"]
-[ext_resource type="Script" uid="uid://dtbw3ebud1qsi" path="res://scripts/pawn/Pawn.cs" id="2_pawn"]
+[ext_resource type="SpriteFrames" uid="uid://iy6vpiau7not" path="res://scenes/pawn/rabbit_animations.tres" id="1_vscr3"]
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_8iv6u"]
-radius = 0.25
-
-[sub_resource type="Animation" id="Animation_5dqq3"]
+[sub_resource type="Animation" id="Animation_bab8k"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -24,7 +20,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -34,13 +30,13 @@ tracks/1/keys = {
 "values": ["dig"]
 }
 
-[sub_resource type="Animation" id="Animation_pcpcu"]
+[sub_resource type="Animation" id="Animation_ccfo0"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -52,7 +48,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -62,13 +58,13 @@ tracks/1/keys = {
 "values": ["dig_down"]
 }
 
-[sub_resource type="Animation" id="Animation_3ppau"]
+[sub_resource type="Animation" id="Animation_eqwak"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -80,7 +76,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -90,13 +86,13 @@ tracks/1/keys = {
 "values": ["dig_up"]
 }
 
-[sub_resource type="Animation" id="Animation_dbje4"]
+[sub_resource type="Animation" id="Animation_0rrc3"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -108,7 +104,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -118,13 +114,13 @@ tracks/1/keys = {
 "values": ["idle"]
 }
 
-[sub_resource type="Animation" id="Animation_l50vd"]
+[sub_resource type="Animation" id="Animation_dxh4p"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -136,7 +132,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -146,13 +142,13 @@ tracks/1/keys = {
 "values": ["idle_back"]
 }
 
-[sub_resource type="Animation" id="Animation_74r86"]
+[sub_resource type="Animation" id="Animation_haj5u"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -164,7 +160,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -174,13 +170,13 @@ tracks/1/keys = {
 "values": ["idle_right"]
 }
 
-[sub_resource type="Animation" id="Animation_2du13"]
+[sub_resource type="Animation" id="Animation_ukfwh"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -192,7 +188,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -202,13 +198,13 @@ tracks/1/keys = {
 "values": ["move_down"]
 }
 
-[sub_resource type="Animation" id="Animation_i74ng"]
+[sub_resource type="Animation" id="Animation_ybw8e"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -220,7 +216,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -230,13 +226,13 @@ tracks/1/keys = {
 "values": ["move_right"]
 }
 
-[sub_resource type="Animation" id="Animation_65uxm"]
+[sub_resource type="Animation" id="Animation_dcyra"]
 length = 0.8
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("AnimatedSprite3D:frame")
+tracks/0/path = NodePath("AnimatedSprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -248,7 +244,7 @@ tracks/0/keys = {
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("AnimatedSprite3D:animation")
+tracks/1/path = NodePath("AnimatedSprite2D:animation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -258,31 +254,25 @@ tracks/1/keys = {
 "values": ["move_up"]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_8hfg8"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_6k4km"]
 _data = {
-&"dig": SubResource("Animation_5dqq3"),
-&"dig_down": SubResource("Animation_pcpcu"),
-&"dig_up": SubResource("Animation_3ppau"),
-&"idle": SubResource("Animation_dbje4"),
-&"idle_back": SubResource("Animation_l50vd"),
-&"idle_right": SubResource("Animation_74r86"),
-&"move_down": SubResource("Animation_2du13"),
-&"move_right": SubResource("Animation_i74ng"),
-&"move_up": SubResource("Animation_65uxm")
+&"dig": SubResource("Animation_bab8k"),
+&"dig_down": SubResource("Animation_ccfo0"),
+&"dig_up": SubResource("Animation_eqwak"),
+&"idle": SubResource("Animation_0rrc3"),
+&"idle_back": SubResource("Animation_dxh4p"),
+&"idle_right": SubResource("Animation_haj5u"),
+&"move_down": SubResource("Animation_ukfwh"),
+&"move_right": SubResource("Animation_ybw8e"),
+&"move_up": SubResource("Animation_dcyra")
 }
 
-[node name="Pawn" type="CharacterBody3D" unique_id=2013400589]
-script = ExtResource("2_pawn")
+[node name="Rabbit" type="CharacterBody2D" unique_id=1204454229]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=393313031]
-shape = SubResource("SphereShape3D_8iv6u")
-
-[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="." unique_id=171122601]
-pixel_size = 3.0
-billboard = 1
-texture_filter = 0
-sprite_frames = ExtResource("1_5dqq3")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=53176165]
+texture_filter = 1
+sprite_frames = ExtResource("1_vscr3")
 animation = &"idle"
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=559594905]
-libraries/ = SubResource("AnimationLibrary_8hfg8")
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1416548715]
+libraries/ = SubResource("AnimationLibrary_6k4km")
