@@ -4,7 +4,7 @@ using Godot;
 namespace EndfieldZero.UI;
 
 /// <summary>
-/// Debug overlay showing FPS, game time, camera position, and pawn count.
+/// Debug overlay showing FPS, game time, camera, pawns, and selection info.
 /// </summary>
 public partial class DebugHud : Label
 {
@@ -41,11 +41,15 @@ public partial class DebugHud : Label
 
         int pawnCount = 0;
         if (PawnManager.Instance != null)
-        {
             foreach (var _ in PawnManager.Instance.GetAllPawns())
                 pawnCount++;
-        }
 
-        Text = $"FPS: {_currentFps:F0} | {timeStr}\nCamera: {cameraPos}\nColonists: {pawnCount}";
+        // Selection info
+        var sel = GetParent()?.GetNodeOrNull<SelectionManager>("SelectionManager");
+        int selCount = sel?.Selected.Count ?? 0;
+
+        Text = $"FPS: {_currentFps:F0} | {timeStr}\n" +
+               $"Camera: {cameraPos}\n" +
+               $"Colonists: {pawnCount} | Selected: {selCount}";
     }
 }

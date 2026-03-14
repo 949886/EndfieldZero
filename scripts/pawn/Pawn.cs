@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using EndfieldZero.Core;
 using Godot;
 
@@ -7,6 +8,7 @@ namespace EndfieldZero.Pawn;
 /// Main pawn script — attach to pawn.tscn root (CharacterBody3D).
 /// Owns data (PawnData Resource), needs, mood, and animation controller.
 /// Subscribes to the tick system for need decay and mood updates.
+/// Supports both direct MoveTo and A* path following.
 /// </summary>
 public partial class Pawn : CharacterBody3D
 {
@@ -20,34 +22,35 @@ public partial class Pawn : CharacterBody3D
     public Needs Needs { get; private set; }
     public MoodTracker Mood { get; private set; }
     public bool IsAlive { get; private set; } = true;
+    public bool IsSelected { get; set; }        // Set by SelectionManager
+    public bool IsMoving => _hasTarget || _pathIndex < _path.Count;
 
     private PawnAnimController _animController;
     private AnimatedSprite3D _sprite;
     private AnimationPlayer _animPlayer;
 
-    // Movement
+    // Direct movement
     private Vector3 _moveTarget;
     private bool _hasTarget;
 
+    // Path following
+    private List<Vector3> _path = new();
+    private int _pathIndex;
+    private const float PathNodeReachDist = 16f;   // Distance to consider a waypoint reached
+
     public override void _Ready()
     {
-        // Ensure PawnData exists
         Data ??= new PawnData();
 
-        // Initialize sub-systems
         Needs = new Needs();
         Data.ApplyTraitNeedModifiers(Needs);
-
         Mood = new MoodTracker(Data);
 
-        // Cache child nodes
         _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
         _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _animController = new PawnAnimController(_sprite, _animPlayer);
 
-        // Subscribe to tick
         EventBus.Tick += OnTick;
-
         GD.Print($"[Pawn] {Data.PawnName} (ID:{Data.Id}) spawned at {GlobalPosition}");
     }
 
@@ -60,30 +63,59 @@ public partial class Pawn : CharacterBody3D
     {
         if (!IsAlive) return;
 
-        float dt = (float)delta;
+        float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
+        Vector3 velocity = Vector3.Zero;
 
-        if (_hasTarget)
+        // Path following takes priority
+        if (_pathIndex < _path.Count)
         {
-            Vector3 direction = (_moveTarget - GlobalPosition);
-            direction.Y = 0; // Stay on XZ plane
+            Vector3 target = _path[_pathIndex];
+            Vector3 direction = target - GlobalPosition;
+            direction.Y = 0;
 
-            float distance = direction.Length();
-            if (distance < 5f) // Close enough
+            if (direction.Length() < PathNodeReachDist)
+            {
+                _pathIndex++;
+                if (_pathIndex >= _path.Count)
+                {
+                    // Path complete
+                    _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
+                    Velocity = Vector3.Zero;
+                    return;
+                }
+                // Continue to next waypoint
+                target = _path[_pathIndex];
+                direction = target - GlobalPosition;
+                direction.Y = 0;
+            }
+
+            velocity = direction.Normalized() * speed;
+        }
+        else if (_hasTarget)
+        {
+            Vector3 direction = _moveTarget - GlobalPosition;
+            direction.Y = 0;
+
+            if (direction.Length() < PathNodeReachDist)
             {
                 _hasTarget = false;
-                Velocity = Vector3.Zero;
                 _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
+                Velocity = Vector3.Zero;
+                return;
             }
-            else
-            {
-                float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
-                Velocity = direction.Normalized() * speed;
-                _animController.Update(Velocity, PawnAnimController.PawnAnimState.Moving);
-                MoveAndSlide();
-            }
+
+            velocity = direction.Normalized() * speed;
+        }
+
+        if (velocity.LengthSquared() > 0.01f)
+        {
+            Velocity = velocity;
+            _animController.Update(velocity, PawnAnimController.PawnAnimState.Moving);
+            MoveAndSlide();
         }
         else
         {
+            Velocity = Vector3.Zero;
             _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
         }
     }
@@ -94,13 +126,9 @@ public partial class Pawn : CharacterBody3D
     {
         if (!IsAlive) return;
 
-        // Decay needs
         Needs.Tick();
-
-        // Update mood (expire thoughts)
         Mood.Tick(tick);
 
-        // Check critical needs
         if (Needs.Hunger <= 0f)
         {
             Die("starvation");
@@ -109,18 +137,13 @@ public partial class Pawn : CharacterBody3D
 
         if (Needs.Rest <= 0f)
         {
-            // Collapse — force sleep (simplified for now)
             Needs.Rest = 5f;
             Mood.AddThought("collapsed", "体力不支倒地", -15f, TimeManager.TicksPerHour * 8);
         }
 
-        // Mood-based events
-        if (Mood.IsBreakdownRisk() && tick % 300 == 0) // Check every 5 seconds
-        {
+        if (Mood.IsBreakdownRisk() && tick % 300 == 0)
             EventBus.FirePawnMentalBreak(Data.Id);
-        }
 
-        // Check critical needs for events
         if (Needs.HasCritical() && tick % 60 == 0)
         {
             var (name, _) = Needs.GetMostUrgent();
@@ -130,9 +153,19 @@ public partial class Pawn : CharacterBody3D
 
     // --- Public API ---
 
-    /// <summary>Set a movement target on XZ plane.</summary>
+    /// <summary>Follow an A* path (list of world-space points).</summary>
+    public void FollowPath(List<Vector3> worldPath)
+    {
+        _path = worldPath ?? new List<Vector3>();
+        _pathIndex = 0;
+        _hasTarget = false;
+    }
+
+    /// <summary>Set a direct movement target on XZ plane.</summary>
     public void MoveTo(Vector3 target)
     {
+        _path.Clear();
+        _pathIndex = 0;
         _moveTarget = new Vector3(target.X, GlobalPosition.Y, target.Z);
         _hasTarget = true;
     }
@@ -141,6 +174,8 @@ public partial class Pawn : CharacterBody3D
     public void Stop()
     {
         _hasTarget = false;
+        _path.Clear();
+        _pathIndex = 0;
         Velocity = Vector3.Zero;
     }
 

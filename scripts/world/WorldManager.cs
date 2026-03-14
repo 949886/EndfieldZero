@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EndfieldZero.Core;
+using EndfieldZero.Pathfinding;
 using Godot;
 
 namespace EndfieldZero.World;
@@ -13,6 +14,8 @@ namespace EndfieldZero.World;
 /// </summary>
 public partial class WorldManager : Node3D
 {
+    /// <summary>Singleton instance.</summary>
+    public static WorldManager Instance { get; private set; }
     /// <summary>Currently loaded chunks keyed by chunk coordinate.</summary>
     private readonly Dictionary<Vector2I, Chunk> _loadedChunks = new();
 
@@ -44,8 +47,12 @@ public partial class WorldManager : Node3D
 
     public override void _Ready()
     {
+        Instance = this;
         _generator = new WorldGenerator(Seed, BiomeScale, BiomeOctaves, ContinentScale);
         _camera = GetViewport().GetCamera3D();
+
+        // Initialize pathfinding service
+        PathfindingService.Instance = new PathfindingService(this);
     }
 
     public override void _Process(double delta)

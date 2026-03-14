@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/managers/PawnManager.cs" id="4_pawnmgr"]
 [ext_resource type="Script" path="res://scripts/ui/DebugHud.cs" id="5_debughud"]
 [ext_resource type="PackedScene" path="res://scenes/pawn/pawn.tscn" id="6_pawnscene"]
+[ext_resource type="Script" path="res://scripts/ui/SelectionManager.cs" id="7_selection"]
 
 [node name="Main" type="Node3D"]
 
@@ -30,9 +31,20 @@ PawnScene = ExtResource("6_pawnscene")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 
+[node name="SelectionManager" type="Control" parent="UILayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("7_selection")
+
 [node name="DebugHud" type="Label" parent="UILayer"]
+layout_mode = 0
 offset_left = 10.0
 offset_top = 10.0
-offset_right = 300.0
+offset_right = 400.0
 offset_bottom = 80.0
 script = ExtResource("5_debughud")
