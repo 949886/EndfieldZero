@@ -15,7 +15,7 @@ namespace EndfieldZero.Pawn;
 public partial class Pawn : CharacterBody3D
 {
     [Export] public PawnData Data { get; set; }
-    [Export] public float BaseMoveSpeed { get; set; } = 100f;
+    [Export] public float BaseMoveSpeed { get; set; } = Settings.PawnBaseMoveSpeed;
 
     // --- Runtime state ---
     public Needs Needs { get; private set; }
@@ -39,7 +39,7 @@ public partial class Pawn : CharacterBody3D
     // Path following
     private List<Vector3> _path = new();
     private int _pathIndex;
-    private const float PathNodeReachDist = 16f;
+    private static float PathNodeReachDist => 0.5f * Settings.BlockPixelSize;
 
     // Player command timer — AI resumes after idle for a while
     private long _playerCommandEndTick;

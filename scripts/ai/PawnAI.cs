@@ -80,7 +80,7 @@ public class PawnAI
         }
 
         // Re-evaluate periodically or when idle
-        bool shouldEval = (tick - _lastEvalTick) >= Constants.AIEvalInterval
+        bool shouldEval = (tick - _lastEvalTick) >= Settings.AIEvalInterval
                        || _currentAction == null;
 
         if (shouldEval)

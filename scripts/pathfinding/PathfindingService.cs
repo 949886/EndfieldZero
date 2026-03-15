@@ -133,14 +133,14 @@ public class PathfindingService
         if (blockPath == null) return null;
 
         var worldPath = new List<Vector3>(blockPath.Count);
-        float half = Constants.BlockPixelSize * 0.5f;
+        float half = Settings.BlockPixelSize * 0.5f;
 
         foreach (var bp in blockPath)
         {
             worldPath.Add(new Vector3(
-                bp.X * Constants.BlockPixelSize + half,
+                bp.X * Settings.BlockPixelSize + half,
                 0f,
-                bp.Y * Constants.BlockPixelSize + half
+                bp.Y * Settings.BlockPixelSize + half
             ));
         }
 
@@ -150,8 +150,8 @@ public class PathfindingService
     /// <summary>Convert a world 3D position to block coordinates.</summary>
     public static Vector2I WorldToBlock(Vector3 worldPos)
     {
-        int bx = Mathf.FloorToInt(worldPos.X / Constants.BlockPixelSize);
-        int bz = Mathf.FloorToInt(worldPos.Z / Constants.BlockPixelSize);
+        int bx = Mathf.FloorToInt(worldPos.X / Settings.BlockPixelSize);
+        int bz = Mathf.FloorToInt(worldPos.Z / Settings.BlockPixelSize);
         return new Vector2I(bx, bz);
     }
 

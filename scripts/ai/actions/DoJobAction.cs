@@ -22,7 +22,7 @@ public class DoJobAction : AIAction
     private bool _isAtTarget;
     private bool _isComplete;
 
-    private const float WorkReachDist = 64f;  // How close the pawn needs to be to work
+    private static float WorkReachDist => 2f * Settings.BlockPixelSize;  // 2 blocks
 
     public override float[] GetQueryVector(AIContext context)
     {

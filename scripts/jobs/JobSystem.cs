@@ -68,7 +68,8 @@ public partial class JobSystem : Node
 
             // Score = priority - distance penalty
             float distance = pawn.GlobalPosition.DistanceTo(job.TargetWorldPos);
-            float distancePenalty = distance / 1000f;  // Normalize distance
+            // Normalize by half a chunk so job scoring stays stable across block scales.
+            float distancePenalty = distance / (Settings.ChunkPixelSize * 0.5f);
             float skillBonus = pawn.Data.GetStat(job.RequiredSkill) * 0.5f;
             float score = job.EffectivePriority + skillBonus - distancePenalty;
 
@@ -102,9 +103,9 @@ public partial class JobSystem : Node
         {
             TargetBlockCoord = new Vector2I(worldBlockX, worldBlockZ),
             TargetWorldPos = new Vector3(
-                worldBlockX * Constants.BlockPixelSize + Constants.BlockPixelSize * 0.5f,
+                worldBlockX * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f,
                 0f,
-                worldBlockZ * Constants.BlockPixelSize + Constants.BlockPixelSize * 0.5f
+                worldBlockZ * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f
             ),
             RequiredSkill = "Mining",
             WorkTicks = 300,    // 5 seconds base
@@ -123,9 +124,9 @@ public partial class JobSystem : Node
         {
             TargetBlockCoord = from,
             TargetWorldPos = new Vector3(
-                from.X * Constants.BlockPixelSize + Constants.BlockPixelSize * 0.5f,
+                from.X * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f,
                 0f,
-                from.Y * Constants.BlockPixelSize + Constants.BlockPixelSize * 0.5f
+                from.Y * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f
             ),
             RequiredSkill = "Strength",
             WorkTicks = 120,
@@ -144,9 +145,9 @@ public partial class JobSystem : Node
         {
             TargetBlockCoord = new Vector2I(worldBlockX, worldBlockZ),
             TargetWorldPos = new Vector3(
-                worldBlockX * Constants.BlockPixelSize + Constants.BlockPixelSize * 0.5f,
+                worldBlockX * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f,
                 0f,
-                worldBlockZ * Constants.BlockPixelSize + Constants.BlockPixelSize * 0.5f
+                worldBlockZ * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f
             ),
             RequiredSkill = "Construction",
             WorkTicks = 480,

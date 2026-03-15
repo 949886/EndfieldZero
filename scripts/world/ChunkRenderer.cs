@@ -53,8 +53,8 @@ void fragment() {
         if (_chunk == null) return;
 
         var registry = BlockRegistry.Instance;
-        int size = Constants.ChunkSize;
-        float px = Constants.BlockPixelSize;
+        int size = Settings.ChunkSize;
+        float px = Settings.BlockPixelSize;
 
         // Collect vertices and colors via greedy meshing on layer 0
         var vertices = new List<Vector3>();

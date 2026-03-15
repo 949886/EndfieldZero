@@ -45,9 +45,9 @@ public partial class TimeManager : Node
 
         _accumulator += delta * GameSpeed;
 
-        while (_accumulator >= Constants.TickInterval)
+        while (_accumulator >= Settings.TickInterval)
         {
-            _accumulator -= Constants.TickInterval;
+            _accumulator -= Settings.TickInterval;
             CurrentTick++;
             EventBus.FireTick(CurrentTick);
 

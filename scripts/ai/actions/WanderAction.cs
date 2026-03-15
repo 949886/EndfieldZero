@@ -80,7 +80,7 @@ public class WanderAction : AIAction
         var rng = new RandomNumberGenerator();
         rng.Randomize();
 
-        float radius = Constants.PawnWanderRadius;
+        float radius = Settings.PawnWanderRadius;
         float dx = rng.RandfRange(-radius, radius);
         float dz = rng.RandfRange(-radius, radius);
 

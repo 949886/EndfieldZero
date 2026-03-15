@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GameSettingsResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/GameSettingsResource.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+ChunkSize = 64
+MaxLayers = 4
+BlockPixelSize = 1.0
+LoadRadius = 4
+UnloadRadius = 6
+MaxChunkLoadsPerFrame = 2
+TicksPerSecond = 60
+DefaultSeed = 42
+AIEvalInterval = 30
+PawnWanderRadiusBlocks = 16.0
+PawnBaseMoveSpeedBlocksPerSecond = 3.125

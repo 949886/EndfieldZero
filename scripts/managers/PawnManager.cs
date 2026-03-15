@@ -116,7 +116,7 @@ public partial class PawnManager : Node3D
     private Vector3 GetSpawnPosition(int index)
     {
         // Spawn in a small cluster around (0, 0, 0) with some offset
-        float spacing = Constants.BlockPixelSize * 3; // 3 blocks apart
+        float spacing = Settings.BlockPixelSize * 3; // 3 blocks apart
         float x = (index % 3 - 1) * spacing;
         float z = (index / 3) * spacing;
         return new Vector3(x, 0f, z);

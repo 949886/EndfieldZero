@@ -34,7 +34,7 @@ public partial class WorldManager : Node3D
     /// <summary>Last known camera chunk position, to avoid redundant recalculation.</summary>
     private Vector2I _lastCameraChunkCoord = new(int.MinValue, int.MinValue);
 
-    [Export] public int Seed { get; set; } = Constants.DefaultSeed;
+    [Export] public int Seed { get; set; } = Settings.DefaultSeed;
 
     /// <summary>Controls biome size. Higher = larger biomes. Default: 3.0.</summary>
     [Export(PropertyHint.Range, "0.5,20.0,0.5")] public float BiomeScale { get; set; } = 1.0f;
@@ -76,7 +76,7 @@ public partial class WorldManager : Node3D
 
         // Load a few chunks per frame from the queue
         int loaded = 0;
-        while (_loadQueue.Count > 0 && loaded < Constants.MaxChunkLoadsPerFrame)
+        while (_loadQueue.Count > 0 && loaded < Settings.MaxChunkLoadsPerFrame)
         {
             Vector2I coord = _loadQueue.Dequeue();
 
@@ -84,7 +84,7 @@ public partial class WorldManager : Node3D
             if (_loadedChunks.ContainsKey(coord))
                 continue;
 
-            if (ChunkDistance(coord, _lastCameraChunkCoord) > Constants.LoadRadius)
+            if (ChunkDistance(coord, _lastCameraChunkCoord) > Settings.LoadRadius)
                 continue;
 
             LoadChunk(coord);
@@ -99,7 +99,7 @@ public partial class WorldManager : Node3D
             {
                 kvp.Value.RebuildMesh();
                 rebuilt++;
-                if (rebuilt >= Constants.MaxChunkLoadsPerFrame) break;
+                if (rebuilt >= Settings.MaxChunkLoadsPerFrame) break;
             }
         }
     }
@@ -129,7 +129,7 @@ public partial class WorldManager : Node3D
 
         foreach (var coord in _loadedChunks.Keys)
         {
-            if (ChunkDistance(coord, centerChunkCoord) > Constants.UnloadRadius)
+            if (ChunkDistance(coord, centerChunkCoord) > Settings.UnloadRadius)
             {
                 toRemove.Add(coord);
             }
@@ -158,7 +158,7 @@ public partial class WorldManager : Node3D
 
         // Generate coordinates in spiral order
         var coords = new List<Vector2I>();
-        int r = Constants.LoadRadius;
+        int r = Settings.LoadRadius;
 
         for (int dz = -r; dz <= r; dz++)
         {
@@ -189,24 +189,24 @@ public partial class WorldManager : Node3D
     /// <summary>Convert 3D world position (XZ plane) to chunk coordinate.</summary>
     public static Vector2I WorldToChunkCoord(Vector3 worldPos)
     {
-        int cx = Mathf.FloorToInt(worldPos.X / Constants.ChunkPixelSize);
-        int cz = Mathf.FloorToInt(worldPos.Z / Constants.ChunkPixelSize);
+        int cx = Mathf.FloorToInt(worldPos.X / Settings.ChunkPixelSize);
+        int cz = Mathf.FloorToInt(worldPos.Z / Settings.ChunkPixelSize);
         return new Vector2I(cx, cz);
     }
 
     /// <summary>Convert world block coordinate to chunk coordinate.</summary>
     public static Vector2I BlockToChunkCoord(int worldX, int worldZ)
     {
-        int cx = worldX >= 0 ? worldX / Constants.ChunkSize : (worldX - Constants.ChunkSize + 1) / Constants.ChunkSize;
-        int cz = worldZ >= 0 ? worldZ / Constants.ChunkSize : (worldZ - Constants.ChunkSize + 1) / Constants.ChunkSize;
+        int cx = worldX >= 0 ? worldX / Settings.ChunkSize : (worldX - Settings.ChunkSize + 1) / Settings.ChunkSize;
+        int cz = worldZ >= 0 ? worldZ / Settings.ChunkSize : (worldZ - Settings.ChunkSize + 1) / Settings.ChunkSize;
         return new Vector2I(cx, cz);
     }
 
     /// <summary>Convert world block coordinate to local coordinate within its chunk.</summary>
     public static Vector2I BlockToLocalCoord(int worldX, int worldZ)
     {
-        int lx = ((worldX % Constants.ChunkSize) + Constants.ChunkSize) % Constants.ChunkSize;
-        int lz = ((worldZ % Constants.ChunkSize) + Constants.ChunkSize) % Constants.ChunkSize;
+        int lx = ((worldX % Settings.ChunkSize) + Settings.ChunkSize) % Settings.ChunkSize;
+        int lz = ((worldZ % Settings.ChunkSize) + Settings.ChunkSize) % Settings.ChunkSize;
         return new Vector2I(lx, lz);
     }
 

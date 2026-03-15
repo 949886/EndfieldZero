@@ -131,9 +131,9 @@ public sealed class WorldGenerator
     {
         var origin = chunk.WorldOrigin;
 
-        for (int lz = 0; lz < Constants.ChunkSize; lz++)
+        for (int lz = 0; lz < Settings.ChunkSize; lz++)
         {
-            for (int lx = 0; lx < Constants.ChunkSize; lx++)
+            for (int lx = 0; lx < Settings.ChunkSize; lx++)
             {
                 int worldX = origin.X + lx;
                 int worldZ = origin.Y + lz;

@@ -27,15 +27,15 @@ public class Chunk
     public Chunk(Vector2I chunkCoord)
     {
         ChunkCoord = chunkCoord;
-        Blocks = new Block[Constants.ChunkSize * Constants.ChunkSize * Constants.MaxLayers];
+        Blocks = new Block[Settings.ChunkSize * Settings.ChunkSize * Settings.MaxLayers];
     }
 
     // --- Indexing ---
 
     private static int Index(int localX, int localZ, int layer = 0)
     {
-        return layer * Constants.ChunkSize * Constants.ChunkSize
-             + localZ * Constants.ChunkSize
+        return layer * Settings.ChunkSize * Settings.ChunkSize
+             + localZ * Settings.ChunkSize
              + localX;
     }
 
@@ -59,20 +59,20 @@ public class Chunk
     /// <summary>Check if local coordinates are within chunk bounds.</summary>
     public static bool IsInBounds(int localX, int localZ, int layer = 0)
     {
-        return localX >= 0 && localX < Constants.ChunkSize
-            && localZ >= 0 && localZ < Constants.ChunkSize
-            && layer >= 0 && layer < Constants.MaxLayers;
+        return localX >= 0 && localX < Settings.ChunkSize
+            && localZ >= 0 && localZ < Settings.ChunkSize
+            && layer >= 0 && layer < Settings.MaxLayers;
     }
 
     // --- Coordinate helpers ---
 
     /// <summary>World-space origin of this chunk in block coordinates.</summary>
-    public Vector2I WorldOrigin => ChunkCoord * Constants.ChunkSize;
+    public Vector2I WorldOrigin => ChunkCoord * Settings.ChunkSize;
 
     /// <summary>World-space origin of this chunk in 3D coordinates (XZ plane, Y=0).</summary>
     public Vector3 WorldPosition3D => new(
-        ChunkCoord.X * Constants.ChunkPixelSize,
+        ChunkCoord.X * Settings.ChunkPixelSize,
         0f,
-        ChunkCoord.Y * Constants.ChunkPixelSize
+        ChunkCoord.Y * Settings.ChunkPixelSize
     );
 }

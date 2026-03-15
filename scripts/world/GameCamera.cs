@@ -1,4 +1,5 @@
 using Godot;
+using EndfieldZero.Core;
 
 namespace EndfieldZero.World;
 
@@ -11,25 +12,25 @@ namespace EndfieldZero.World;
 public partial class GameCamera : Camera3D
 {
     /// <summary>Camera movement speed in units per second.</summary>
-    [Export] public float MoveSpeed { get; set; } = 800f;
+    [Export] public float MoveSpeed { get; set; } = 25f * Settings.BlockPixelSize;
 
     /// <summary>Zoom speed factor.</summary>
     [Export] public float ZoomSpeed { get; set; } = 0.1f;
 
     /// <summary>Minimum orthographic size (zoomed in).</summary>
-    [Export] public float MinOrthoSize { get; set; } = 50f;
+    [Export] public float MinOrthoSize { get; set; } = 1.5f * Settings.BlockPixelSize;
 
     /// <summary>Maximum orthographic size (zoomed out).</summary>
-    [Export] public float MaxOrthoSize { get; set; } = 20000f;
+    [Export] public float MaxOrthoSize { get; set; } = 625f * Settings.BlockPixelSize;
 
     /// <summary>Camera move speed boost when holding Shift.</summary>
     [Export] public float SprintMultiplier { get; set; } = 2.5f;
 
     /// <summary>Camera height above the XZ plane.</summary>
-    [Export] public float CameraHeight { get; set; } = 1000f;
+    [Export] public float CameraHeight { get; set; } = 32f * Settings.BlockPixelSize;
 
     /// <summary>Initial orthographic size.</summary>
-    [Export] public float InitialOrthoSize { get; set; } = 3000f;
+    [Export] public float InitialOrthoSize { get; set; } = 93.75f * Settings.BlockPixelSize;
 
     private bool _isDragging;
     private float _currentOrthoSize;
