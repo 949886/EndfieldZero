@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/ui/DebugHud.cs" id="5_debughud"]
 [ext_resource type="PackedScene" path="res://scenes/pawn/pawn.tscn" id="6_pawnscene"]
 [ext_resource type="Script" path="res://scripts/ui/SelectionManager.cs" id="7_selection"]
+[ext_resource type="Script" path="res://scripts/jobs/JobSystem.cs" id="8_jobsys"]
 
 [node name="Main" type="Node3D"]
 
@@ -15,6 +16,9 @@ script = ExtResource("3_time")
 
 [node name="WorldManager" type="Node3D" parent="."]
 script = ExtResource("1_world")
+
+[node name="JobSystem" type="Node" parent="."]
+script = ExtResource("8_jobsys")
 
 [node name="GameCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)
@@ -46,5 +50,5 @@ layout_mode = 0
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 400.0
-offset_bottom = 80.0
+offset_bottom = 100.0
 script = ExtResource("5_debughud")

@@ -187,7 +187,7 @@ public partial class SelectionManager : Control
             // Direct movement fallback
             foreach (var pawn in _selected)
             {
-                pawn.MoveTo(worldTarget);
+                pawn.PlayerMoveTo(worldTarget);
             }
         }
     }
@@ -217,12 +217,12 @@ public partial class SelectionManager : Control
 
             if (worldPath != null && worldPath.Count > 0)
             {
-                pawn.FollowPath(worldPath);
+                pawn.PlayerFollowPath(worldPath);
             }
             else
             {
                 // Fallback to direct move
-                pawn.MoveTo(worldTarget);
+                pawn.PlayerMoveTo(worldTarget);
             }
         }
     }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EndfieldZero.AI;
 using EndfieldZero.Core;
 using Godot;
 
@@ -6,24 +7,26 @@ namespace EndfieldZero.Pawn;
 
 /// <summary>
 /// Main pawn script — attach to pawn.tscn root (CharacterBody3D).
-/// Owns data (PawnData Resource), needs, mood, and animation controller.
+/// Owns data (PawnData Resource), needs, mood, AI, and animation controller.
 /// Subscribes to the tick system for need decay and mood updates.
-/// Supports both direct MoveTo and A* path following.
+/// AI drives autonomous behavior (wander, satisfy needs, do jobs).
+/// Player commands (via SelectionManager) override AI temporarily.
 /// </summary>
 public partial class Pawn : CharacterBody3D
 {
-    /// <summary>Pawn data resource (identity, stats, traits).</summary>
     [Export] public PawnData Data { get; set; }
-
-    /// <summary>Movement speed in units/second (base, before Agility modifier).</summary>
     [Export] public float BaseMoveSpeed { get; set; } = 100f;
 
     // --- Runtime state ---
     public Needs Needs { get; private set; }
     public MoodTracker Mood { get; private set; }
+    public PawnAI AI { get; private set; }
     public bool IsAlive { get; private set; } = true;
-    public bool IsSelected { get; set; }        // Set by SelectionManager
+    public bool IsSelected { get; set; }
     public bool IsMoving => _hasTarget || _pathIndex < _path.Count;
+
+    /// <summary>When true, AI is paused (player issued a direct command).</summary>
+    public bool IsPlayerControlled { get; set; }
 
     private PawnAnimController _animController;
     private AnimatedSprite3D _sprite;
@@ -36,7 +39,10 @@ public partial class Pawn : CharacterBody3D
     // Path following
     private List<Vector3> _path = new();
     private int _pathIndex;
-    private const float PathNodeReachDist = 16f;   // Distance to consider a waypoint reached
+    private const float PathNodeReachDist = 16f;
+
+    // Player command timer — AI resumes after idle for a while
+    private long _playerCommandEndTick;
 
     public override void _Ready()
     {
@@ -50,6 +56,9 @@ public partial class Pawn : CharacterBody3D
         _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _animController = new PawnAnimController(_sprite, _animPlayer);
 
+        // Initialize AI
+        AI = new PawnAI(this);
+
         EventBus.Tick += OnTick;
         GD.Print($"[Pawn] {Data.PawnName} (ID:{Data.Id}) spawned at {GlobalPosition}");
     }
@@ -57,6 +66,7 @@ public partial class Pawn : CharacterBody3D
     public override void _ExitTree()
     {
         EventBus.Tick -= OnTick;
+        AI?.Dispose();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -66,7 +76,6 @@ public partial class Pawn : CharacterBody3D
         float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
         Vector3 velocity = Vector3.Zero;
 
-        // Path following takes priority
         if (_pathIndex < _path.Count)
         {
             Vector3 target = _path[_pathIndex];
@@ -78,12 +87,10 @@ public partial class Pawn : CharacterBody3D
                 _pathIndex++;
                 if (_pathIndex >= _path.Count)
                 {
-                    // Path complete
                     _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
                     Velocity = Vector3.Zero;
                     return;
                 }
-                // Continue to next waypoint
                 target = _path[_pathIndex];
                 direction = target - GlobalPosition;
                 direction.Y = 0;
@@ -120,8 +127,6 @@ public partial class Pawn : CharacterBody3D
         }
     }
 
-    // --- Tick handler ---
-
     private void OnTick(long tick)
     {
         if (!IsAlive) return;
@@ -149,6 +154,12 @@ public partial class Pawn : CharacterBody3D
             var (name, _) = Needs.GetMostUrgent();
             EventBus.FireNeedCritical(Data.Id, name);
         }
+
+        // Resume AI after player command timeout
+        if (IsPlayerControlled && !IsMoving && tick > _playerCommandEndTick)
+        {
+            IsPlayerControlled = false;
+        }
     }
 
     // --- Public API ---
@@ -170,7 +181,26 @@ public partial class Pawn : CharacterBody3D
         _hasTarget = true;
     }
 
-    /// <summary>Stop all movement.</summary>
+    /// <summary>
+    /// Player-issued move command. Pauses AI until arrival + timeout.
+    /// </summary>
+    public void PlayerMoveTo(Vector3 target)
+    {
+        IsPlayerControlled = true;
+        _playerCommandEndTick = (TimeManager.Instance?.CurrentTick ?? 0) + 300; // 5 sec grace
+        MoveTo(target);
+    }
+
+    /// <summary>
+    /// Player-issued path follow. Pauses AI until arrival + timeout.
+    /// </summary>
+    public void PlayerFollowPath(List<Vector3> worldPath)
+    {
+        IsPlayerControlled = true;
+        _playerCommandEndTick = (TimeManager.Instance?.CurrentTick ?? 0) + 300;
+        FollowPath(worldPath);
+    }
+
     public void Stop()
     {
         _hasTarget = false;
@@ -179,12 +209,12 @@ public partial class Pawn : CharacterBody3D
         Velocity = Vector3.Zero;
     }
 
-    /// <summary>Kill this pawn.</summary>
     public void Die(string cause)
     {
         if (!IsAlive) return;
         IsAlive = false;
         Stop();
+        AI?.Dispose();
         GD.Print($"[Pawn] {Data.PawnName} died: {cause}");
         EventBus.FirePawnDied(Data.Id);
     }

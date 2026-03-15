@@ -1,10 +1,11 @@
+using EndfieldZero.Jobs;
 using EndfieldZero.Managers;
 using Godot;
 
 namespace EndfieldZero.UI;
 
 /// <summary>
-/// Debug overlay showing FPS, game time, camera, pawns, and selection info.
+/// Debug overlay: FPS, game time, camera, colonists, selection, AI state, jobs.
 /// </summary>
 public partial class DebugHud : Label
 {
@@ -39,17 +40,29 @@ public partial class DebugHud : Label
             ? $"Day {time.CurrentDay} {time.CurrentHour:D2}:00 ({time.GameSpeed}×)"
             : "N/A";
 
+        // Pawn counts
         int pawnCount = 0;
+        string aiInfo = "";
         if (PawnManager.Instance != null)
-            foreach (var _ in PawnManager.Instance.GetAllPawns())
+        {
+            foreach (var pawn in PawnManager.Instance.GetAllPawns())
+            {
                 pawnCount++;
+                if (pawn.IsSelected && pawn.AI != null)
+                    aiInfo = $" | AI: {pawn.AI.CurrentActionName}";
+            }
+        }
 
-        // Selection info
+        // Selection
         var sel = GetParent()?.GetNodeOrNull<SelectionManager>("SelectionManager");
         int selCount = sel?.Selected.Count ?? 0;
 
+        // Jobs
+        int availJobs = JobSystem.Instance?.CountByStatus(JobStatus.Available) ?? 0;
+        int activeJobs = JobSystem.Instance?.CountByStatus(JobStatus.InProgress) ?? 0;
+
         Text = $"FPS: {_currentFps:F0} | {timeStr}\n" +
-               $"Camera: {cameraPos}\n" +
-               $"Colonists: {pawnCount} | Selected: {selCount}";
+               $"Camera: {cameraPos} | Colonists: {pawnCount}\n" +
+               $"Selected: {selCount}{aiInfo} | Jobs: {availJobs} avail / {activeJobs} active";
     }
 }
