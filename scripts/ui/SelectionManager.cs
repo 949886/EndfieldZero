@@ -43,6 +43,15 @@ public partial class SelectionManager : Control
 
     public override void _Input(InputEvent @event)
     {
+        // Skip selection handling when in a tool mode (Mine/Construct/Grow/Cancel)
+        if (ToolModeManager.Instance != null && ToolModeManager.Instance.CurrentMode != ToolMode.Select)
+        {
+            // Still allow right-click movement for selected pawns in tool modes
+            if (@event is InputEventMouseButton tmb && tmb.ButtonIndex == MouseButton.Right && tmb.Pressed)
+                HandleRightClick(tmb.Position);
+            return;
+        }
+
         if (@event is InputEventMouseButton mb)
         {
             HandleMouseButton(mb);

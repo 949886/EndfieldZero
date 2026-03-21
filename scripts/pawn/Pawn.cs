@@ -44,6 +44,10 @@ public partial class Pawn : CharacterBody3D
     // Player command timer — AI resumes after idle for a while
     private long _playerCommandEndTick;
 
+    // Work animation
+    private bool _isWorking;
+    private Vector3 _workFacing;
+
     public override void _Ready()
     {
         Data ??= new PawnData();
@@ -119,6 +123,12 @@ public partial class Pawn : CharacterBody3D
             Velocity = velocity;
             _animController.Update(velocity, PawnAnimController.PawnAnimState.Moving);
             MoveAndSlide();
+        }
+        else if (_isWorking)
+        {
+            Velocity = Vector3.Zero;
+            // Use work facing direction for dig animation
+            _animController.Update(_workFacing, PawnAnimController.PawnAnimState.Working);
         }
         else
         {
@@ -207,6 +217,21 @@ public partial class Pawn : CharacterBody3D
         _path.Clear();
         _pathIndex = 0;
         Velocity = Vector3.Zero;
+        _isWorking = false;
+    }
+
+    /// <summary>Set a work target — triggers work (dig) animation facing the target.</summary>
+    public void SetWorkTarget(Vector3 targetPos)
+    {
+        _isWorking = true;
+        _workFacing = (targetPos - GlobalPosition).Normalized();
+        _workFacing.Y = 0;
+    }
+
+    /// <summary>Clear work target — return to idle.</summary>
+    public void ClearWorkTarget()
+    {
+        _isWorking = false;
     }
 
     public void Die(string cause)

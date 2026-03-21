@@ -159,6 +159,48 @@ public partial class JobSystem : Node
         return job;
     }
 
+    /// <summary>Create a grow (planting) job.</summary>
+    public Job CreateGrowJob(int worldBlockX, int worldBlockZ)
+    {
+        var job = new Job("Grow", "种植")
+        {
+            TargetBlockCoord = new Vector2I(worldBlockX, worldBlockZ),
+            TargetWorldPos = new Vector3(
+                worldBlockX * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f,
+                0f,
+                worldBlockZ * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f
+            ),
+            RequiredSkill = "Growing",
+            WorkTicks = 180,
+            BasePriority = 4,
+            XpPerTick = 0.4f,
+        };
+
+        AddJob(job);
+        return job;
+    }
+
+    /// <summary>Create a harvest job.</summary>
+    public Job CreateHarvestJob(int worldBlockX, int worldBlockZ)
+    {
+        var job = new Job("Harvest", "收获")
+        {
+            TargetBlockCoord = new Vector2I(worldBlockX, worldBlockZ),
+            TargetWorldPos = new Vector3(
+                worldBlockX * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f,
+                0f,
+                worldBlockZ * Settings.BlockPixelSize + Settings.BlockPixelSize * 0.5f
+            ),
+            RequiredSkill = "Growing",
+            WorkTicks = 90,
+            BasePriority = 5,
+            XpPerTick = 0.3f,
+        };
+
+        AddJob(job);
+        return job;
+    }
+
     /// <summary>Get count of jobs by status.</summary>
     public int CountByStatus(JobStatus status) => _jobs.Count(j => j.Status == status);
 

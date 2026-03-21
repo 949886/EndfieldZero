@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using EndfieldZero.Core;
 using EndfieldZero.Jobs;
 using EndfieldZero.Pathfinding;
+using EndfieldZero.Pawn;
 using EndfieldZero.World;
 using Godot;
 
@@ -10,46 +10,42 @@ namespace EndfieldZero.AI.Actions;
 /// <summary>
 /// DoJobAction — claims and executes a job from the JobSystem.
 /// Walks to the job target, then performs work ticks until completion.
+/// Uses work animation (dig) while actively working.
 ///
 /// Q vector: very sensitive to JobAvailability dimension.
-/// Also considers skill match for the best available job.
 /// </summary>
 public class DoJobAction : AIAction
 {
-    public override string Name => "DoJob";
+    public override string Name => _claimedJob != null ? $"Job:{_claimedJob.DisplayName}" : "DoJob";
 
     private Job _claimedJob;
     private bool _isAtTarget;
     private bool _isComplete;
 
-    private static float WorkReachDist => 2f * Settings.BlockPixelSize;  // 2 blocks
+    private static float WorkReachDist => 2f * Settings.BlockPixelSize;
 
     public override float[] GetQueryVector(AIContext context)
     {
-        // Only scores high when jobs are available
-        // Moderate need sensitivity means pawns won't work if starving
         float jobWeight = context.JobAvailability;
 
         return new float[]
         {
-            -context.HungerUrgency * 0.3f,   // Negative: don't work if starving
-            -context.RestUrgency * 0.2f,      // Negative: don't work if exhausted
-            0.0f,                              // Joy
-            0.0f,                              // Comfort
-            0.0f,                              // Beauty
-            0.0f,                              // Social
+            -context.HungerUrgency * 0.3f,   // Don't work if starving
+            -context.RestUrgency * 0.2f,      // Don't work if exhausted
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
             jobWeight * 2.0f,                  // Jobs — very high when available
-            0.3f,                              // Safety — prefer safe areas
+            0.3f,                              // Safety
             0.2f,                              // Idleness
         };
     }
 
     public override bool CanExecute(AIContext context)
     {
-        // Can't work if critical needs
         if (context.Pawn.Needs.Hunger < 15f || context.Pawn.Needs.Rest < 10f)
             return false;
-
         return context.JobAvailability > 0f;
     }
 
@@ -59,7 +55,6 @@ public class DoJobAction : AIAction
         _isAtTarget = false;
         _isComplete = false;
 
-        // Claim the best job
         _claimedJob = JobSystem.Instance?.FindBestJob(context.Pawn);
         if (_claimedJob == null)
         {
@@ -68,10 +63,7 @@ public class DoJobAction : AIAction
         }
 
         _claimedJob.Reserve(context.Pawn.Data.Id);
-
         GD.Print($"[AI] {context.Pawn.Data.PawnName} claimed job: {_claimedJob.DisplayName} at {_claimedJob.TargetBlockCoord}");
-
-        // Navigate to target
         NavigateToJob(context);
     }
 
@@ -88,30 +80,37 @@ public class DoJobAction : AIAction
                 _isAtTarget = true;
                 _claimedJob.Start();
                 context.Pawn.Stop();
+
+                // Face toward job target
+                context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos);
             }
             return;
         }
 
-        // Do work
+        // Do work — set working animation every tick
+        context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos);
         _claimedJob.TicksWorked++;
 
-        // Grant XP
+        // Grant XP and speed bonuses
         if (!string.IsNullOrEmpty(_claimedJob.RequiredSkill))
         {
             float skillLevel = context.Pawn.Data.GetStat(_claimedJob.RequiredSkill);
-            float speedMod = 1f + skillLevel * 0.05f;  // Higher skill = slightly faster
 
-            // Extra tick for high skill (simulates faster work)
+            // High skill = faster work (extra tick every 3 ticks for 10+ skill)
             if (skillLevel >= 10f && context.CurrentTick % 3 == 0)
+                _claimedJob.TicksWorked++;
+
+            // Very high skill = even faster (extra tick every 2 ticks)
+            if (skillLevel >= 15f && context.CurrentTick % 2 == 0)
                 _claimedJob.TicksWorked++;
 
             context.Pawn.Data.AddExperience(_claimedJob.RequiredSkill, _claimedJob.XpPerTick);
         }
 
-        // Mood modifier from work speed
+        // Mood-based work speed
         float moodMod = context.Pawn.Mood.GetWorkSpeedModifier();
         if (moodMod > 1f && context.CurrentTick % 2 == 0)
-            _claimedJob.TicksWorked++;  // Inspired pawns work faster
+            _claimedJob.TicksWorked++;
 
         // Check completion
         if (_claimedJob.TicksRemaining <= 0)
@@ -124,12 +123,12 @@ public class DoJobAction : AIAction
 
     public override void OnStop()
     {
-        // Cancel claimed job if we're interrupted
         if (_claimedJob != null && _claimedJob.Status != JobStatus.Completed)
         {
             _claimedJob.Cancel();
             _claimedJob = null;
         }
+        Owner?.ClearWorkTarget();
         base.OnStop();
     }
 
@@ -147,24 +146,32 @@ public class DoJobAction : AIAction
                 return;
             }
         }
-
-        // Fallback: direct move
         context.Pawn.MoveTo(_claimedJob.TargetWorldPos);
     }
 
     private void CompleteJob(AIContext context)
     {
         _claimedJob.Complete();
+        context.Pawn.ClearWorkTarget();
 
         GD.Print($"[AI] {context.Pawn.Data.PawnName} completed: {_claimedJob.DisplayName}");
 
-        // Apply job results
         ApplyJobResult(context);
-
         EventBus.FireJobCompleted(_claimedJob.Id);
 
-        // Positive mood from finishing work
-        context.Pawn.Mood.AddThought("finished_work", "完成了工作", 5f, Core.TimeManager.TicksPerHour * 2);
+        // Positive mood
+        string label = _claimedJob.JobType switch
+        {
+            "Mine" => "完成了挖矿",
+            "Construct" => "建好了建筑",
+            "Grow" => "种好了作物",
+            "Harvest" => "收获了作物",
+            _ => "完成了工作",
+        };
+        context.Pawn.Mood.AddThought("finished_work", label, 5f, TimeManager.TicksPerHour * 2);
+
+        // Notify ToolModeManager to clear designation
+        UI.ToolModeManager.Instance?.OnJobCompleted(_claimedJob.TargetBlockCoord);
 
         _claimedJob = null;
         _isComplete = true;
@@ -184,11 +191,37 @@ public class DoJobAction : AIAction
                 break;
 
             case "Construct":
-                // Future: place a constructed block/building
+                // Place a stone block (placeholder for actual construction)
+                if (WorldManager.Instance != null)
+                {
+                    var coord = _claimedJob.TargetBlockCoord;
+                    // TypeId 1 = stone (first registered solid block)
+                    WorldManager.Instance.SetBlock(coord.X, coord.Y, new Block(1));
+                }
+                break;
+
+            case "Grow":
+                // Place a "crop" block (placeholder)
+                // In future: track crop growth stages
+                if (WorldManager.Instance != null)
+                {
+                    var coord = _claimedJob.TargetBlockCoord;
+                    // TypeId 5 = farmland/crop placeholder
+                    WorldManager.Instance.SetBlock(coord.X, coord.Y, new Block(5));
+                }
+                break;
+
+            case "Harvest":
+                // Remove the crop, "produce" items (placeholder)
+                if (WorldManager.Instance != null)
+                {
+                    var coord = _claimedJob.TargetBlockCoord;
+                    WorldManager.Instance.SetBlock(coord.X, coord.Y, Block.Air);
+                }
                 break;
 
             case "Haul":
-                // Future: move item from A to B
+                // Future: move item
                 break;
         }
     }

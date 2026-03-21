@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://scenes/pawn/pawn.tscn" id="6_pawnscene"]
 [ext_resource type="Script" path="res://scripts/ui/SelectionManager.cs" id="7_selection"]
 [ext_resource type="Script" path="res://scripts/jobs/JobSystem.cs" id="8_jobsys"]
+[ext_resource type="Script" path="res://scripts/ui/ToolModeManager.cs" id="9_toolmode"]
+[ext_resource type="Script" path="res://scripts/ui/JobOverlay.cs" id="10_joboverlay"]
 
 [node name="Main" type="Node3D"]
 
@@ -33,7 +35,20 @@ PawnScene = ExtResource("6_pawnscene")
 
 [node name="EntityContainer" type="Node3D" parent="."]
 
+[node name="JobOverlay" type="MeshInstance3D" parent="."]
+script = ExtResource("10_joboverlay")
+
 [node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="ToolModeManager" type="Control" parent="UILayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_toolmode")
 
 [node name="SelectionManager" type="Control" parent="UILayer"]
 layout_mode = 1
@@ -49,6 +64,6 @@ script = ExtResource("7_selection")
 layout_mode = 0
 offset_left = 10.0
 offset_top = 10.0
-offset_right = 400.0
+offset_right = 500.0
 offset_bottom = 100.0
 script = ExtResource("5_debughud")
