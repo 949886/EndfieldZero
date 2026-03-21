@@ -25,6 +25,12 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class ToolModeManager : Control
 {
+    public enum ConstructPlacementMode
+    {
+        Brush,
+        Box,
+    }
+
     /// <summary>Current active tool mode.</summary>
     public ToolMode CurrentMode { get; private set; } = ToolMode.Select;
 
@@ -36,6 +42,9 @@ public partial class ToolModeManager : Control
 
     /// <summary>Current blueprint rotation (0-3).</summary>
     public int BuildRotation { get; set; }
+
+    /// <summary>How Construct mode places blueprints.</summary>
+    public ConstructPlacementMode PlacementMode { get; set; } = ConstructPlacementMode.Brush;
 
     /// <summary>Selected zone type for Zone mode.</summary>
     public string SelectedZoneType { get; set; } = "Stockpile";
@@ -106,6 +115,8 @@ public partial class ToolModeManager : Control
                     ? MouseFilterEnum.Ignore
                     : MouseFilterEnum.Pass;
                 _isDragging = false;
+                _constructPaintActive = false;
+                _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
                 QueueRedraw();
             }
         }
@@ -123,9 +134,16 @@ public partial class ToolModeManager : Control
                 {
                     if (CurrentMode == ToolMode.Construct && SelectedBuildingDef != null)
                     {
-                        _constructPaintActive = true;
-                        _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
-                        PaintBlueprintAtScreen(mb.Position);
+                        if (PlacementMode == ConstructPlacementMode.Brush)
+                        {
+                            _constructPaintActive = true;
+                            _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
+                            PaintBlueprintAtScreen(mb.Position);
+                        }
+                        else
+                        {
+                            StartDrag(mb.Position);
+                        }
                     }
                     else
                     {
@@ -158,7 +176,10 @@ public partial class ToolModeManager : Control
         }
         else if (@event is InputEventMouseMotion mm)
         {
-            if (CurrentMode == ToolMode.Construct && _constructPaintActive && SelectedBuildingDef != null)
+            if (CurrentMode == ToolMode.Construct &&
+                PlacementMode == ConstructPlacementMode.Brush &&
+                _constructPaintActive &&
+                SelectedBuildingDef != null)
             {
                 PaintBlueprintAtScreen(mm.Position);
                 GetViewport().SetInputAsHandled();
@@ -213,6 +234,15 @@ public partial class ToolModeManager : Control
         _isDragging = false;
         _dragEnd = ScreenToBlock(screenPos);
         QueueRedraw();
+
+        if (CurrentMode == ToolMode.Construct &&
+            PlacementMode == ConstructPlacementMode.Box &&
+            SelectedBuildingDef != null)
+        {
+            PlaceBlueprintsInDraggedArea();
+            return;
+        }
+
         ApplyDesignation();
     }
 
@@ -289,6 +319,46 @@ public partial class ToolModeManager : Control
 
         _lastConstructPaintCell = blockCoord;
         PlaceBlueprintAtMouse(screenPos);
+    }
+
+    private void PlaceBlueprintsInDraggedArea()
+    {
+        if (SelectedBuildingDef == null || BlueprintSystem.Instance == null) return;
+
+        var step = GetBuildingFootprint();
+        int minX = Mathf.Min(_dragStart.X, _dragEnd.X);
+        int maxX = Mathf.Max(_dragStart.X, _dragEnd.X);
+        int minZ = Mathf.Min(_dragStart.Y, _dragEnd.Y);
+        int maxZ = Mathf.Max(_dragStart.Y, _dragEnd.Y);
+
+        for (int bz = minZ; bz <= maxZ; bz += step.Y)
+        {
+            for (int bx = minX; bx <= maxX; bx += step.X)
+            {
+                PlaceBlueprintAtBlock(new Vector2I(bx, bz));
+            }
+        }
+    }
+
+    private Vector2I GetBuildingFootprint()
+    {
+        if (SelectedBuildingDef == null)
+            return Vector2I.One;
+
+        return (BuildRotation % 2) == 1
+            ? new Vector2I(SelectedBuildingDef.Size.Y, SelectedBuildingDef.Size.X)
+            : SelectedBuildingDef.Size;
+    }
+
+    private void PlaceBlueprintAtBlock(Vector2I blockCoord)
+    {
+        if (SelectedBuildingDef == null || BlueprintSystem.Instance == null) return;
+
+        var bp = BlueprintSystem.Instance.PlaceBlueprint(SelectedBuildingDef, blockCoord, BuildRotation);
+        if (bp == null) return;
+
+        foreach (var cell in bp.OccupiedCells())
+            _designatedBlocks.Add(cell);
     }
 
     private void UpdateBlueprintPreview(Vector2 screenPos)

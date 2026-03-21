@@ -17,6 +17,8 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class BuildSubMenu : PanelContainer
 {
+    private Button _brushModeButton;
+    private Button _boxModeButton;
     private HBoxContainer _categoryBar;
     private HBoxContainer _itemBar;
     private Label _descLabel;
@@ -47,6 +49,15 @@ public partial class BuildSubMenu : PanelContainer
         vbox.AddThemeConstantOverride("separation", 6);
         AddChild(vbox);
 
+        var modeBar = new HBoxContainer();
+        modeBar.AddThemeConstantOverride("separation", 4);
+        vbox.AddChild(modeBar);
+
+        _brushModeButton = CreateModeButton("Brush", ToolModeManager.ConstructPlacementMode.Brush);
+        _boxModeButton = CreateModeButton("Box", ToolModeManager.ConstructPlacementMode.Box);
+        modeBar.AddChild(_brushModeButton);
+        modeBar.AddChild(_boxModeButton);
+
         // Category bar
         _categoryBar = new HBoxContainer();
         _categoryBar.AddThemeConstantOverride("separation", 4);
@@ -72,6 +83,8 @@ public partial class BuildSubMenu : PanelContainer
         bool shouldShow = ToolModeManager.Instance?.CurrentMode == ToolMode.Construct;
         if (shouldShow != Visible)
             Visible = shouldShow;
+
+        UpdatePlacementModeButtons();
     }
 
     private void BuildCategories()
@@ -146,6 +159,67 @@ public partial class BuildSubMenu : PanelContainer
         // Show description
         var matText = string.Join(", ", def.Materials.Select(m => $"{m.Key}×{m.Value}"));
         _descLabel.Text = $"{def.DisplayName} ({def.Size.X}×{def.Size.Y}) | 材料: {matText} | 工时: {def.WorkTicks}";
+    }
+
+    private Button CreateModeButton(string text, ToolModeManager.ConstructPlacementMode mode)
+    {
+        var btn = new Button
+        {
+            Text = text,
+            CustomMinimumSize = new Vector2(72, 28),
+        };
+        btn.AddThemeFontSizeOverride("font_size", 12);
+
+        var normalStyle = new StyleBoxFlat
+        {
+            BgColor = InactiveBtnBg,
+            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
+            ContentMarginLeft = 8, ContentMarginRight = 8,
+            ContentMarginTop = 4, ContentMarginBottom = 4,
+            BorderWidthLeft = 1, BorderWidthRight = 1,
+            BorderWidthTop = 1, BorderWidthBottom = 1,
+            BorderColor = new Color(0.3f, 0.4f, 0.5f, 0.5f),
+        };
+        btn.AddThemeStyleboxOverride("normal", normalStyle);
+
+        var hoverStyle = (StyleBoxFlat)normalStyle.Duplicate();
+        hoverStyle.BgColor = new Color(0.18f, 0.18f, 0.24f, 0.85f);
+        btn.AddThemeStyleboxOverride("hover", hoverStyle);
+
+        btn.Pressed += () =>
+        {
+            if (ToolModeManager.Instance != null)
+                ToolModeManager.Instance.PlacementMode = mode;
+            UpdatePlacementModeButtons();
+        };
+
+        return btn;
+    }
+
+    private void UpdatePlacementModeButtons()
+    {
+        if (_brushModeButton == null || _boxModeButton == null || ToolModeManager.Instance == null)
+            return;
+
+        bool brushActive = ToolModeManager.Instance.PlacementMode == ToolModeManager.ConstructPlacementMode.Brush;
+        ApplyModeButtonState(_brushModeButton, brushActive);
+        ApplyModeButtonState(_boxModeButton, !brushActive);
+    }
+
+    private void ApplyModeButtonState(Button button, bool active)
+    {
+        var style = button.GetThemeStylebox("normal") as StyleBoxFlat;
+        if (style != null)
+        {
+            style.BgColor = active ? ActiveBtnBg : InactiveBtnBg;
+            style.BorderColor = active
+                ? new Color(0.45f, 0.75f, 0.95f, 0.85f)
+                : new Color(0.3f, 0.4f, 0.5f, 0.5f);
+        }
+
+        button.AddThemeColorOverride("font_color",
+            active ? Colors.White : new Color(0.8f, 0.8f, 0.86f));
     }
 
     private PanelContainer CreateButton(string text, System.Action onClick)
