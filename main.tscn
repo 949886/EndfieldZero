@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/jobs/JobSystem.cs" id="8_jobsys"]
 [ext_resource type="Script" path="res://scripts/ui/ToolModeManager.cs" id="9_toolmode"]
 [ext_resource type="Script" path="res://scripts/ui/JobOverlay.cs" id="10_joboverlay"]
+[ext_resource type="Script" path="res://scripts/ui/PawnInfoPanel.cs" id="11_infopanel"]
+[ext_resource type="Script" path="res://scripts/ui/ToolModeBar.cs" id="12_toolbar"]
 
 [node name="Main" type="Node3D"]
 
@@ -59,6 +61,32 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
 script = ExtResource("7_selection")
+
+[node name="ToolModeBar" type="HBoxContainer" parent="UILayer"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 8.0
+offset_right = 150.0
+offset_bottom = 40.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("12_toolbar")
+
+[node name="PawnInfoPanel" type="PanelContainer" parent="UILayer"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = -260.0
+offset_right = 340.0
+offset_bottom = -10.0
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("11_infopanel")
 
 [node name="DebugHud" type="Label" parent="UILayer"]
 layout_mode = 0

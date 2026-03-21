@@ -31,12 +31,15 @@ public partial class SelectionManager : Control
     private static readonly Color BoxBorderColor = new(0.3f, 1f, 0.3f, 0.8f);
     private static readonly Color SelectionCircleColor = new(0.3f, 1f, 0.3f, 0.6f);
 
+    /// <summary>Singleton.</summary>
+    public static SelectionManager Instance { get; private set; }
+
     /// <summary>Currently selected pawns (read-only).</summary>
     public IReadOnlyList<Pawn.Pawn> Selected => _selected;
 
     public override void _Ready()
     {
-        // Cover entire viewport for input capture
+        Instance = this;
         MouseFilter = MouseFilterEnum.Pass;
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
     }
@@ -186,6 +189,9 @@ public partial class SelectionManager : Control
         // Raycast from screen to XZ plane (Y=0)
         Vector3 worldTarget = ScreenToWorldXZ(screenPos, camera);
 
+        // Spawn move command ping effect
+        SpawnMovePing(worldTarget);
+
         // Use pathfinding if available
         if (PathfindingService.Instance != null)
         {
@@ -311,5 +317,16 @@ public partial class SelectionManager : Control
 
         float t = -from.Y / dir.Y;
         return from + dir * t;
+    }
+
+    /// <summary>Spawn a green ping effect at the move target in 3D world.</summary>
+    private void SpawnMovePing(Vector3 worldPos)
+    {
+        var ping = new MoveCommandPing();
+        ping.Position = worldPos;
+
+        // Add to main scene root (not UILayer)
+        var root = GetTree().Root.GetChild(0);
+        root?.AddChild(ping);
     }
 }

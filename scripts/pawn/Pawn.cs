@@ -48,6 +48,9 @@ public partial class Pawn : CharacterBody3D
     private bool _isWorking;
     private Vector3 _workFacing;
 
+    // Selection circle visual
+    private SelectionCircle _selectionCircle;
+
     public override void _Ready()
     {
         Data ??= new PawnData();
@@ -63,6 +66,10 @@ public partial class Pawn : CharacterBody3D
         // Initialize AI
         AI = new PawnAI(this);
 
+        // Create selection circle as child
+        _selectionCircle = new SelectionCircle();
+        AddChild(_selectionCircle);
+
         EventBus.Tick += OnTick;
         GD.Print($"[Pawn] {Data.PawnName} (ID:{Data.Id}) spawned at {GlobalPosition}");
     }
@@ -76,6 +83,9 @@ public partial class Pawn : CharacterBody3D
     public override void _PhysicsProcess(double delta)
     {
         if (!IsAlive) return;
+
+        // Update selection circle visibility
+        _selectionCircle?.SetSelected(IsSelected);
 
         float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
         Vector3 velocity = Vector3.Zero;
