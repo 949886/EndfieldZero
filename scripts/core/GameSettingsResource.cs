@@ -4,7 +4,7 @@ namespace EndfieldZero.Core;
 
 /// <summary>
 /// Editable game settings stored as a Godot Resource.
-/// Values are loaded from res://scripts/core/game_settings.tres.
+/// Values are loaded from res://settings/game_settings.tres.
 /// </summary>
 [GlobalClass]
 public partial class GameSettingsResource : Resource

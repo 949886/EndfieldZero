@@ -7,7 +7,7 @@ namespace EndfieldZero.Core;
 /// </summary>
 public static class Settings
 {
-    private const string SettingsResourcePath = "res://scripts/core/game_settings.tres";
+    private const string SettingsResourcePath = "res://settings/game_settings.tres";
     private static GameSettingsResource _resource;
 
     private static GameSettingsResource Resource
