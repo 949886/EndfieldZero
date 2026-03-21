@@ -25,6 +25,9 @@ public partial class WorldManager : Node3D
     /// <summary>Procedural generator.</summary>
     private WorldGenerator _generator;
 
+    /// <summary>Chunk cache that restores unloaded data and persists modified chunks.</summary>
+    private ChunkCache _chunkCache;
+
     /// <summary>Queue of chunk coordinates waiting to be loaded.</summary>
     private readonly Queue<Vector2I> _loadQueue = new();
 
@@ -35,6 +38,8 @@ public partial class WorldManager : Node3D
     private Vector2I _lastCameraChunkCoord = new(int.MinValue, int.MinValue);
 
     [Export] public int Seed { get; set; } = Settings.DefaultSeed;
+    [Export(PropertyHint.Range, "16,2048,16")] public int MaxCachedChunksInMemory { get; set; } = 256;
+    [Export] public bool PersistModifiedChunksToDisk { get; set; } = true;
 
     /// <summary>Controls biome size. Higher = larger biomes. Default: 3.0.</summary>
     [Export(PropertyHint.Range, "0.5,20.0,0.5")] public float BiomeScale { get; set; } = 1.0f;
@@ -49,10 +54,20 @@ public partial class WorldManager : Node3D
     {
         Instance = this;
         _generator = new WorldGenerator(Seed, BiomeScale, BiomeOctaves, ContinentScale);
+        _chunkCache = new ChunkCache(Seed, MaxCachedChunksInMemory, PersistModifiedChunksToDisk);
         _camera = GetViewport().GetCamera3D();
 
         // Initialize pathfinding service
         PathfindingService.Instance = new PathfindingService(this);
+    }
+
+    public override void _ExitTree()
+    {
+        foreach (var chunk in _loadedChunks.Values)
+            _chunkCache?.Store(chunk);
+
+        if (Instance == this)
+            Instance = null;
     }
 
     public override void _Process(double delta)
@@ -108,9 +123,11 @@ public partial class WorldManager : Node3D
 
     private void LoadChunk(Vector2I chunkCoord)
     {
-        // Create chunk data
         var chunk = new Chunk(chunkCoord);
-        _generator.GenerateChunk(chunk);
+        bool restoredFromCache = _chunkCache != null && _chunkCache.TryRestore(chunkCoord, chunk);
+        if (!restoredFromCache)
+            _generator.GenerateChunk(chunk);
+
         _loadedChunks[chunkCoord] = chunk;
 
         // Create renderer node
@@ -137,7 +154,9 @@ public partial class WorldManager : Node3D
 
         foreach (var coord in toRemove)
         {
-            // TODO: serialize chunk to disk before unloading (save system)
+            if (_loadedChunks.TryGetValue(coord, out var chunk))
+                _chunkCache?.Store(chunk);
+
             _loadedChunks.Remove(coord);
 
             if (_renderers.TryGetValue(coord, out var renderer))

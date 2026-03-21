@@ -24,6 +24,9 @@ public class Chunk
     /// <summary>Whether the chunk data has been populated by the generator.</summary>
     public bool IsGenerated { get; set; }
 
+    /// <summary>Whether gameplay has changed this chunk since generation/load.</summary>
+    public bool IsModified { get; private set; }
+
     public Chunk(Vector2I chunkCoord)
     {
         ChunkCoord = chunkCoord;
@@ -48,12 +51,44 @@ public class Chunk
     }
 
     /// <summary>Set block at local coordinates. Marks chunk as dirty.</summary>
-    public void SetBlock(int localX, int localZ, Block block, int layer = 0)
+    public void SetBlock(int localX, int localZ, Block block, int layer = 0, bool markModified = true)
     {
         if (!IsInBounds(localX, localZ, layer))
             return;
-        Blocks[Index(localX, localZ, layer)] = block;
+
+        int index = Index(localX, localZ, layer);
+        if (Blocks[index].TypeId == block.TypeId
+            && Blocks[index].Metadata == block.Metadata
+            && Blocks[index].Layer == block.Layer)
+        {
+            return;
+        }
+
+        Blocks[index] = block;
         IsDirty = true;
+        if (markModified)
+            IsModified = true;
+    }
+
+    /// <summary>Load a full block snapshot into this chunk.</summary>
+    public bool TryLoadSnapshot(Block[] snapshot, bool isModified)
+    {
+        if (snapshot == null || snapshot.Length != Blocks.Length)
+            return false;
+
+        System.Array.Copy(snapshot, Blocks, Blocks.Length);
+        IsGenerated = true;
+        IsDirty = true;
+        IsModified = isModified;
+        return true;
+    }
+
+    /// <summary>Create a defensive copy of the chunk's block data.</summary>
+    public Block[] CreateSnapshot()
+    {
+        var snapshot = new Block[Blocks.Length];
+        System.Array.Copy(Blocks, snapshot, Blocks.Length);
+        return snapshot;
     }
 
     /// <summary>Check if local coordinates are within chunk bounds.</summary>

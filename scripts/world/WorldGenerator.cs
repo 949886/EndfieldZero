@@ -192,7 +192,7 @@ public sealed class WorldGenerator
                     }
                 }
 
-                chunk.SetBlock(lx, lz, new Block(blockType));
+                chunk.SetBlock(lx, lz, new Block(blockType), markModified: false);
             }
         }
 
