@@ -50,6 +50,13 @@ public sealed class BlockRegistry
     public const ushort MushroomId = 35;        // 蘑菇
     public const ushort RiverId = 36;           // 河流（浅水变体）
 
+    // --- Building blocks ---
+    public const ushort StoneWallId = 37;        // 石墙（建造产物）
+    public const ushort WoodWallId = 38;         // 木墙
+    public const ushort WoodDoorId = 39;         // 木门（可通行）
+    public const ushort StoneFloorId = 40;       // 石地板
+    public const ushort WoodFloorId = 41;        // 木地板
+
     private readonly List<BlockDef> _defs = new();
     private static BlockRegistry _instance;
 
@@ -117,6 +124,13 @@ public sealed class BlockRegistry
         reg.Register(new BlockDef(OreDiamondId,  "Diamond Ore",  new Color("5ae8e8"),  isSolid: true,  moveSpeedMod: 0f));
         reg.Register(new BlockDef(MushroomId,    "Mushroom",     new Color("a03030"),  isSolid: false, moveSpeedMod: 1f));
         reg.Register(new BlockDef(RiverId,       "River",        new Color("4a90d0"),  isSolid: false, isTransparent: true, moveSpeedMod: 0.4f));
+
+        // --- Building blocks ---
+        reg.Register(new BlockDef(StoneWallId,   "Stone Wall",   new Color("6a6a70"),  isSolid: true,  moveSpeedMod: 0f));
+        reg.Register(new BlockDef(WoodWallId,    "Wood Wall",    new Color("8a6a40"),  isSolid: true,  moveSpeedMod: 0f));
+        reg.Register(new BlockDef(WoodDoorId,    "Wood Door",    new Color("7a5a30"),  isSolid: false, moveSpeedMod: 0.8f));
+        reg.Register(new BlockDef(StoneFloorId,  "Stone Floor",  new Color("8a8a90"),  isSolid: false, moveSpeedMod: 1.1f));
+        reg.Register(new BlockDef(WoodFloorId,   "Wood Floor",   new Color("9a7a50"),  isSolid: false, moveSpeedMod: 1.1f));
 
         return reg;
     }

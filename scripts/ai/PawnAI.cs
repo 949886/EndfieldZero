@@ -97,6 +97,13 @@ public class PawnAI
     /// </summary>
     private void Evaluate()
     {
+        // If current action is running and doesn't want to be interrupted, skip
+        if (_currentAction != null && _currentAction.IsRunning
+            && !_currentAction.ShouldInterrupt(_context))
+        {
+            return;
+        }
+
         float[] key = _context.GetKeyVector();
         float sqrtD = MathF.Sqrt(AIContext.Dimensions);
 

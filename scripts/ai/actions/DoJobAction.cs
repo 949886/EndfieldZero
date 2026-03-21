@@ -121,11 +121,26 @@ public class DoJobAction : AIAction
 
     public override bool IsComplete(AIContext context) => _isComplete;
 
+    /// <summary>
+    /// Prevent AI from switching away while actively working.
+    /// Only allow interruption if starving/exhausted.
+    /// </summary>
+    public override bool ShouldInterrupt(AIContext context)
+    {
+        if (_isAtTarget && _claimedJob != null && _claimedJob.Status == JobStatus.InProgress)
+        {
+            // Only interrupt for critical needs
+            return context.Pawn.Needs.Hunger < 10f || context.Pawn.Needs.Rest < 5f;
+        }
+        return true;
+    }
+
     public override void OnStop()
     {
         if (_claimedJob != null && _claimedJob.Status != JobStatus.Completed)
         {
-            _claimedJob.Cancel();
+            // Release — preserves work progress so another pawn can continue
+            _claimedJob.Release();
             _claimedJob = null;
         }
         Owner?.ClearWorkTarget();
@@ -191,28 +206,34 @@ public class DoJobAction : AIAction
                 break;
 
             case "Construct":
-                // Place a stone block (placeholder for actual construction)
-                if (WorldManager.Instance != null)
+                // Complete via BlueprintSystem (places the correct block)
+                if (_claimedJob.BlueprintId >= 0)
                 {
-                    var coord = _claimedJob.TargetBlockCoord;
-                    // TypeId 1 = stone (first registered solid block)
-                    WorldManager.Instance.SetBlock(coord.X, coord.Y, new Block(1));
+                    Building.BlueprintSystem.Instance?.CompleteBlueprint(_claimedJob.BlueprintId);
+                }
+                else
+                {
+                    // Legacy fallback: place stone wall
+                    if (WorldManager.Instance != null)
+                    {
+                        var coord = _claimedJob.TargetBlockCoord;
+                        WorldManager.Instance.SetBlock(coord.X, coord.Y,
+                            new Block(World.BlockRegistry.StoneWallId));
+                    }
                 }
                 break;
 
             case "Grow":
                 // Place a "crop" block (placeholder)
-                // In future: track crop growth stages
                 if (WorldManager.Instance != null)
                 {
                     var coord = _claimedJob.TargetBlockCoord;
-                    // TypeId 5 = farmland/crop placeholder
                     WorldManager.Instance.SetBlock(coord.X, coord.Y, new Block(5));
                 }
                 break;
 
             case "Harvest":
-                // Remove the crop, "produce" items (placeholder)
+                // Remove the crop
                 if (WorldManager.Instance != null)
                 {
                     var coord = _claimedJob.TargetBlockCoord;
@@ -226,3 +247,4 @@ public class DoJobAction : AIAction
         }
     }
 }
+

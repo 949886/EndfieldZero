@@ -38,6 +38,9 @@ public class Job
     // --- XP ---
     public float XpPerTick { get; set; } = 0.5f;     // XP granted per work tick
 
+    // --- Blueprint link ---
+    public int BlueprintId { get; set; } = -1;         // Linked blueprint (-1 = none)
+
     public Job(string jobType, string displayName)
     {
         Id = _nextId++;
@@ -74,7 +77,15 @@ public class Job
         ReservedByPawnId = -1;
     }
 
-    /// <summary>Cancel and release this job.</summary>
+    /// <summary>Release reservation (pawn gave up, but work is preserved).</summary>
+    public void Release()
+    {
+        Status = JobStatus.Available;
+        ReservedByPawnId = -1;
+        // TicksWorked is preserved — another pawn can continue
+    }
+
+    /// <summary>Cancel job entirely (player-initiated). Resets all progress.</summary>
     public void Cancel()
     {
         Status = JobStatus.Available;

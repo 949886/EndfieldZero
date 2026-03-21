@@ -246,27 +246,36 @@ public partial class SelectionManager : Control
 
     private void Select(Pawn.Pawn pawn)
     {
-        if (!_selected.Contains(pawn))
-            _selected.Add(pawn);
+        if (_selected.Contains(pawn))
+            return;
+
+        _selected.Add(pawn);
+        pawn.IsSelected = true;
     }
 
     private void Deselect(Pawn.Pawn pawn)
     {
-        _selected.Remove(pawn);
+        if (_selected.Remove(pawn))
+            pawn.IsSelected = false;
     }
 
     private void DeselectAll()
     {
+        foreach (var pawn in _selected)
+            pawn.IsSelected = false;
+
         _selected.Clear();
     }
 
     private void SelectAll()
     {
-        _selected.Clear();
+        DeselectAll();
         if (PawnManager.Instance == null) return;
+
         foreach (var pawn in PawnManager.Instance.GetAllPawns())
         {
-            if (pawn.IsAlive) _selected.Add(pawn);
+            if (pawn.IsAlive)
+                Select(pawn);
         }
     }
 

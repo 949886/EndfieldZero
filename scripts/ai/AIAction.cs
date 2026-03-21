@@ -50,6 +50,13 @@ public abstract class AIAction
 
     /// <summary>Whether this action has completed its goal.</summary>
     public abstract bool IsComplete(AIContext context);
+
+    /// <summary>
+    /// Whether this action can be interrupted by re-evaluation.
+    /// Return false to prevent the AI from switching away (e.g., mid-work).
+    /// Default: true (always interruptible).
+    /// </summary>
+    public virtual bool ShouldInterrupt(AIContext context) => true;
 }
 
 /// <summary>

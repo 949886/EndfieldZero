@@ -12,6 +12,12 @@
 [ext_resource type="Script" path="res://scripts/ui/JobOverlay.cs" id="10_joboverlay"]
 [ext_resource type="Script" path="res://scripts/ui/PawnInfoPanel.cs" id="11_infopanel"]
 [ext_resource type="Script" path="res://scripts/ui/ToolModeBar.cs" id="12_toolbar"]
+[ext_resource type="Script" path="res://scripts/building/BlueprintSystem.cs" id="13_bpsys"]
+[ext_resource type="Script" path="res://scripts/building/BlueprintOverlay.cs" id="14_bpoverlay"]
+[ext_resource type="Script" path="res://scripts/zone/ZoneSystem.cs" id="15_zonesys"]
+[ext_resource type="Script" path="res://scripts/zone/ZoneOverlay.cs" id="16_zoneoverlay"]
+[ext_resource type="Script" path="res://scripts/ui/BuildSubMenu.cs" id="17_buildmenu"]
+[ext_resource type="Script" path="res://scripts/ui/ZoneSubMenu.cs" id="18_zonemenu"]
 
 [node name="Main" type="Node3D"]
 
@@ -23,6 +29,12 @@ script = ExtResource("1_world")
 
 [node name="JobSystem" type="Node" parent="."]
 script = ExtResource("8_jobsys")
+
+[node name="BlueprintSystem" type="Node" parent="."]
+script = ExtResource("13_bpsys")
+
+[node name="ZoneSystem" type="Node" parent="."]
+script = ExtResource("15_zonesys")
 
 [node name="GameCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)
@@ -37,8 +49,14 @@ PawnScene = ExtResource("6_pawnscene")
 
 [node name="EntityContainer" type="Node3D" parent="."]
 
+[node name="ZoneOverlay" type="MeshInstance3D" parent="."]
+script = ExtResource("16_zoneoverlay")
+
 [node name="JobOverlay" type="MeshInstance3D" parent="."]
 script = ExtResource("10_joboverlay")
+
+[node name="BlueprintOverlay" type="MeshInstance3D" parent="."]
+script = ExtResource("14_bpoverlay")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 
@@ -67,13 +85,44 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -150.0
+offset_left = -180.0
 offset_top = 8.0
-offset_right = 150.0
+offset_right = 180.0
 offset_bottom = 40.0
 grow_horizontal = 2
 mouse_filter = 2
 script = ExtResource("12_toolbar")
+
+
+[node name="BuildSubMenu" type="PanelContainer" parent="UILayer"]
+layout_mode = 0
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -120.0
+offset_right = 250.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+script = ExtResource("17_buildmenu")
+
+[node name="ZoneSubMenu" type="PanelContainer" parent="UILayer"]
+layout_mode = 0
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -60.0
+offset_right = 200.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+script = ExtResource("18_zonemenu")
 
 [node name="PawnInfoPanel" type="PanelContainer" parent="UILayer"]
 layout_mode = 0

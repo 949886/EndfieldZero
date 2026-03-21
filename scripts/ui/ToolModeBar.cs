@@ -6,7 +6,7 @@ namespace EndfieldZero.UI;
 /// Small HUD bar showing the current tool mode with icon indicators.
 /// Rendered at top-center of the screen.
 ///
-///  [ Q:选择 ] [ M:挖矿 ] [ B:建造 ] [ G:种植 ] [ X:取消 ]
+///  [ Q:选择 ] [ M:挖矿 ] [ B:建造 ] [ G:种植 ] [ Z:区划 ] [ X:取消 ]
 ///
 /// The active mode is highlighted with a colored background.
 /// </summary>
@@ -31,6 +31,7 @@ public partial class ToolModeBar : HBoxContainer
         new(ToolMode.Mine,      "M", "挖矿", new Color(1f, 0.35f, 0.25f)),
         new(ToolMode.Construct, "B", "建造", new Color(0.35f, 0.55f, 1f)),
         new(ToolMode.Grow,      "G", "种植", new Color(0.35f, 0.9f, 0.35f)),
+        new(ToolMode.Zone,      "Z", "区划", new Color(0.8f, 0.6f, 0.25f)),
         new(ToolMode.Cancel,    "X", "取消", new Color(1f, 0.8f, 0.25f)),
     };
 
@@ -39,7 +40,6 @@ public partial class ToolModeBar : HBoxContainer
 
     public override void _Ready()
     {
-        // Center at top
         Alignment = AlignmentMode.Center;
         AddThemeConstantOverride("separation", 4);
 
@@ -52,21 +52,14 @@ public partial class ToolModeBar : HBoxContainer
             var style = new StyleBoxFlat
             {
                 BgColor = new Color(0.1f, 0.1f, 0.15f, 0.7f),
-                CornerRadiusTopLeft = 4,
-                CornerRadiusTopRight = 4,
-                CornerRadiusBottomLeft = 4,
-                CornerRadiusBottomRight = 4,
-                ContentMarginLeft = 8,
-                ContentMarginRight = 8,
-                ContentMarginTop = 4,
-                ContentMarginBottom = 4,
+                CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
+                CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
+                ContentMarginLeft = 8, ContentMarginRight = 8,
+                ContentMarginTop = 4, ContentMarginBottom = 4,
             };
             panel.AddThemeStyleboxOverride("panel", style);
 
-            var label = new Label
-            {
-                Text = $"{Modes[i].Key}:{Modes[i].Label}",
-            };
+            var label = new Label { Text = $"{Modes[i].Key}:{Modes[i].Label}" };
             label.AddThemeFontSizeOverride("font_size", 13);
             label.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.75f));
             panel.AddChild(label);
@@ -92,10 +85,11 @@ public partial class ToolModeBar : HBoxContainer
                     ? Modes[i].Color with { A = 0.4f }
                     : new Color(0.1f, 0.1f, 0.15f, 0.7f);
 
-                style.BorderWidthBottom = active ? 2 : 0;
-                style.BorderWidthTop = active ? 2 : 0;
-                style.BorderWidthLeft = active ? 2 : 0;
-                style.BorderWidthRight = active ? 2 : 0;
+                int bw = active ? 2 : 0;
+                style.BorderWidthBottom = bw;
+                style.BorderWidthTop = bw;
+                style.BorderWidthLeft = bw;
+                style.BorderWidthRight = bw;
                 style.BorderColor = active ? Modes[i].Color with { A = 0.8f } : Colors.Transparent;
             }
 

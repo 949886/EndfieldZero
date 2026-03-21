@@ -38,6 +38,9 @@ public partial class JobSystem : Node
         _jobs.RemoveAll(j => j.Id == jobId);
     }
 
+    /// <summary>All registered jobs (read-only).</summary>
+    public IReadOnlyList<Job> AllJobs => _jobs;
+
     /// <summary>Get a job by ID.</summary>
     public Job GetJob(int jobId) => _jobs.FirstOrDefault(j => j.Id == jobId);
 
@@ -204,8 +207,6 @@ public partial class JobSystem : Node
     /// <summary>Get count of jobs by status.</summary>
     public int CountByStatus(JobStatus status) => _jobs.Count(j => j.Status == status);
 
-    /// <summary>All jobs (read-only).</summary>
-    public IReadOnlyList<Job> AllJobs => _jobs;
 
     /// <summary>Cleanup completed/failed jobs older than N ticks.</summary>
     public override void _Process(double delta)

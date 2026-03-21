@@ -1,23 +1,21 @@
 namespace EndfieldZero.UI;
 
 /// <summary>
-/// Defines the current interaction tool mode.
-/// Determines how mouse clicks behave in the game world.
+/// Available tool modes for player interaction.
+///
+///   Select    (Q) — Select and command pawns
+///   Mine      (M) — Designate blocks for mining
+///   Construct (B) — Place building blueprints
+///   Grow      (G) — Designate grow areas
+///   Zone      (Z) — Create/manage zones
+///   Cancel    (X) — Cancel designations/blueprints/zones
 /// </summary>
 public enum ToolMode
 {
-    /// <summary>Default: left-click selects units, right-click moves them.</summary>
     Select,
-
-    /// <summary>Left-click/drag designates blocks for mining.</summary>
     Mine,
-
-    /// <summary>Left-click/drag designates blocks for construction.</summary>
     Construct,
-
-    /// <summary>Left-click/drag designates blocks for growing crops.</summary>
     Grow,
-
-    /// <summary>Left-click/drag cancels existing job designations.</summary>
+    Zone,
     Cancel,
 }
