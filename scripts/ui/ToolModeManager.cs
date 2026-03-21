@@ -46,6 +46,8 @@ public partial class ToolModeManager : Control
     private Vector2I _dragEnd;
     private Vector2 _dragScreenStart;
     private Vector2 _dragScreenEnd;
+    private bool _constructPaintActive;
+    private Vector2I _lastConstructPaintCell = new(int.MinValue, int.MinValue);
 
     // Track designated blocks to avoid duplicate jobs
     private readonly HashSet<Vector2I> _designatedBlocks = new();
@@ -121,17 +123,25 @@ public partial class ToolModeManager : Control
                 {
                     if (CurrentMode == ToolMode.Construct && SelectedBuildingDef != null)
                     {
-                        // Single-click placement for blueprints
-                        PlaceBlueprintAtMouse(mb.Position);
-                        GetViewport().SetInputAsHandled();
-                        return;
+                        _constructPaintActive = true;
+                        _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
+                        PaintBlueprintAtScreen(mb.Position);
                     }
-                    StartDrag(mb.Position);
+                    else
+                    {
+                        StartDrag(mb.Position);
+                    }
                     GetViewport().SetInputAsHandled();
                 }
                 else if (_isDragging)
                 {
                     EndDrag(mb.Position);
+                    GetViewport().SetInputAsHandled();
+                }
+                else if (!mb.Pressed && CurrentMode == ToolMode.Construct)
+                {
+                    _constructPaintActive = false;
+                    _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
                     GetViewport().SetInputAsHandled();
                 }
             }
@@ -140,12 +150,20 @@ public partial class ToolModeManager : Control
                 CurrentMode = ToolMode.Select;
                 MouseFilter = MouseFilterEnum.Ignore;
                 _isDragging = false;
+                _constructPaintActive = false;
+                _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
                 SelectedBuildingDef = null;
                 QueueRedraw();
             }
         }
         else if (@event is InputEventMouseMotion mm)
         {
+            if (CurrentMode == ToolMode.Construct && _constructPaintActive && SelectedBuildingDef != null)
+            {
+                PaintBlueprintAtScreen(mm.Position);
+                GetViewport().SetInputAsHandled();
+            }
+
             if (_isDragging)
             {
                 _dragScreenEnd = mm.Position;
@@ -164,7 +182,6 @@ public partial class ToolModeManager : Control
     public override void _Draw()
     {
         if (!_isDragging || CurrentMode == ToolMode.Select) return;
-        if (CurrentMode == ToolMode.Construct) return; // Blueprint uses its own overlay
 
         if (ModeColors.TryGetValue(CurrentMode, out var fill) &&
             ModeBorderColors.TryGetValue(CurrentMode, out var border))
@@ -261,6 +278,17 @@ public partial class ToolModeManager : Control
             foreach (var cell in bp.OccupiedCells())
                 _designatedBlocks.Add(cell);
         }
+    }
+
+    private void PaintBlueprintAtScreen(Vector2 screenPos)
+    {
+        if (SelectedBuildingDef == null || BlueprintSystem.Instance == null) return;
+
+        var blockCoord = ScreenToBlock(screenPos);
+        if (blockCoord == _lastConstructPaintCell) return;
+
+        _lastConstructPaintCell = blockCoord;
+        PlaceBlueprintAtMouse(screenPos);
     }
 
     private void UpdateBlueprintPreview(Vector2 screenPos)
