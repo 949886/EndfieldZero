@@ -224,20 +224,21 @@ public class DoJobAction : AIAction
                 break;
 
             case "Grow":
-                // Place a "crop" block (placeholder)
-                if (WorldManager.Instance != null)
+                // Plant a random crop via CropManager
+                if (Farming.CropManager.Instance != null)
                 {
                     var coord = _claimedJob.TargetBlockCoord;
-                    WorldManager.Instance.SetBlock(coord.X, coord.Y, new Block(5));
+                    var cropDef = Farming.CropRegistry.Instance.GetRandom();
+                    Farming.CropManager.Instance.PlantCrop(cropDef, coord);
                 }
                 break;
 
             case "Harvest":
-                // Remove the crop
-                if (WorldManager.Instance != null)
+                // Remove the crop via CropManager
+                if (Farming.CropManager.Instance != null)
                 {
                     var coord = _claimedJob.TargetBlockCoord;
-                    WorldManager.Instance.SetBlock(coord.X, coord.Y, Block.Air);
+                    Farming.CropManager.Instance.RemoveCrop(coord);
                 }
                 break;
 

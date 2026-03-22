@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using EndfieldZero.Core;
+using EndfieldZero.Farming;
 using EndfieldZero.Managers;
 using EndfieldZero.Pathfinding;
 using Godot;
@@ -36,6 +37,9 @@ public partial class SelectionManager : Control
 
     /// <summary>Currently selected pawns (read-only).</summary>
     public IReadOnlyList<Pawn.Pawn> Selected => _selected;
+
+    /// <summary>Selected non-pawn entity (crop, building, etc.).</summary>
+    public ISelectable SelectedEntity { get; private set; }
 
     public override void _Ready()
     {
@@ -154,9 +158,19 @@ public partial class SelectionManager : Control
                 Select(closest);
             }
         }
-        else if (!additive)
+        else
         {
-            DeselectAll();
+            // Try selecting a non-pawn entity (crop or building)
+            var entity = FindEntityAtScreenPos(screenPos, camera);
+            if (entity != null)
+            {
+                DeselectAll();
+                SelectEntity(entity);
+            }
+            else if (!additive)
+            {
+                DeselectAll();
+            }
         }
     }
 
@@ -263,8 +277,8 @@ public partial class SelectionManager : Control
     {
         foreach (var pawn in _selected)
             pawn.IsSelected = false;
-
         _selected.Clear();
+        DeselectEntity();
     }
 
     private void SelectAll()
@@ -312,6 +326,61 @@ public partial class SelectionManager : Control
         }
 
         return closest;
+    }
+
+    private void SelectEntity(ISelectable entity)
+    {
+        DeselectEntity();
+        SelectedEntity = entity;
+        entity.IsSelected = true;
+    }
+
+    private void DeselectEntity()
+    {
+        if (SelectedEntity != null)
+        {
+            SelectedEntity.IsSelected = false;
+            SelectedEntity = null;
+        }
+    }
+
+    private ISelectable FindEntityAtScreenPos(Vector2 screenPos, Camera3D camera)
+    {
+        Vector3 worldPos = ScreenToWorldXZ(screenPos, camera);
+        var blockCoord = PathfindingService.WorldToBlock(worldPos);
+
+        // Check crops
+        var crop = CropManager.Instance?.GetCropAt(blockCoord);
+        if (crop != null) return crop;
+
+        // Check buildings in EntityContainer
+        var container = GetTree().Root.GetChild(0)?.GetNodeOrNull<Node3D>("EntityContainer");
+        if (container != null)
+        {
+            foreach (var child in container.GetChildren())
+            {
+                if (child is Building.BuildingInstance building)
+                {
+                    // Check if click is within the building's cell area
+                    foreach (var cell in BuildingOccupiedCells(building))
+                    {
+                        if (cell == blockCoord) return building;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static System.Collections.Generic.IEnumerable<Vector2I> BuildingOccupiedCells(Building.BuildingInstance b)
+    {
+        var effSize = b.BuildRotation % 2 == 1
+            ? new Vector2I(b.Def.Size.Y, b.Def.Size.X)
+            : b.Def.Size;
+        for (int dz = 0; dz < effSize.Y; dz++)
+            for (int dx = 0; dx < effSize.X; dx++)
+                yield return new Vector2I(b.BlockCoord.X + dx, b.BlockCoord.Y + dz);
     }
 
     /// <summary>Convert screen position to world XZ plane (Y=0).</summary>

@@ -139,13 +139,18 @@ public partial class BlueprintSystem : Node
 
         bp.Status = BlueprintStatus.Complete;
 
-        // Place blocks in the world
         if (bp.Def.PlacedBlockId != 0 && WorldManager.Instance != null)
         {
+            // Structure: place blocks in the world
             foreach (var cell in bp.OccupiedCells())
             {
                 WorldManager.Instance.SetBlock(cell.X, cell.Y, new Block(bp.Def.PlacedBlockId));
             }
+        }
+        else
+        {
+            // Furniture/Production: spawn a BuildingInstance entity
+            SpawnBuildingEntity(bp);
         }
 
         // Free cells
@@ -154,6 +159,18 @@ public partial class BlueprintSystem : Node
 
         _blueprints.Remove(bp);
         GD.Print($"[Blueprint] Completed {bp.Def.DisplayName} (ID:{bp.Id})");
+    }
+
+    private void SpawnBuildingEntity(Blueprint bp)
+    {
+        var instance = new BuildingInstance();
+        instance.Init(bp.Def, bp.BlockCoord, bp.Rotation);
+
+        var container = GetTree().Root.GetChild(0)?.GetNodeOrNull<Node3D>("EntityContainer");
+        if (container != null)
+            container.AddChild(instance);
+        else
+            GetTree().Root.GetChild(0).AddChild(instance);
     }
 
     /// <summary>Get blueprint by ID.</summary>

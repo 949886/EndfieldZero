@@ -1,3 +1,4 @@
+using EndfieldZero.Farming;
 using EndfieldZero.Managers;
 using EndfieldZero.Pawn;
 using Godot;
@@ -179,22 +180,59 @@ public partial class PawnInfoPanel : PanelContainer
     public override void _Process(double delta)
     {
         var sel = SelectionManager.Instance;
-        if (sel == null || sel.Selected.Count == 0)
+        if (sel == null)
+        {
+            if (Visible) Visible = false;
+            return;
+        }
+
+        // Priority: selected pawn > selected entity
+        if (sel.Selected.Count > 0)
+        {
+            var pawn = sel.Selected[0];
+            if (!pawn.IsAlive)
+            {
+                Visible = false;
+                return;
+            }
+            Visible = true;
+            ShowPawnLayout(true);
+            UpdateInfo(pawn);
+        }
+        else if (sel.SelectedEntity != null)
+        {
+            Visible = true;
+            ShowPawnLayout(false);
+            UpdateEntityInfo(sel.SelectedEntity);
+        }
+        else
         {
             if (Visible) Visible = false;
             _lastPawn = null;
-            return;
         }
+    }
 
-        var pawn = sel.Selected[0];
-        if (!pawn.IsAlive)
-        {
-            Visible = false;
-            return;
-        }
+    /// <summary>Toggle visibility of pawn-specific UI elements.</summary>
+    private void ShowPawnLayout(bool isPawn)
+    {
+        _aiLabel.Visible = isPawn;
+        _needsBars.Visible = isPawn;
+        _traitsLabel.Visible = isPawn;
+        _statsLabel.Visible = isPawn;
+    }
 
-        Visible = true;
-        UpdateInfo(pawn);
+    /// <summary>Display info for a non-pawn ISelectable entity.</summary>
+    private void UpdateEntityInfo(ISelectable entity)
+    {
+        _nameLabel.Text = entity.SelectionTitle;
+        _nameLabel.AddThemeColorOverride("font_color", new Color(0.9f, 0.95f, 1f));
+
+        _moodLabel.Text = "";
+
+        // Use aiLabel to show detailed info (repurposed)
+        _aiLabel.Visible = true;
+        _aiLabel.Text = entity.SelectionInfo;
+        _aiLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
     }
 
     private void UpdateInfo(Pawn.Pawn pawn)

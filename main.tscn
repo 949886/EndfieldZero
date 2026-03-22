@@ -2,66 +2,83 @@
 
 [ext_resource type="Script" uid="uid://c2ij8gq1dt43j" path="res://scripts/world/WorldManager.cs" id="1_world"]
 [ext_resource type="Script" uid="uid://tvm7tvhi6uui" path="res://scripts/world/GameCamera.cs" id="2_camera"]
-[ext_resource type="Script" path="res://scripts/core/TimeManager.cs" id="3_time"]
-[ext_resource type="Script" path="res://scripts/managers/PawnManager.cs" id="4_pawnmgr"]
-[ext_resource type="Script" path="res://scripts/ui/DebugHud.cs" id="5_debughud"]
-[ext_resource type="PackedScene" path="res://scenes/pawn/pawn.tscn" id="6_pawnscene"]
-[ext_resource type="Script" path="res://scripts/ui/SelectionManager.cs" id="7_selection"]
-[ext_resource type="Script" path="res://scripts/jobs/JobSystem.cs" id="8_jobsys"]
-[ext_resource type="Script" path="res://scripts/ui/ToolModeManager.cs" id="9_toolmode"]
-[ext_resource type="Script" path="res://scripts/ui/JobOverlay.cs" id="10_joboverlay"]
-[ext_resource type="Script" path="res://scripts/ui/PawnInfoPanel.cs" id="11_infopanel"]
-[ext_resource type="Script" path="res://scripts/ui/ToolModeBar.cs" id="12_toolbar"]
-[ext_resource type="Script" path="res://scripts/building/BlueprintSystem.cs" id="13_bpsys"]
-[ext_resource type="Script" path="res://scripts/building/BlueprintOverlay.cs" id="14_bpoverlay"]
-[ext_resource type="Script" path="res://scripts/zone/ZoneSystem.cs" id="15_zonesys"]
-[ext_resource type="Script" path="res://scripts/zone/ZoneOverlay.cs" id="16_zoneoverlay"]
-[ext_resource type="Script" path="res://scripts/ui/BuildSubMenu.cs" id="17_buildmenu"]
-[ext_resource type="Script" path="res://scripts/ui/ZoneSubMenu.cs" id="18_zonemenu"]
+[ext_resource type="Script" uid="uid://8wpw4nfr58p6" path="res://scripts/core/TimeManager.cs" id="3_time"]
+[ext_resource type="Script" uid="uid://qbr477lbylxe" path="res://scripts/managers/PawnManager.cs" id="4_pawnmgr"]
+[ext_resource type="Script" uid="uid://pe01yehya3jh" path="res://scripts/ui/DebugHud.cs" id="5_debughud"]
+[ext_resource type="PackedScene" uid="uid://cn2new4w286a7" path="res://scenes/pawn/pawn.tscn" id="6_pawnscene"]
+[ext_resource type="Script" uid="uid://ckofm3agwmlig" path="res://scripts/ui/SelectionManager.cs" id="7_selection"]
+[ext_resource type="Script" uid="uid://iw2ktub182gc" path="res://scripts/jobs/JobSystem.cs" id="8_jobsys"]
+[ext_resource type="Script" uid="uid://dpa0in6xeavjq" path="res://scripts/ui/ToolModeManager.cs" id="9_toolmode"]
+[ext_resource type="Script" uid="uid://c2ga6q3paq732" path="res://scripts/ui/JobOverlay.cs" id="10_joboverlay"]
+[ext_resource type="Script" uid="uid://b4b7inxnrsphj" path="res://scripts/ui/PawnInfoPanel.cs" id="11_infopanel"]
+[ext_resource type="Script" uid="uid://d2pons28x71rf" path="res://scripts/ui/ToolModeBar.cs" id="12_toolbar"]
+[ext_resource type="Script" uid="uid://8oy7xsnrjjwt" path="res://scripts/building/BlueprintSystem.cs" id="13_bpsys"]
+[ext_resource type="Script" uid="uid://cf0xtv8ger1e" path="res://scripts/building/BlueprintOverlay.cs" id="14_bpoverlay"]
+[ext_resource type="Script" uid="uid://bwqigr13rdaqg" path="res://scripts/zone/ZoneSystem.cs" id="15_zonesys"]
+[ext_resource type="Script" uid="uid://bntgxfd4b0e17" path="res://scripts/zone/ZoneOverlay.cs" id="16_zoneoverlay"]
+[ext_resource type="Script" uid="uid://bevn26cdiijop" path="res://scripts/ui/BuildSubMenu.cs" id="17_buildmenu"]
+[ext_resource type="Script" uid="uid://c1sogdvtkywo1" path="res://scripts/ui/ZoneSubMenu.cs" id="18_zonemenu"]
+[ext_resource type="Script" uid="uid://cmdy61n8bo0bd" path="res://scripts/farming/CropManager.cs" id="19_cropmgr"]
 
-[node name="Main" type="Node3D"]
+[node name="Main" type="Node3D" unique_id=1919884210]
 
-[node name="TimeManager" type="Node" parent="."]
+[node name="TimeManager" type="Node" parent="." unique_id=1406431404]
 script = ExtResource("3_time")
 
-[node name="WorldManager" type="Node3D" parent="."]
+[node name="WorldManager" type="Node3D" parent="." unique_id=198313969]
 script = ExtResource("1_world")
+Seed = null
+MaxCachedChunksInMemory = null
+PersistModifiedChunksToDisk = null
+BiomeScale = null
+BiomeOctaves = null
+ContinentScale = null
 
-[node name="JobSystem" type="Node" parent="."]
+[node name="JobSystem" type="Node" parent="." unique_id=1967343563]
 script = ExtResource("8_jobsys")
 
-[node name="BlueprintSystem" type="Node" parent="."]
+[node name="BlueprintSystem" type="Node" parent="." unique_id=1885116895]
 script = ExtResource("13_bpsys")
 
-[node name="ZoneSystem" type="Node" parent="."]
+[node name="ZoneSystem" type="Node" parent="." unique_id=1664638144]
 script = ExtResource("15_zonesys")
 
-[node name="GameCamera" type="Camera3D" parent="."]
+[node name="CropManager" type="Node" parent="." unique_id=1173605976]
+script = ExtResource("19_cropmgr")
+
+[node name="GameCamera" type="Camera3D" parent="." unique_id=886642279]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)
 projection = 1
 size = 3000.0
 far = 2000.0
 script = ExtResource("2_camera")
+MoveSpeed = null
+ZoomSpeed = null
+MinOrthoSize = null
+MaxOrthoSize = null
+SprintMultiplier = null
+CameraHeight = null
+InitialOrthoSize = null
 
-[node name="PawnManager" type="Node3D" parent="."]
+[node name="PawnManager" type="Node3D" parent="." unique_id=1435440092]
 script = ExtResource("4_pawnmgr")
 PawnScene = ExtResource("6_pawnscene")
 
-[node name="EntityContainer" type="Node3D" parent="."]
+[node name="EntityContainer" type="Node3D" parent="." unique_id=1344124148]
 
-[node name="ZoneOverlay" type="MeshInstance3D" parent="."]
+[node name="ZoneOverlay" type="MeshInstance3D" parent="." unique_id=910245452]
 script = ExtResource("16_zoneoverlay")
 
-[node name="JobOverlay" type="MeshInstance3D" parent="."]
+[node name="JobOverlay" type="MeshInstance3D" parent="." unique_id=468099319]
 script = ExtResource("10_joboverlay")
 
-[node name="BlueprintOverlay" type="MeshInstance3D" parent="."]
+[node name="BlueprintOverlay" type="MeshInstance3D" parent="." unique_id=465881266]
 script = ExtResource("14_bpoverlay")
 
-[node name="UILayer" type="CanvasLayer" parent="."]
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=617075823]
 
-[node name="ToolModeManager" type="Control" parent="UILayer"]
-layout_mode = 1
+[node name="ToolModeManager" type="Control" parent="UILayer" unique_id=1976271369]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -70,8 +87,8 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("9_toolmode")
 
-[node name="SelectionManager" type="Control" parent="UILayer"]
-layout_mode = 1
+[node name="SelectionManager" type="Control" parent="UILayer" unique_id=206388829]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -80,8 +97,7 @@ grow_vertical = 2
 mouse_filter = 1
 script = ExtResource("7_selection")
 
-[node name="ToolModeBar" type="HBoxContainer" parent="UILayer"]
-layout_mode = 1
+[node name="ToolModeBar" type="HBoxContainer" parent="UILayer" unique_id=548142977]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
@@ -93,9 +109,7 @@ grow_horizontal = 2
 mouse_filter = 2
 script = ExtResource("12_toolbar")
 
-
-[node name="BuildSubMenu" type="PanelContainer" parent="UILayer"]
-layout_mode = 0
+[node name="BuildSubMenu" type="PanelContainer" parent="UILayer" unique_id=282717081]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -106,11 +120,9 @@ offset_top = -120.0
 offset_right = 250.0
 grow_horizontal = 2
 grow_vertical = 0
-mouse_filter = 0
 script = ExtResource("17_buildmenu")
 
-[node name="ZoneSubMenu" type="PanelContainer" parent="UILayer"]
-layout_mode = 0
+[node name="ZoneSubMenu" type="PanelContainer" parent="UILayer" unique_id=791029399]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -121,24 +133,21 @@ offset_top = -60.0
 offset_right = 200.0
 grow_horizontal = 2
 grow_vertical = 0
-mouse_filter = 0
 script = ExtResource("18_zonemenu")
 
-[node name="PawnInfoPanel" type="PanelContainer" parent="UILayer"]
-layout_mode = 0
+[node name="PawnInfoPanel" type="PanelContainer" parent="UILayer" unique_id=1520069536]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 10.0
 offset_top = -260.0
 offset_right = 340.0
 offset_bottom = -10.0
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
 grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("11_infopanel")
 
-[node name="DebugHud" type="Label" parent="UILayer"]
-layout_mode = 0
+[node name="DebugHud" type="Label" parent="UILayer" unique_id=1481170795]
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 500.0
