@@ -35,6 +35,7 @@ public class PawnAI
         RegisterAction(new Actions.WanderAction());
         RegisterAction(new Actions.SatisfyNeedAction());
         RegisterAction(new Actions.DoJobAction());
+        RegisterAction(new Actions.HaulAction());
 
         // Subscribe to tick
         EventBus.Tick += OnTick;

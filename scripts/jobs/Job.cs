@@ -41,6 +41,10 @@ public class Job
     // --- Blueprint link ---
     public int BlueprintId { get; set; } = -1;         // Linked blueprint (-1 = none)
 
+    // --- Haul link ---
+    public int HaulItemId { get; set; } = -1;           // Linked ItemStack ID (-1 = none)
+    public Vector2I HaulDestCoord { get; set; }          // Destination stockpile coordinate
+
     public Job(string jobType, string displayName)
     {
         Id = _nextId++;

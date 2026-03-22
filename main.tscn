@@ -19,6 +19,7 @@
 [ext_resource type="Script" uid="uid://bevn26cdiijop" path="res://scripts/ui/BuildSubMenu.cs" id="17_buildmenu"]
 [ext_resource type="Script" uid="uid://c1sogdvtkywo1" path="res://scripts/ui/ZoneSubMenu.cs" id="18_zonemenu"]
 [ext_resource type="Script" uid="uid://cmdy61n8bo0bd" path="res://scripts/farming/CropManager.cs" id="19_cropmgr"]
+[ext_resource type="Script" path="res://scripts/items/ItemManager.cs" id="20_itemmgr"]
 
 [node name="Main" type="Node3D" unique_id=1919884210]
 
@@ -39,6 +40,9 @@ script = ExtResource("15_zonesys")
 
 [node name="CropManager" type="Node" parent="." unique_id=1173605976]
 script = ExtResource("19_cropmgr")
+
+[node name="ItemManager" type="Node" parent="."]
+script = ExtResource("20_itemmgr")
 
 [node name="GameCamera" type="Camera3D" parent="." unique_id=886642279]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)

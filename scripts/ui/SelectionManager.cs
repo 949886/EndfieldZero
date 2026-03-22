@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using EndfieldZero.Core;
 using EndfieldZero.Farming;
+using EndfieldZero.Items;
 using EndfieldZero.Managers;
 using EndfieldZero.Pathfinding;
 using Godot;
@@ -348,6 +350,14 @@ public partial class SelectionManager : Control
     {
         Vector3 worldPos = ScreenToWorldXZ(screenPos, camera);
         var blockCoord = PathfindingService.WorldToBlock(worldPos);
+
+        // Check items on ground
+        if (ItemManager.Instance != null)
+        {
+            var items = ItemManager.Instance.GetItemsAt(blockCoord);
+            var firstItem = items.FirstOrDefault();
+            if (firstItem != null) return firstItem;
+        }
 
         // Check crops
         var crop = CropManager.Instance?.GetCropAt(blockCoord);

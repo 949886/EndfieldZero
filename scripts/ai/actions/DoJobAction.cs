@@ -197,23 +197,41 @@ public class DoJobAction : AIAction
         switch (_claimedJob.JobType)
         {
             case "Mine":
-                // Remove the block from the world
+            {
+                var coord = _claimedJob.TargetBlockCoord;
+
+                // Determine item drop from block type
                 if (WorldManager.Instance != null)
                 {
-                    var coord = _claimedJob.TargetBlockCoord;
+                    var block = WorldManager.Instance.GetBlock(coord.X, coord.Y);
+                    var dropId = Items.ItemRegistry.BlockDropItemId(block.TypeId);
+                    if (dropId != null && Items.ItemManager.Instance != null)
+                    {
+                        int dropCount = block.TypeId switch
+                        {
+                            World.BlockRegistry.TreeId or
+                            World.BlockRegistry.ConiferTreeId or
+                            World.BlockRegistry.BirchTreeId or
+                            World.BlockRegistry.JungleTreeId or
+                            World.BlockRegistry.AcaciaTreeId => 3,
+                            World.BlockRegistry.OreDiamondId => 1,
+                            _ => 2,
+                        };
+                        Items.ItemManager.Instance.SpawnItem(coord, dropId, dropCount);
+                    }
+
                     WorldManager.Instance.SetBlock(coord.X, coord.Y, Block.Air);
                 }
                 break;
+            }
 
             case "Construct":
-                // Complete via BlueprintSystem (places the correct block)
                 if (_claimedJob.BlueprintId >= 0)
                 {
                     Building.BlueprintSystem.Instance?.CompleteBlueprint(_claimedJob.BlueprintId);
                 }
                 else
                 {
-                    // Legacy fallback: place stone wall
                     if (WorldManager.Instance != null)
                     {
                         var coord = _claimedJob.TargetBlockCoord;
@@ -224,7 +242,6 @@ public class DoJobAction : AIAction
                 break;
 
             case "Grow":
-                // Plant a random crop via CropManager
                 if (Farming.CropManager.Instance != null)
                 {
                     var coord = _claimedJob.TargetBlockCoord;
@@ -234,17 +251,25 @@ public class DoJobAction : AIAction
                 break;
 
             case "Harvest":
-                // Remove the crop via CropManager
-                if (Farming.CropManager.Instance != null)
+            {
+                var coord = _claimedJob.TargetBlockCoord;
+
+                // Drop crop items
+                if (Farming.CropManager.Instance != null && Items.ItemManager.Instance != null)
                 {
-                    var coord = _claimedJob.TargetBlockCoord;
+                    var crop = Farming.CropManager.Instance.GetCropAt(coord);
+                    if (crop != null)
+                    {
+                        var itemId = Items.ItemRegistry.CropDropItemId(crop.Def.Id);
+                        if (itemId != null)
+                        {
+                            Items.ItemManager.Instance.SpawnItem(coord, itemId, crop.Def.HarvestYield);
+                        }
+                    }
                     Farming.CropManager.Instance.RemoveCrop(coord);
                 }
                 break;
-
-            case "Haul":
-                // Future: move item
-                break;
+            }
         }
     }
 }
