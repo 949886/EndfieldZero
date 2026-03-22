@@ -46,7 +46,7 @@ public class DoJobAction : AIAction
     {
         if (context.Pawn.Needs.Hunger < 15f || context.Pawn.Needs.Rest < 10f)
             return false;
-        return context.JobAvailability > 0f;
+        return JobSystem.Instance?.HasAvailableNonHaulJobs(context.Pawn) ?? false;
     }
 
     public override void OnStart(AIContext context)
@@ -55,7 +55,7 @@ public class DoJobAction : AIAction
         _isAtTarget = false;
         _isComplete = false;
 
-        _claimedJob = JobSystem.Instance?.FindBestJob(context.Pawn);
+        _claimedJob = JobSystem.Instance?.FindBestNonHaulJob(context.Pawn);
         if (_claimedJob == null)
         {
             _isComplete = true;

@@ -39,13 +39,10 @@ public class HaulAction : AIAction
 
     public override float[] GetQueryVector(AIContext context)
     {
-        // Lower priority than regular jobs, but still useful
-        float haulWeight = 0f;
-        if (ItemManager.Instance != null)
-        {
-            var groundItems = ItemManager.Instance.GetGroundItems();
-            foreach (var _ in groundItems) { haulWeight = 1f; break; }
-        }
+        float haulWeight = JobSystem.Instance != null &&
+            JobSystem.Instance.AllJobs.Any(j => j.JobType == "Haul" && j.IsAvailable)
+            ? 1f
+            : 0f;
 
         return new float[]
         {
@@ -176,7 +173,8 @@ public class HaulAction : AIAction
         if (_haulJob != null && _haulJob.Status != JobStatus.Completed)
         {
             if (_carriedItem != null && IsInstanceValid(_carriedItem) &&
-                _carriedItem.State == ItemState.BeingCarried)
+                (_carriedItem.State == ItemState.BeingCarried ||
+                 _carriedItem.State == ItemState.Reserved))
             {
                 _carriedItem.State = ItemState.OnGround;
             }
@@ -217,10 +215,10 @@ public class HaulAction : AIAction
             var worldPath = PathfindingService.PathToWorld(path);
             if (worldPath != null && worldPath.Count > 0)
             {
-                pawn.PlayerFollowPath(worldPath);
+                pawn.FollowPath(worldPath);
                 return;
             }
         }
-        pawn.PlayerMoveTo(target);
+        pawn.MoveTo(target);
     }
 }

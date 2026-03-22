@@ -55,6 +55,18 @@ public partial class JobSystem : Node
         return false;
     }
 
+    /// <summary>Whether there are any available non-haul jobs the pawn can do.</summary>
+    public bool HasAvailableNonHaulJobs(Pawn.Pawn pawn)
+    {
+        foreach (var job in _jobs)
+        {
+            if (job.JobType == "Haul") continue;
+            if (job.IsAvailable && CanPawnDoJob(pawn, job))
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Find the best available job for a pawn, considering priority and distance.
     /// Returns null if no suitable job found.
@@ -72,6 +84,33 @@ public partial class JobSystem : Node
             // Score = priority - distance penalty
             float distance = pawn.GlobalPosition.DistanceTo(job.TargetWorldPos);
             // Normalize by half a chunk so job scoring stays stable across block scales.
+            float distancePenalty = distance / (Settings.ChunkPixelSize * 0.5f);
+            float skillBonus = pawn.Data.GetStat(job.RequiredSkill) * 0.5f;
+            float score = job.EffectivePriority + skillBonus - distancePenalty;
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = job;
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>Find the best available non-haul job for a pawn.</summary>
+    public Job FindBestNonHaulJob(Pawn.Pawn pawn)
+    {
+        Job best = null;
+        float bestScore = float.MinValue;
+
+        foreach (var job in _jobs)
+        {
+            if (job.JobType == "Haul") continue;
+            if (!job.IsAvailable || !CanPawnDoJob(pawn, job))
+                continue;
+
+            float distance = pawn.GlobalPosition.DistanceTo(job.TargetWorldPos);
             float distancePenalty = distance / (Settings.ChunkPixelSize * 0.5f);
             float skillBonus = pawn.Data.GetStat(job.RequiredSkill) * 0.5f;
             float score = job.EffectivePriority + skillBonus - distancePenalty;
