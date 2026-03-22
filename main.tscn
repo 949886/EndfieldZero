@@ -27,12 +27,6 @@ script = ExtResource("3_time")
 
 [node name="WorldManager" type="Node3D" parent="." unique_id=198313969]
 script = ExtResource("1_world")
-Seed = null
-MaxCachedChunksInMemory = null
-PersistModifiedChunksToDisk = null
-BiomeScale = null
-BiomeOctaves = null
-ContinentScale = null
 
 [node name="JobSystem" type="Node" parent="." unique_id=1967343563]
 script = ExtResource("8_jobsys")
@@ -52,13 +46,6 @@ projection = 1
 size = 3000.0
 far = 2000.0
 script = ExtResource("2_camera")
-MoveSpeed = null
-ZoomSpeed = null
-MinOrthoSize = null
-MaxOrthoSize = null
-SprintMultiplier = null
-CameraHeight = null
-InitialOrthoSize = null
 
 [node name="PawnManager" type="Node3D" parent="." unique_id=1435440092]
 script = ExtResource("4_pawnmgr")

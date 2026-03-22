@@ -11,6 +11,8 @@ namespace EndfieldZero.World;
 /// </summary>
 public partial class GameCamera : Camera3D
 {
+    private const float MinCameraSizeEpsilon = 0.001f;
+
     /// <summary>Camera movement speed in units per second.</summary>
     [Export] public float MoveSpeed { get; set; } = 25f * Settings.BlockPixelSize;
 
@@ -37,9 +39,11 @@ public partial class GameCamera : Camera3D
 
     public override void _Ready()
     {
+        SanitizeSettings();
+
         // Set up orthographic top-down view
         Projection = ProjectionType.Orthogonal;
-        _currentOrthoSize = InitialOrthoSize;
+        _currentOrthoSize = Mathf.Clamp(InitialOrthoSize, MinOrthoSize, MaxOrthoSize);
         Size = _currentOrthoSize;
 
         // Look straight down: rotate -90° around X axis
@@ -51,6 +55,17 @@ public partial class GameCamera : Camera3D
         // Near/far planes
         Near = 0.1f;
         Far = CameraHeight * 2f;
+    }
+
+    private void SanitizeSettings()
+    {
+        MoveSpeed = Mathf.Max(MoveSpeed, 0f);
+        ZoomSpeed = Mathf.Clamp(ZoomSpeed, 0f, 0.95f);
+        SprintMultiplier = Mathf.Max(SprintMultiplier, 1f);
+        CameraHeight = Mathf.Max(CameraHeight, MinCameraSizeEpsilon);
+        MinOrthoSize = Mathf.Max(MinOrthoSize, MinCameraSizeEpsilon);
+        MaxOrthoSize = Mathf.Max(MaxOrthoSize, MinOrthoSize);
+        InitialOrthoSize = Mathf.Clamp(InitialOrthoSize, MinOrthoSize, MaxOrthoSize);
     }
 
     public override void _Process(double delta)
@@ -131,6 +146,9 @@ public partial class GameCamera : Camera3D
             // In orthographic, pixels map linearly to world units
             var viewport = GetViewport();
             Vector2 viewportSize = viewport.GetVisibleRect().Size;
+            if (viewportSize.Y <= 0f)
+                return;
+
             float pixelsToWorld = _currentOrthoSize * 2f / viewportSize.Y;
 
             float dx = -mouseMotion.Relative.X * pixelsToWorld;
