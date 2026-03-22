@@ -16,6 +16,9 @@ public partial class BuildingInstance : Node3D, ISelectable
     public BuildingDef Def { get; private set; }
     public Vector2I BlockCoord { get; private set; }
     public int BuildRotation { get; private set; }
+    public Vector2I EffectiveSize => BuildRotation % 2 == 1
+        ? new Vector2I(Def.Size.Y, Def.Size.X)
+        : Def.Size;
 
     // --- Selection ---
     public bool IsSelected { get; set; }
@@ -49,15 +52,21 @@ public partial class BuildingInstance : Node3D, ISelectable
         BuildRotation = rotation;
 
         float px = Settings.BlockPixelSize;
-        var effSize = BuildRotation % 2 == 1
-            ? new Vector2I(def.Size.Y, def.Size.X)
-            : def.Size;
+        var effSize = EffectiveSize;
 
         Position = new Vector3(
             (blockCoord.X + effSize.X * 0.5f) * px,
             0.02f,
             (blockCoord.Y + effSize.Y * 0.5f) * px
         );
+    }
+
+    public System.Collections.Generic.IEnumerable<Vector2I> OccupiedCells()
+    {
+        var size = EffectiveSize;
+        for (int dz = 0; dz < size.Y; dz++)
+            for (int dx = 0; dx < size.X; dx++)
+                yield return new Vector2I(BlockCoord.X + dx, BlockCoord.Y + dz);
     }
 
     public override void _Ready()

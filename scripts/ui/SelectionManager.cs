@@ -375,12 +375,7 @@ public partial class SelectionManager : Control
 
     private static System.Collections.Generic.IEnumerable<Vector2I> BuildingOccupiedCells(Building.BuildingInstance b)
     {
-        var effSize = b.BuildRotation % 2 == 1
-            ? new Vector2I(b.Def.Size.Y, b.Def.Size.X)
-            : b.Def.Size;
-        for (int dz = 0; dz < effSize.Y; dz++)
-            for (int dx = 0; dx < effSize.X; dx++)
-                yield return new Vector2I(b.BlockCoord.X + dx, b.BlockCoord.Y + dz);
+        return b.OccupiedCells();
     }
 
     /// <summary>Convert screen position to world XZ plane (Y=0).</summary>

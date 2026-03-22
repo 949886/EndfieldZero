@@ -14,7 +14,7 @@ namespace EndfieldZero.Building;
 public partial class BlueprintSystem : Node
 {
     private readonly List<Blueprint> _blueprints = new();
-    private readonly HashSet<Vector2I> _occupiedCells = new();
+    private readonly HashSet<Vector2I> _blueprintOccupiedCells = new();
 
     public static BlueprintSystem Instance { get; private set; }
 
@@ -42,7 +42,7 @@ public partial class BlueprintSystem : Node
 
         // Occupy cells
         foreach (var cell in bp.OccupiedCells())
-            _occupiedCells.Add(cell);
+            _blueprintOccupiedCells.Add(cell);
 
         _blueprints.Add(bp);
 
@@ -61,7 +61,11 @@ public partial class BlueprintSystem : Node
         foreach (var cell in bp.OccupiedCells())
         {
             // Check overlap with other blueprints
-            if (_occupiedCells.Contains(cell))
+            if (_blueprintOccupiedCells.Contains(cell))
+                return false;
+
+            // Check overlap with finished furniture/production buildings
+            if (IsFinishedBuildingOccupying(cell))
                 return false;
 
             // Check world block
@@ -104,7 +108,7 @@ public partial class BlueprintSystem : Node
 
         // Free cells
         foreach (var cell in bp.OccupiedCells())
-            _occupiedCells.Remove(cell);
+            _blueprintOccupiedCells.Remove(cell);
 
         // Cancel linked job
         if (bp.LinkedJobId >= 0)
@@ -155,7 +159,7 @@ public partial class BlueprintSystem : Node
 
         // Free cells
         foreach (var cell in bp.OccupiedCells())
-            _occupiedCells.Remove(cell);
+            _blueprintOccupiedCells.Remove(cell);
 
         _blueprints.Remove(bp);
         GD.Print($"[Blueprint] Completed {bp.Def.DisplayName} (ID:{bp.Id})");
@@ -177,7 +181,28 @@ public partial class BlueprintSystem : Node
     public Blueprint GetBlueprint(int id) => _blueprints.FirstOrDefault(b => b.Id == id);
 
     /// <summary>Check if a cell is occupied by any blueprint.</summary>
-    public bool IsCellOccupied(Vector2I cell) => _occupiedCells.Contains(cell);
+    public bool IsCellOccupied(Vector2I cell)
+        => _blueprintOccupiedCells.Contains(cell) || IsFinishedBuildingOccupying(cell);
+
+    private bool IsFinishedBuildingOccupying(Vector2I cell)
+    {
+        var container = GetTree().Root.GetChild(0)?.GetNodeOrNull<Node3D>("EntityContainer");
+        if (container == null) return false;
+
+        foreach (var child in container.GetChildren())
+        {
+            if (child is not BuildingInstance building)
+                continue;
+
+            foreach (var occupiedCell in building.OccupiedCells())
+            {
+                if (occupiedCell == cell)
+                    return true;
+            }
+        }
+
+        return false;
+    }
 
     // --- Job creation ---
 
