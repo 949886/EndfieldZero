@@ -37,7 +37,7 @@ public partial class WorldManager : Node3D
     /// <summary>Last known camera chunk position, to avoid redundant recalculation.</summary>
     private Vector2I _lastCameraChunkCoord = new(int.MinValue, int.MinValue);
 
-    [Export] public int Seed { get; set; } = Settings.DefaultSeed;
+    [Export] public int Seed { get; set; }　= 42;
     [Export(PropertyHint.Range, "16,2048,16")] public int MaxCachedChunksInMemory { get; set; } = 256;
     [Export] public bool PersistModifiedChunksToDisk { get; set; } = true;
 

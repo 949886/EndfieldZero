@@ -14,31 +14,37 @@ public partial class GameCamera : Camera3D
     private const float MinCameraSizeEpsilon = 0.001f;
 
     /// <summary>Camera movement speed in units per second.</summary>
-    [Export] public float MoveSpeed { get; set; } = 25f * Settings.BlockPixelSize;
+    [Export] public float MoveSpeed { get; set; } = 25f;
 
     /// <summary>Zoom speed factor.</summary>
     [Export] public float ZoomSpeed { get; set; } = 0.1f;
 
     /// <summary>Minimum orthographic size (zoomed in).</summary>
-    [Export] public float MinOrthoSize { get; set; } = 1.5f * Settings.BlockPixelSize;
+    [Export] public float MinOrthoSize { get; set; } = 1.5f;
 
     /// <summary>Maximum orthographic size (zoomed out).</summary>
-    [Export] public float MaxOrthoSize { get; set; } = 625f * Settings.BlockPixelSize;
+    [Export] public float MaxOrthoSize { get; set; } = 625f;
 
     /// <summary>Camera move speed boost when holding Shift.</summary>
     [Export] public float SprintMultiplier { get; set; } = 2.5f;
 
     /// <summary>Camera height above the XZ plane.</summary>
-    [Export] public float CameraHeight { get; set; } = 32f * Settings.BlockPixelSize;
+    [Export] public float CameraHeight { get; set; } = 32f;
 
     /// <summary>Initial orthographic size.</summary>
-    [Export] public float InitialOrthoSize { get; set; } = 93.75f * Settings.BlockPixelSize;
+    [Export] public float InitialOrthoSize { get; set; } = 93.75f;
 
     private bool _isDragging;
     private float _currentOrthoSize;
 
     public override void _Ready()
-    {
+    { 
+        MoveSpeed *= Settings.BlockPixelSize;
+        MinOrthoSize *= Settings.BlockPixelSize;
+        MaxOrthoSize *= Settings.BlockPixelSize;
+        CameraHeight *= Settings.BlockPixelSize;
+        InitialOrthoSize *= Settings.BlockPixelSize;
+        
         SanitizeSettings();
 
         // Set up orthographic top-down view

@@ -15,7 +15,7 @@ namespace EndfieldZero.Pawn;
 public partial class Pawn : CharacterBody3D
 {
     [Export] public PawnData Data { get; set; }
-    [Export] public float BaseMoveSpeed { get; set; } = Settings.PawnBaseMoveSpeed;
+    [Export] public float BaseMoveSpeed { get; set; } = 3.125f;
 
     // --- Runtime state ---
     public Needs Needs { get; private set; }
