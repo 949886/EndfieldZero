@@ -29,4 +29,8 @@ public partial class GameSettingsResource : Resource
     [Export] public int AIEvalInterval { get; set; } = 30;
     [Export] public float PawnWanderRadiusBlocks { get; set; } = 16f;
     [Export] public float PawnBaseMoveSpeedBlocksPerSecond { get; set; } = 3.125f;
+
+    // --- Environment ---
+    [Export] public int DaysPerSeason { get; set; } = 15;
+    [Export] public int WeatherChangeIntervalHours { get; set; } = 6;
 }

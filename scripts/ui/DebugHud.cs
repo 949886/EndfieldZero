@@ -1,3 +1,4 @@
+using EndfieldZero.Environment;
 using EndfieldZero.Jobs;
 using EndfieldZero.Managers;
 using Godot;
@@ -5,7 +6,7 @@ using Godot;
 namespace EndfieldZero.UI;
 
 /// <summary>
-/// Debug overlay: FPS, game time, camera, colonists, selection, AI, jobs, tool mode.
+/// Debug overlay: FPS, game time, camera, colonists, selection, AI, jobs, tool mode, environment.
 /// </summary>
 public partial class DebugHud : Label
 {
@@ -65,8 +66,15 @@ public partial class DebugHud : Label
         // Tool mode
         string toolStr = ToolModeManager.Instance?.CurrentMode.ToString() ?? "Select";
 
+        // Environment
+        var env = EnvironmentManager.Instance;
+        string envStr = env != null
+            ? $"{env.CurrentSeason} | {env.CurrentWeather} | {env.AmbientTemperature:F0}°C"
+            : "N/A";
+
         Text = $"FPS: {_currentFps:F0} | {timeStr} | Tool: {toolStr}\n" +
                $"Camera: {cameraPos} | Colonists: {pawnCount}\n" +
-               $"Selected: {selCount}{aiInfo} | Jobs: {availJobs}待/{reservedJobs}领/{activeJobs}做";
+               $"Selected: {selCount}{aiInfo} | Jobs: {availJobs}待/{reservedJobs}领/{activeJobs}做\n" +
+               $"Env: {envStr}";
     }
 }

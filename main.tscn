@@ -20,11 +20,16 @@
 [ext_resource type="Script" uid="uid://c1sogdvtkywo1" path="res://scripts/ui/ZoneSubMenu.cs" id="18_zonemenu"]
 [ext_resource type="Script" uid="uid://cmdy61n8bo0bd" path="res://scripts/farming/CropManager.cs" id="19_cropmgr"]
 [ext_resource type="Script" path="res://scripts/items/ItemManager.cs" id="20_itemmgr"]
+[ext_resource type="Script" path="res://scripts/environment/EnvironmentManager.cs" id="21_envmgr"]
+[ext_resource type="Script" path="res://scripts/environment/DayNightVisuals.cs" id="22_daynight"]
 
 [node name="Main" type="Node3D" unique_id=1919884210]
 
 [node name="TimeManager" type="Node" parent="." unique_id=1406431404]
 script = ExtResource("3_time")
+
+[node name="EnvironmentManager" type="Node" parent="."]
+script = ExtResource("21_envmgr")
 
 [node name="WorldManager" type="Node3D" parent="." unique_id=198313969]
 script = ExtResource("1_world")
@@ -56,6 +61,18 @@ script = ExtResource("4_pawnmgr")
 PawnScene = ExtResource("6_pawnscene")
 
 [node name="EntityContainer" type="Node3D" parent="." unique_id=1344124148]
+
+[node name="DayNightOverlay" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Tint" type="ColorRect" parent="DayNightOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("22_daynight")
 
 [node name="ZoneOverlay" type="MeshInstance3D" parent="." unique_id=910245452]
 script = ExtResource("16_zoneoverlay")

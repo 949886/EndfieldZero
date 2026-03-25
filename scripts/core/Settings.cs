@@ -49,4 +49,8 @@ public static class Settings
     public static int AIEvalInterval => Resource.AIEvalInterval;
     public static float PawnWanderRadius => Resource.PawnWanderRadiusBlocks * BlockPixelSize;
     public static float PawnBaseMoveSpeed => Resource.PawnBaseMoveSpeedBlocksPerSecond * BlockPixelSize;
+
+    // --- Environment ---
+    public static int DaysPerSeason => Resource.DaysPerSeason;
+    public static int WeatherChangeIntervalHours => Resource.WeatherChangeIntervalHours;
 }

@@ -1,4 +1,5 @@
 using System;
+using EndfieldZero.Environment;
 
 namespace EndfieldZero.Core;
 
@@ -27,6 +28,10 @@ public static class EventBus
     public static event Action<int> HourChanged;       // game hour (0-23)
     public static event Action<int> DayChanged;        // game day
 
+    // --- Environment ---
+    public static event Action<Season> SeasonChanged;
+    public static event Action<WeatherType> WeatherChanged;
+
     // --- Fire methods ---
     public static void FirePawnSpawned(int id) => PawnSpawned?.Invoke(id);
     public static void FirePawnDied(int id) => PawnDied?.Invoke(id);
@@ -39,4 +44,6 @@ public static class EventBus
     public static void FireTick(long tick) => Tick?.Invoke(tick);
     public static void FireHourChanged(int hour) => HourChanged?.Invoke(hour);
     public static void FireDayChanged(int day) => DayChanged?.Invoke(day);
+    public static void FireSeasonChanged(Season s) => SeasonChanged?.Invoke(s);
+    public static void FireWeatherChanged(WeatherType w) => WeatherChanged?.Invoke(w);
 }
