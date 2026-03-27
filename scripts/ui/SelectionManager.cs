@@ -55,6 +55,8 @@ public partial class SelectionManager : Control
         // Skip selection handling when in a tool mode (Mine/Construct/Grow/Cancel)
         if (ToolModeManager.Instance != null && ToolModeManager.Instance.CurrentMode != ToolMode.Select)
         {
+            CancelBoxSelection();
+
             // Still allow right-click movement for selected pawns in tool modes
             if (@event is InputEventMouseButton tmb && tmb.ButtonIndex == MouseButton.Right && tmb.Pressed)
                 HandleRightClick(tmb.Position);
@@ -122,6 +124,15 @@ public partial class SelectionManager : Control
         {
             HandleRightClick(mb.Position);
         }
+    }
+
+    private void CancelBoxSelection()
+    {
+        if (!_isBoxSelecting)
+            return;
+
+        _isBoxSelecting = false;
+        QueueRedraw();
     }
 
     private void HandleKey(InputEventKey key)

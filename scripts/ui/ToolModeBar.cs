@@ -41,6 +41,7 @@ public partial class ToolModeBar : HBoxContainer
     public override void _Ready()
     {
         Alignment = AlignmentMode.Center;
+        MouseFilter = MouseFilterEnum.Pass;
         AddThemeConstantOverride("separation", 4);
 
         _buttons = new PanelContainer[Modes.Length];
@@ -48,7 +49,12 @@ public partial class ToolModeBar : HBoxContainer
 
         for (int i = 0; i < Modes.Length; i++)
         {
-            var panel = new PanelContainer();
+            var modeInfo = Modes[i];
+            var panel = new PanelContainer
+            {
+                MouseFilter = MouseFilterEnum.Stop,
+                MouseDefaultCursorShape = CursorShape.PointingHand,
+            };
             var style = new StyleBoxFlat
             {
                 BgColor = new Color(0.1f, 0.1f, 0.15f, 0.7f),
@@ -59,11 +65,26 @@ public partial class ToolModeBar : HBoxContainer
             };
             panel.AddThemeStyleboxOverride("panel", style);
 
-            var label = new Label { Text = $"{Modes[i].Key}:{Modes[i].Label}" };
+            var label = new Label
+            {
+                Text = $"{modeInfo.Key}:{modeInfo.Label}",
+            };
             label.AddThemeFontSizeOverride("font_size", 13);
             label.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.75f));
-            panel.AddChild(label);
+            label.MouseFilter = MouseFilterEnum.Ignore;
 
+            panel.GuiInput += (@event) =>
+            {
+                if (@event is InputEventMouseButton mb &&
+                    mb.ButtonIndex == MouseButton.Left &&
+                    mb.Pressed)
+                {
+                    ToolModeManager.Instance?.SetMode(modeInfo.Mode);
+                    AcceptEvent();
+                }
+            };
+
+            panel.AddChild(label);
             AddChild(panel);
             _buttons[i] = panel;
             _labels[i] = label;

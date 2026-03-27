@@ -200,6 +200,21 @@ public partial class ToolModeManager : Control
         }
     }
 
+    public void SetMode(ToolMode mode)
+    {
+        if (CurrentMode == mode)
+            return;
+
+        CurrentMode = mode;
+        MouseFilter = CurrentMode == ToolMode.Select
+            ? MouseFilterEnum.Ignore
+            : MouseFilterEnum.Pass;
+        _isDragging = false;
+        _constructPaintActive = false;
+        _lastConstructPaintCell = new Vector2I(int.MinValue, int.MinValue);
+        QueueRedraw();
+    }
+
     public override void _Draw()
     {
         if (!_isDragging || CurrentMode == ToolMode.Select) return;
