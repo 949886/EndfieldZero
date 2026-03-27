@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CropDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/farming/CropDef.cs" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/Sprout Lands/Objects/Farming Plants.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_stage_0"]
+atlas = ExtResource("2")
+region = Rect2(0, 112, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_stage_1"]
+atlas = ExtResource("2")
+region = Rect2(16, 112, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_stage_2"]
+atlas = ExtResource("2")
+region = Rect2(32, 112, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_stage_3"]
+atlas = ExtResource("2")
+region = Rect2(48, 112, 16, 16)
+
+[resource]
+script = ExtResource("1")
+Id = "sunflower"
+DisplayName = "向日葵"
+TicksPerStage = 600
+MinGrowingSkill = 1.0
+HarvestYield = 3
+XpPerTick = 0.3
+StageTiles = Array[AtlasTexture]([SubResource("AtlasTexture_stage_0"), SubResource("AtlasTexture_stage_1"), SubResource("AtlasTexture_stage_2"), SubResource("AtlasTexture_stage_3")])

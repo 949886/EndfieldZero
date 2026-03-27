@@ -39,7 +39,6 @@ public partial class CropInstance : Node3D, ISelectable
 
     // --- Rendering ---
     private Sprite3D _sprite;
-    private Texture2D _spriteSheet;
     private SelectionCircleNode _selectionCircle;
 
     private bool _harvestJobCreated;
@@ -60,14 +59,9 @@ public partial class CropInstance : Node3D, ISelectable
 
     public override void _Ready()
     {
-        // Load sprite sheet
-        _spriteSheet = GD.Load<Texture2D>("res://sprites/Sprout Lands/Objects/Farming Plants.png");
-
         // Create Sprite3D
         _sprite = new Sprite3D
         {
-            Texture = _spriteSheet,
-            RegionEnabled = true,
             PixelSize = 0.06f,
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
             TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
@@ -127,13 +121,8 @@ public partial class CropInstance : Node3D, ISelectable
 
     private void UpdateSprite()
     {
-        if (_sprite == null || _spriteSheet == null) return;
-
-        int stage = Mathf.Min(CurrentStage, Def.GrowthStages - 1);
-        int tileX = Def.SpriteColumn * CropDef.TileSize;
-        int tileY = (Def.SpriteRowStart + stage) * CropDef.TileSize;
-
-        _sprite.RegionRect = new Rect2(tileX, tileY, CropDef.TileSize, CropDef.TileSize);
+        if (_sprite == null) return;
+        _sprite.Texture = Def.GetStageTexture(CurrentStage);
     }
 
     private void CreateHarvestJob()

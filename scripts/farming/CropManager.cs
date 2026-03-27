@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Godot.Collections;
 
 namespace EndfieldZero.Farming;
 
@@ -10,7 +11,9 @@ namespace EndfieldZero.Farming;
 /// </summary>
 public partial class CropManager : Node
 {
-    private readonly Dictionary<Vector2I, CropInstance> _crops = new();
+    private readonly System.Collections.Generic.Dictionary<Vector2I, CropInstance> _crops = new();
+
+    [Export] public Array<CropDef> CropDefinitions { get; set; } = new();
 
     public static CropManager Instance { get; private set; }
 
@@ -20,11 +23,18 @@ public partial class CropManager : Node
     public override void _Ready()
     {
         Instance = this;
+        CropRegistry.Initialize(CropDefinitions);
     }
 
     /// <summary>Plant a crop at the given block coordinate.</summary>
     public CropInstance PlantCrop(CropDef def, Vector2I blockCoord)
     {
+        if (def == null)
+        {
+            GD.PushWarning($"[CropManager] Tried to plant a null crop at {blockCoord}.");
+            return null;
+        }
+
         // Don't double-plant
         if (_crops.ContainsKey(blockCoord))
         {

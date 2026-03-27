@@ -22,6 +22,14 @@
 [ext_resource type="Script" path="res://scripts/items/ItemManager.cs" id="20_itemmgr"]
 [ext_resource type="Script" path="res://scripts/environment/EnvironmentManager.cs" id="21_envmgr"]
 [ext_resource type="Script" path="res://scripts/environment/DayNightVisuals.cs" id="22_daynight"]
+[ext_resource type="Resource" path="res://resources/crops/wheat.tres" id="23_wheat"]
+[ext_resource type="Resource" path="res://resources/crops/carrot.tres" id="24_carrot"]
+[ext_resource type="Resource" path="res://resources/crops/tomato.tres" id="25_tomato"]
+[ext_resource type="Resource" path="res://resources/crops/pumpkin.tres" id="26_pumpkin"]
+[ext_resource type="Resource" path="res://resources/crops/sunflower.tres" id="27_sunflower"]
+[ext_resource type="Resource" path="res://resources/crops/beetroot.tres" id="28_beetroot"]
+[ext_resource type="Resource" path="res://resources/crops/corn.tres" id="29_corn"]
+[ext_resource type="Resource" path="res://resources/crops/blueberry.tres" id="30_blueberry"]
 
 [node name="Main" type="Node3D" unique_id=1919884210]
 
@@ -45,6 +53,7 @@ script = ExtResource("15_zonesys")
 
 [node name="CropManager" type="Node" parent="." unique_id=1173605976]
 script = ExtResource("19_cropmgr")
+CropDefinitions = Array[CropDef]([ExtResource("23_wheat"), ExtResource("24_carrot"), ExtResource("25_tomato"), ExtResource("26_pumpkin"), ExtResource("27_sunflower"), ExtResource("28_beetroot"), ExtResource("29_corn"), ExtResource("30_blueberry")])
 
 [node name="ItemManager" type="Node" parent="."]
 script = ExtResource("20_itemmgr")

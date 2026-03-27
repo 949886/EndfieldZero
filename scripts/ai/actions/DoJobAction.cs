@@ -246,7 +246,8 @@ public class DoJobAction : AIAction
                 {
                     var coord = _claimedJob.TargetBlockCoord;
                     var cropDef = Farming.CropRegistry.Instance.GetRandom();
-                    Farming.CropManager.Instance.PlantCrop(cropDef, coord);
+                    if (cropDef != null)
+                        Farming.CropManager.Instance.PlantCrop(cropDef, coord);
                 }
                 break;
 

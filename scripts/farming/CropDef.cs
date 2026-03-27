@@ -1,63 +1,77 @@
+using Godot;
+using Godot.Collections;
+
 namespace EndfieldZero.Farming;
 
 /// <summary>
-/// Static definition for a crop type.
-/// Maps to specific regions of the Farming Plants.png sprite sheet.
-///
-/// Sprite sheet layout: 16×16px tiles, 8 columns of crops.
-/// Each crop has multiple growth stage sprites arranged vertically.
+/// Crop definition resource.
+/// Growth stages map to explicit atlas textures in the crop sprite sheet.
 /// </summary>
-public class CropDef
+[GlobalClass]
+public partial class CropDef : Resource
 {
-    /// <summary>Unique identifier. e.g. "wheat".</summary>
-    public string Id { get; }
+    [Export] public string Id { get; set; } = "";
+    [Export] public string DisplayName { get; set; } = "";
+    [Export] public int TicksPerStage { get; set; } = 600;
+    [Export] public float MinGrowingSkill { get; set; }
+    [Export] public int HarvestYield { get; set; } = 1;
+    [Export] public float XpPerTick { get; set; } = 0.3f;
+    [Export] public Array<AtlasTexture> StageTiles { get; set; } = new();
 
-    /// <summary>Display name. e.g. "小麦".</summary>
-    public string DisplayName { get; }
-
-    /// <summary>Number of growth stages (corn=5, others=4).</summary>
-    public int GrowthStages { get; }
-
-    /// <summary>Game ticks per growth stage.</summary>
-    public int TicksPerStage { get; }
-
-    /// <summary>Total ticks from planting to maturity.</summary>
+    public int GrowthStages => StageTiles.Count;
     public int TotalGrowthTicks => GrowthStages * TicksPerStage;
-
-    /// <summary>Minimum Growing skill to plant.</summary>
-    public float MinGrowingSkill { get; }
-
-    /// <summary>Base harvest yield (items produced).</summary>
-    public int HarvestYield { get; }
-
-    /// <summary>XP per Grow/Harvest tick.</summary>
-    public float XpPerTick { get; }
-
-    // --- Sprite sheet mapping ---
-
-    /// <summary>Column index in Farming Plants.png (0-based, left to right).</summary>
-    public int SpriteColumn { get; }
-
-    /// <summary>Starting row index for this crop's sprites (0-based, top to bottom).</summary>
-    public int SpriteRowStart { get; }
-
-    /// <summary>Pixel size of each tile in the sprite sheet.</summary>
-    public const int TileSize = 16;
+    
+    public CropDef() {}
 
     public CropDef(
-        string id, string displayName,
-        int growthStages, int ticksPerStage,
-        float minGrowingSkill, int harvestYield, float xpPerTick,
-        int spriteColumn, int spriteRowStart)
+        string id,
+        string displayName,
+        int ticksPerStage,
+        float minGrowingSkill,
+        int harvestYield,
+        float xpPerTick,
+        Texture2D texture,
+        int tileSize,
+        params (int x, int y)[] stageTiles)
     {
         Id = id;
         DisplayName = displayName;
-        GrowthStages = growthStages;
         TicksPerStage = ticksPerStage;
         MinGrowingSkill = minGrowingSkill;
         HarvestYield = harvestYield;
         XpPerTick = xpPerTick;
-        SpriteColumn = spriteColumn;
-        SpriteRowStart = spriteRowStart;
+        StageTiles = BuildAtlasTextures(texture, tileSize, stageTiles);
+    }
+
+
+    public AtlasTexture GetStageTexture(int stage)
+    {
+        if (StageTiles.Count == 0)
+            return null;
+
+        int index = Mathf.Clamp(stage, 0, StageTiles.Count - 1);
+        return StageTiles[index];
+    }
+
+    private static Array<AtlasTexture> BuildAtlasTextures(
+        Texture2D texture,
+        int tileSize,
+        (int x, int y)[] stageTiles)
+    {
+        var textures = new Array<AtlasTexture>();
+
+        if (texture == null || tileSize <= 0 || stageTiles == null)
+            return textures;
+
+        foreach (var (x, y) in stageTiles)
+        {
+            textures.Add(new AtlasTexture
+            {
+                Atlas = texture,
+                Region = new Rect2(x * tileSize, y * tileSize, tileSize, tileSize),
+            });
+        }
+
+        return textures;
     }
 }
