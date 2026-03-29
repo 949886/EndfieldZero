@@ -60,7 +60,7 @@ public class PawnAnimController
 
     private string GetTargetAnimation()
     {
-        Vector2 screenMotion = GameCamera.Instance?.GetScreenMotion(_lastFacing) ?? new Vector2(_lastFacing.X, _lastFacing.Z);
+        Vector2 screenMotion = GetViewRelativeMotion();
 
         // Determine primary direction relative to the camera.
         float absX = Mathf.Abs(screenMotion.X);
@@ -114,6 +114,27 @@ public class PawnAnimController
                 };
             }
         }
+    }
+
+    private Vector2 GetViewRelativeMotion()
+    {
+        Vector3 facing = _lastFacing;
+        facing.Y = 0f;
+        if (facing.LengthSquared() <= 0.0001f)
+            return Vector2.Zero;
+
+        facing = facing.Normalized();
+
+        if (GameCamera.Instance == null)
+            return new Vector2(facing.X, facing.Z);
+
+        // Use the camera's projected screen motion directly so animation facing
+        // stays consistent across yaw rotations in angled 3D mode.
+        Vector2 screenMotion = GameCamera.Instance.GetScreenMotion(facing);
+        if (screenMotion.LengthSquared() <= 0.0001f)
+            return new Vector2(facing.X, facing.Z);
+
+        return screenMotion;
     }
 
     private void PlayAnimation(string animName)

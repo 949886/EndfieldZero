@@ -185,7 +185,7 @@ public partial class GameCamera : Camera3D
         Vector3 sampleOrigin = FocusWorldPosition;
         Vector2 origin = UnprojectPosition(sampleOrigin);
         Vector2 xDelta = UnprojectPosition(sampleOrigin + Vector3.Right) - origin;
-        Vector2 zDelta = UnprojectPosition(sampleOrigin + Vector3.Forward) - origin;
+        Vector2 zDelta = UnprojectPosition(sampleOrigin + Vector3.Back) - origin;
         return xDelta * worldDirection.X + zDelta * worldDirection.Z;
     }
 
@@ -332,7 +332,7 @@ public partial class GameCamera : Camera3D
         Vector3 sampleOrigin = FocusWorldPosition;
         Vector2 origin = UnprojectPosition(sampleOrigin);
         Vector2 xDelta = UnprojectPosition(sampleOrigin + Vector3.Right) - origin;
-        Vector2 zDelta = UnprojectPosition(sampleOrigin + Vector3.Forward) - origin;
+        Vector2 zDelta = UnprojectPosition(sampleOrigin + Vector3.Back) - origin;
 
         float det = xDelta.X * zDelta.Y - xDelta.Y * zDelta.X;
         if (Mathf.Abs(det) < 0.0001f)
