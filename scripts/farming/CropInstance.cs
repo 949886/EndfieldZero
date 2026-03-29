@@ -1,5 +1,6 @@
 using EndfieldZero.Core;
 using EndfieldZero.Jobs;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.Farming;
@@ -50,9 +51,10 @@ public partial class CropInstance : Node3D, ISelectable
         BlockCoord = blockCoord;
 
         float px = Settings.BlockPixelSize;
+        float baseY = WorldManager.Instance?.GetSurfaceTopY(blockCoord.X, blockCoord.Y) ?? 0f;
         Position = new Vector3(
             (blockCoord.X + 0.5f) * px,
-            0.02f,
+            baseY + 0.02f,
             (blockCoord.Y + 0.5f) * px
         );
     }

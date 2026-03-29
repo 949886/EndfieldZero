@@ -6,48 +6,85 @@ using Godot;
 
 namespace EndfieldZero.World;
 
+public readonly struct SurfaceColumnInfo
+{
+    public SurfaceColumnInfo(
+        Vector2I blockCoord,
+        Block block,
+        BlockDef def,
+        int layer,
+        float baseY,
+        float surfaceY)
+    {
+        BlockCoord = blockCoord;
+        Block = block;
+        Def = def;
+        Layer = layer;
+        BaseY = baseY;
+        SurfaceY = surfaceY;
+    }
+
+    public Vector2I BlockCoord { get; }
+    public Block Block { get; }
+    public BlockDef Def { get; }
+    public int Layer { get; }
+    public float BaseY { get; }
+    public float SurfaceY { get; }
+    public bool HasSurface => Def != null && !Block.IsAir;
+    public bool IsOccluder => Def != null && Def.IsOccluder(Settings.BlockPixelSize);
+}
+
+public readonly struct SurfaceHit
+{
+    public SurfaceHit(
+        bool hit,
+        Vector2I blockCoord,
+        Vector3 worldPosition,
+        Vector3 blockCenterWorld,
+        float surfaceY,
+        SurfaceColumnInfo column)
+    {
+        Hit = hit;
+        BlockCoord = blockCoord;
+        WorldPosition = worldPosition;
+        BlockCenterWorld = blockCenterWorld;
+        SurfaceY = surfaceY;
+        Column = column;
+    }
+
+    public bool Hit { get; }
+    public Vector2I BlockCoord { get; }
+    public Vector3 WorldPosition { get; }
+    public Vector3 BlockCenterWorld { get; }
+    public float SurfaceY { get; }
+    public SurfaceColumnInfo Column { get; }
+}
+
 /// <summary>
 /// Manages the chunk lifecycle: loading, unloading, and rendering chunks
 /// around the camera. Chunks are loaded in a spiral pattern from the center
 /// outward, with a maximum of N loads per frame to avoid stuttering.
-/// Uses Node3D — chunks are placed on the XZ plane.
 /// </summary>
 public partial class WorldManager : Node3D
 {
-    /// <summary>Singleton instance.</summary>
+    private const float HitRayStepFactor = 0.2f;
+
     public static WorldManager Instance { get; private set; }
-    /// <summary>Currently loaded chunks keyed by chunk coordinate.</summary>
+
     private readonly Dictionary<Vector2I, Chunk> _loadedChunks = new();
-
-    /// <summary>Node holding chunk renderer children.</summary>
     private readonly Dictionary<Vector2I, ChunkRenderer> _renderers = new();
-
-    /// <summary>Procedural generator.</summary>
-    private WorldGenerator _generator;
-
-    /// <summary>Chunk cache that restores unloaded data and persists modified chunks.</summary>
-    private ChunkCache _chunkCache;
-
-    /// <summary>Queue of chunk coordinates waiting to be loaded.</summary>
     private readonly Queue<Vector2I> _loadQueue = new();
 
-    /// <summary>Reference to the camera for determining load center.</summary>
+    private WorldGenerator _generator;
+    private ChunkCache _chunkCache;
     private Camera3D _camera;
-
-    /// <summary>Last known camera chunk position, to avoid redundant recalculation.</summary>
     private Vector2I _lastCameraChunkCoord = new(int.MinValue, int.MinValue);
 
-    [Export] public int Seed { get; set; }　= 42;
+    [Export] public int Seed { get; set; } = 42;
     [Export(PropertyHint.Range, "16,2048,16")] public int MaxCachedChunksInMemory { get; set; } = 256;
     [Export] public bool PersistModifiedChunksToDisk { get; set; } = true;
-
-    /// <summary>Controls biome size. Higher = larger biomes. Default: 3.0.</summary>
     [Export(PropertyHint.Range, "0.5,20.0,0.5")] public float BiomeScale { get; set; } = 1.0f;
-
-    /// <summary>Fractal octaves for biome noise. Fewer = smoother. Default: 2.</summary>
     [Export(PropertyHint.Range, "1,6,1")] public int BiomeOctaves { get; set; } = 4;
-
-    /// <summary>Continent-level scale. Higher = larger landmasses. Default: 5.0.</summary>
     [Export(PropertyHint.Range, "1.0,30.0,0.5")] public float ContinentScale { get; set; } = 5.0f;
 
     public override void _Ready()
@@ -57,7 +94,6 @@ public partial class WorldManager : Node3D
         _chunkCache = new ChunkCache(Seed, MaxCachedChunksInMemory, PersistModifiedChunksToDisk);
         _camera = GetViewport().GetCamera3D();
 
-        // Initialize pathfinding service
         PathfindingService.Instance = new PathfindingService(this);
     }
 
@@ -75,13 +111,15 @@ public partial class WorldManager : Node3D
         if (_camera == null)
         {
             _camera = GetViewport().GetCamera3D();
-            if (_camera == null) return;
+            if (_camera == null)
+                return;
         }
 
-        // Camera looks down -Y, so its XZ position maps to chunk coordinates
-        Vector2I currentChunkCoord = WorldToChunkCoord(_camera.GlobalPosition);
+        Vector3 loadCenter = _camera is GameCamera gameCamera
+            ? gameCamera.FocusWorldPosition
+            : _camera.GlobalPosition;
+        Vector2I currentChunkCoord = WorldToChunkCoord(loadCenter);
 
-        // Recalculate load queue when camera moves to a new chunk
         if (currentChunkCoord != _lastCameraChunkCoord)
         {
             _lastCameraChunkCoord = currentChunkCoord;
@@ -89,16 +127,12 @@ public partial class WorldManager : Node3D
             UnloadDistantChunks(currentChunkCoord);
         }
 
-        // Load a few chunks per frame from the queue
         int loaded = 0;
         while (_loadQueue.Count > 0 && loaded < Settings.MaxChunkLoadsPerFrame)
         {
             Vector2I coord = _loadQueue.Dequeue();
-
-            // Skip if already loaded or out of range
             if (_loadedChunks.ContainsKey(coord))
                 continue;
-
             if (ChunkDistance(coord, _lastCameraChunkCoord) > Settings.LoadRadius)
                 continue;
 
@@ -106,7 +140,6 @@ public partial class WorldManager : Node3D
             loaded++;
         }
 
-        // Rebuild dirty chunk meshes (limit per frame to avoid spikes)
         int rebuilt = 0;
         foreach (var kvp in _renderers)
         {
@@ -114,12 +147,105 @@ public partial class WorldManager : Node3D
             {
                 kvp.Value.RebuildMesh();
                 rebuilt++;
-                if (rebuilt >= Settings.MaxChunkLoadsPerFrame) break;
+                if (rebuilt >= Settings.MaxChunkLoadsPerFrame)
+                    break;
             }
         }
     }
 
-    // --- Loading / Unloading ---
+    public SurfaceHit ScreenToBlockHit(Vector2 screenPos, Camera3D camera = null)
+    {
+        camera ??= GetViewport().GetCamera3D();
+        if (camera == null)
+            return default;
+
+        Vector3 from = camera.ProjectRayOrigin(screenPos);
+        Vector3 dir = camera.ProjectRayNormal(screenPos);
+        float step = Mathf.Max(Settings.BlockPixelSize * HitRayStepFactor, 0.1f);
+        float maxDistance = Mathf.Max(camera.Far, Settings.BlockPixelSize * 128f);
+
+        for (float t = 0f; t <= maxDistance; t += step)
+        {
+            Vector3 sample = from + dir * t;
+            Vector2I coord = PathfindingService.WorldToBlock(sample);
+            SurfaceColumnInfo column = GetSurfaceColumnInfo(coord.X, coord.Y);
+            float targetY = column.HasSurface ? column.SurfaceY : 0f;
+
+            if (sample.Y > targetY + step * 0.5f)
+                continue;
+
+            Vector3 hitWorld = IntersectRayWithHorizontalPlane(from, dir, targetY);
+            Vector2I hitCoord = PathfindingService.WorldToBlock(hitWorld);
+            SurfaceColumnInfo hitColumn = GetSurfaceColumnInfo(hitCoord.X, hitCoord.Y);
+            float hitSurfaceY = hitColumn.HasSurface ? hitColumn.SurfaceY : 0f;
+            Vector3 blockCenter = GetBlockCenterWorld(hitCoord.X, hitCoord.Y, hitSurfaceY);
+
+            return new SurfaceHit(true, hitCoord, hitWorld, blockCenter, hitSurfaceY, hitColumn);
+        }
+
+        Vector3 fallback = IntersectRayWithHorizontalPlane(from, dir, 0f);
+        Vector2I fallbackCoord = PathfindingService.WorldToBlock(fallback);
+        SurfaceColumnInfo fallbackColumn = GetSurfaceColumnInfo(fallbackCoord.X, fallbackCoord.Y);
+        float fallbackSurfaceY = fallbackColumn.HasSurface ? fallbackColumn.SurfaceY : 0f;
+        return new SurfaceHit(
+            true,
+            fallbackCoord,
+            fallback,
+            GetBlockCenterWorld(fallbackCoord.X, fallbackCoord.Y, fallbackSurfaceY),
+            fallbackSurfaceY,
+            fallbackColumn);
+    }
+
+    public SurfaceColumnInfo GetSurfaceColumnInfo(int worldX, int worldZ)
+    {
+        var blockCoord = new Vector2I(worldX, worldZ);
+
+        for (int layer = Settings.MaxLayers - 1; layer >= 0; layer--)
+        {
+            Block block = GetBlock(worldX, worldZ, layer);
+            if (block.IsAir)
+                continue;
+
+            BlockDef def = BlockRegistry.Instance.GetDef(block.TypeId);
+            if (def == null)
+                continue;
+
+            float baseY = layer * Settings.BlockPixelSize;
+            float surfaceY = baseY + def.GetSurfaceHeight(Settings.BlockPixelSize);
+            return new SurfaceColumnInfo(blockCoord, block, def, layer, baseY, surfaceY);
+        }
+
+        return new SurfaceColumnInfo(blockCoord, Block.Air, null, 0, 0f, 0f);
+    }
+
+    public float GetSurfaceTopY(int worldX, int worldZ)
+    {
+        var info = GetSurfaceColumnInfo(worldX, worldZ);
+        return info.HasSurface ? info.SurfaceY : 0f;
+    }
+
+    public float GetDecorationTopY(int worldX, int worldZ)
+    {
+        var info = GetSurfaceColumnInfo(worldX, worldZ);
+        if (!info.HasSurface)
+            return 0f;
+
+        return info.BaseY + info.Def.GetDecorationHeight(Settings.BlockPixelSize);
+    }
+
+    public bool IsColumnOccluder(int worldX, int worldZ)
+    {
+        return GetSurfaceColumnInfo(worldX, worldZ).IsOccluder;
+    }
+
+    public Vector3 GetBlockCenterWorld(int worldX, int worldZ, float surfaceY = 0f)
+    {
+        float half = Settings.BlockPixelSize * 0.5f;
+        return new Vector3(
+            worldX * Settings.BlockPixelSize + half,
+            surfaceY,
+            worldZ * Settings.BlockPixelSize + half);
+    }
 
     private void LoadChunk(Vector2I chunkCoord)
     {
@@ -130,14 +256,11 @@ public partial class WorldManager : Node3D
 
         _loadedChunks[chunkCoord] = chunk;
 
-        // Create renderer node
         var renderer = new ChunkRenderer();
         renderer.SetChunk(chunk);
         renderer.Position = chunk.WorldPosition3D;
         AddChild(renderer);
         _renderers[chunkCoord] = renderer;
-
-        // Mesh will be built on next _Process dirty check
     }
 
     private void UnloadDistantChunks(Vector2I centerChunkCoord)
@@ -147,9 +270,7 @@ public partial class WorldManager : Node3D
         foreach (var coord in _loadedChunks.Keys)
         {
             if (ChunkDistance(coord, centerChunkCoord) > Settings.UnloadRadius)
-            {
                 toRemove.Add(coord);
-            }
         }
 
         foreach (var coord in toRemove)
@@ -167,28 +288,19 @@ public partial class WorldManager : Node3D
         }
     }
 
-    /// <summary>
-    /// Build a spiral-ordered load queue emanating from center.
-    /// Ensures closest chunks load first.
-    /// </summary>
     private void RebuildLoadQueue(Vector2I center)
     {
         _loadQueue.Clear();
 
-        // Generate coordinates in spiral order
         var coords = new List<Vector2I>();
         int r = Settings.LoadRadius;
 
         for (int dz = -r; dz <= r; dz++)
         {
             for (int dx = -r; dx <= r; dx++)
-            {
-                var coord = new Vector2I(center.X + dx, center.Y + dz);
-                coords.Add(coord);
-            }
+                coords.Add(new Vector2I(center.X + dx, center.Y + dz));
         }
 
-        // Sort by distance to center (spiral-like ordering)
         coords.Sort((a, b) =>
         {
             float distA = (a - center).LengthSquared();
@@ -196,16 +308,10 @@ public partial class WorldManager : Node3D
             return distA.CompareTo(distB);
         });
 
-        foreach (var coord in coords)
-        {
-            if (!_loadedChunks.ContainsKey(coord))
-                _loadQueue.Enqueue(coord);
-        }
+        foreach (var coord in coords.Where(coord => !_loadedChunks.ContainsKey(coord)))
+            _loadQueue.Enqueue(coord);
     }
 
-    // --- Coordinate Utilities ---
-
-    /// <summary>Convert 3D world position (XZ plane) to chunk coordinate.</summary>
     public static Vector2I WorldToChunkCoord(Vector3 worldPos)
     {
         int cx = Mathf.FloorToInt(worldPos.X / Settings.ChunkPixelSize);
@@ -213,7 +319,6 @@ public partial class WorldManager : Node3D
         return new Vector2I(cx, cz);
     }
 
-    /// <summary>Convert world block coordinate to chunk coordinate.</summary>
     public static Vector2I BlockToChunkCoord(int worldX, int worldZ)
     {
         int cx = worldX >= 0 ? worldX / Settings.ChunkSize : (worldX - Settings.ChunkSize + 1) / Settings.ChunkSize;
@@ -221,7 +326,6 @@ public partial class WorldManager : Node3D
         return new Vector2I(cx, cz);
     }
 
-    /// <summary>Convert world block coordinate to local coordinate within its chunk.</summary>
     public static Vector2I BlockToLocalCoord(int worldX, int worldZ)
     {
         int lx = ((worldX % Settings.ChunkSize) + Settings.ChunkSize) % Settings.ChunkSize;
@@ -229,7 +333,6 @@ public partial class WorldManager : Node3D
         return new Vector2I(lx, lz);
     }
 
-    /// <summary>Get a block at world block coordinates.</summary>
     public Block GetBlock(int worldX, int worldZ, int layer = 0)
     {
         var chunkCoord = BlockToChunkCoord(worldX, worldZ);
@@ -240,7 +343,6 @@ public partial class WorldManager : Node3D
         return chunk.GetBlock(local.X, local.Y, layer);
     }
 
-    /// <summary>Set a block at world block coordinates. Marks the chunk dirty.</summary>
     public void SetBlock(int worldX, int worldZ, Block block, int layer = 0)
     {
         var chunkCoord = BlockToChunkCoord(worldX, worldZ);
@@ -251,9 +353,17 @@ public partial class WorldManager : Node3D
         chunk.SetBlock(local.X, local.Y, block, layer);
     }
 
-    /// <summary>Chebyshev distance between two chunk coordinates.</summary>
     private static int ChunkDistance(Vector2I a, Vector2I b)
     {
         return Mathf.Max(Mathf.Abs(a.X - b.X), Mathf.Abs(a.Y - b.Y));
+    }
+
+    private static Vector3 IntersectRayWithHorizontalPlane(Vector3 from, Vector3 dir, float y)
+    {
+        if (Mathf.Abs(dir.Y) < 0.0001f)
+            return new Vector3(from.X, y, from.Z);
+
+        float t = (y - from.Y) / dir.Y;
+        return from + dir * t;
     }
 }

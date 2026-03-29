@@ -91,6 +91,9 @@ public partial class ToolModeManager : Control
     {
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
+            if (key.AltPressed && (key.Keycode == Key.Q || key.Keycode == Key.E))
+                return;
+
             var oldMode = CurrentMode;
             switch (key.Keycode)
             {
@@ -468,9 +471,9 @@ public partial class ToolModeManager : Control
     private Vector2I ScreenToBlock(Vector2 screenPos)
     {
         var camera = GetViewport().GetCamera3D();
-        if (camera == null) return Vector2I.Zero;
-        Vector3 worldPos = SelectionManager.ScreenToWorldXZ(screenPos, camera);
-        return PathfindingService.WorldToBlock(worldPos);
+        if (camera == null || WorldManager.Instance == null) return Vector2I.Zero;
+        var hit = WorldManager.Instance.ScreenToBlockHit(screenPos, camera);
+        return hit.Hit ? hit.BlockCoord : Vector2I.Zero;
     }
 
     private static Rect2 GetScreenRect(Vector2 a, Vector2 b)

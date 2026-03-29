@@ -5,6 +5,7 @@ using EndfieldZero.Farming;
 using EndfieldZero.Items;
 using EndfieldZero.Managers;
 using EndfieldZero.Pathfinding;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.UI;
@@ -211,10 +212,12 @@ public partial class SelectionManager : Control
         if (_selected.Count == 0) return;
 
         var camera = GetViewport().GetCamera3D();
-        if (camera == null) return;
+        if (camera == null || WorldManager.Instance == null) return;
 
-        // Raycast from screen to XZ plane (Y=0)
-        Vector3 worldTarget = ScreenToWorldXZ(screenPos, camera);
+        var hit = WorldManager.Instance.ScreenToBlockHit(screenPos, camera);
+        if (!hit.Hit) return;
+
+        Vector3 worldTarget = hit.BlockCenterWorld;
 
         // Spawn move command ping effect
         SpawnMovePing(worldTarget);
@@ -359,8 +362,14 @@ public partial class SelectionManager : Control
 
     private ISelectable FindEntityAtScreenPos(Vector2 screenPos, Camera3D camera)
     {
-        Vector3 worldPos = ScreenToWorldXZ(screenPos, camera);
-        var blockCoord = PathfindingService.WorldToBlock(worldPos);
+        if (WorldManager.Instance == null)
+            return null;
+
+        var hit = WorldManager.Instance.ScreenToBlockHit(screenPos, camera);
+        if (!hit.Hit)
+            return null;
+
+        var blockCoord = hit.BlockCoord;
 
         // Check items on ground
         if (ItemManager.Instance != null)
@@ -402,6 +411,13 @@ public partial class SelectionManager : Control
     /// <summary>Convert screen position to world XZ plane (Y=0).</summary>
     public static Vector3 ScreenToWorldXZ(Vector2 screenPos, Camera3D camera)
     {
+        if (WorldManager.Instance != null)
+        {
+            var hit = WorldManager.Instance.ScreenToBlockHit(screenPos, camera);
+            if (hit.Hit)
+                return hit.WorldPosition;
+        }
+
         Vector3 from = camera.ProjectRayOrigin(screenPos);
         Vector3 dir = camera.ProjectRayNormal(screenPos);
 

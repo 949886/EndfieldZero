@@ -1,4 +1,5 @@
 using Godot;
+using EndfieldZero.World;
 
 namespace EndfieldZero.Building;
 
@@ -60,7 +61,7 @@ public partial class BlueprintOverlay : MeshInstance3D
 
                 foreach (var cell in bp.OccupiedCells())
                 {
-                    AddQuad(vertices, colors, cell, px, color, 0.015f);
+                    AddQuad(vertices, colors, cell, px, color);
                 }
             }
         }
@@ -77,7 +78,7 @@ public partial class BlueprintOverlay : MeshInstance3D
 
             foreach (var cell in tempBp.OccupiedCells())
             {
-                AddQuad(vertices, colors, cell, px, previewColor, 0.02f);
+                AddQuad(vertices, colors, cell, px, previewColor);
             }
         }
 
@@ -96,8 +97,9 @@ public partial class BlueprintOverlay : MeshInstance3D
     private static void AddQuad(
         System.Collections.Generic.List<Vector3> verts,
         System.Collections.Generic.List<Color> cols,
-        Vector2I cell, float px, Color color, float y)
+        Vector2I cell, float px, Color color)
     {
+        float y = (WorldManager.Instance?.GetSurfaceTopY(cell.X, cell.Y) ?? 0f) + 0.015f;
         float inset = px * 0.02f;
         Vector3 tl = new(cell.X * px + inset, y, cell.Y * px + inset);
         Vector3 tr = new((cell.X + 1) * px - inset, y, cell.Y * px + inset);

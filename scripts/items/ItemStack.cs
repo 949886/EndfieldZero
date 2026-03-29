@@ -1,5 +1,6 @@
 using EndfieldZero.Core;
 using EndfieldZero.Farming;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.Items;
@@ -61,9 +62,10 @@ public partial class ItemStack : Node3D, ISelectable
         Count = count;
 
         float px = Settings.BlockPixelSize;
+        float baseY = WorldManager.Instance?.GetSurfaceTopY(blockCoord.X, blockCoord.Y) ?? 0f;
         Position = new Vector3(
             (blockCoord.X + 0.5f) * px,
-            0.05f,
+            baseY + 0.05f,
             (blockCoord.Y + 0.5f) * px
         );
     }
@@ -73,9 +75,10 @@ public partial class ItemStack : Node3D, ISelectable
     {
         BlockCoord = newCoord;
         float px = Settings.BlockPixelSize;
+        float baseY = WorldManager.Instance?.GetSurfaceTopY(newCoord.X, newCoord.Y) ?? 0f;
         Position = new Vector3(
             (newCoord.X + 0.5f) * px,
-            0.05f,
+            baseY + 0.05f,
             (newCoord.Y + 0.5f) * px
         );
     }

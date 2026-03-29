@@ -210,8 +210,11 @@ public partial class BlueprintSystem : Node
     {
         if (JobSystem.Instance == null) return;
 
-        float px = Settings.BlockPixelSize;
         var center = bp.WorldCenter;
+        float targetY = 0f;
+        foreach (var cell in bp.OccupiedCells())
+            targetY = Mathf.Max(targetY, WorldManager.Instance?.GetSurfaceTopY(cell.X, cell.Y) ?? 0f);
+        center = new Vector3(center.X, targetY, center.Z);
 
         var job = new Job("Construct", $"建造{bp.Def.DisplayName}")
         {

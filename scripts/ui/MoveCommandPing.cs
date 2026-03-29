@@ -20,7 +20,7 @@ public partial class MoveCommandPing : MeshInstance3D
     {
         CastShadow = ShadowCastingSetting.Off;
         MaterialOverride = GetPingMaterial();
-        Position = new Vector3(Position.X, 0.02f, Position.Z);
+        Position = new Vector3(Position.X, Position.Y + 0.02f, Position.Z);
         _life = Duration;
         BuildMesh(MaxRadius, 0.8f);
     }

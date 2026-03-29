@@ -1,4 +1,5 @@
 using EndfieldZero.Core;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.Zone;
@@ -35,7 +36,7 @@ public partial class ZoneOverlay : MeshInstance3D
         {
             foreach (var cell in zone.Cells)
             {
-                float y = 0.005f;
+                float y = (WorldManager.Instance?.GetSurfaceTopY(cell.X, cell.Y) ?? 0f) + 0.005f;
                 float inset = px * 0.03f;
                 Vector3 tl = new(cell.X * px + inset, y, cell.Y * px + inset);
                 Vector3 tr = new((cell.X + 1) * px - inset, y, cell.Y * px + inset);

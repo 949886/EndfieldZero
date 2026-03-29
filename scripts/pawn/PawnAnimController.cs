@@ -1,4 +1,5 @@
 using Godot;
+using EndfieldZero.World;
 
 namespace EndfieldZero.Pawn;
 
@@ -59,12 +60,14 @@ public class PawnAnimController
 
     private string GetTargetAnimation()
     {
-        // Determine primary direction from facing
-        float absX = Mathf.Abs(_lastFacing.X);
-        float absZ = Mathf.Abs(_lastFacing.Z);
+        Vector2 screenMotion = GameCamera.Instance?.GetScreenMotion(_lastFacing) ?? new Vector2(_lastFacing.X, _lastFacing.Z);
 
-        bool facingRight = absX > absZ;
-        bool facingUp = _lastFacing.Z < 0;   // -Z = up on screen (camera looks down -Y)
+        // Determine primary direction relative to the camera.
+        float absX = Mathf.Abs(screenMotion.X);
+        float absY = Mathf.Abs(screenMotion.Y);
+
+        bool facingRight = absX > absY;
+        bool facingUp = screenMotion.Y < 0f;
 
         string prefix = _state switch
         {
@@ -76,7 +79,7 @@ public class PawnAnimController
         // Handle flip for left direction
         if (facingRight)
         {
-            _sprite.FlipH = _lastFacing.X < 0;
+            _sprite.FlipH = screenMotion.X < 0f;
 
             return prefix switch
             {

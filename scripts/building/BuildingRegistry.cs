@@ -113,7 +113,8 @@ public sealed class BuildingRegistry
             ghostColor: new Color(0.4f, 0.4f, 0.7f, 0.5f),
             materials: new() { { "Wood", 8 } },
             satisfiesNeed: "Rest",
-            comfortOffset: 15f
+            comfortOffset: 15f,
+            view3DStyle: BuildingView3DStyle.Bed
         ));
 
         reg.Register(new BuildingDef(
@@ -124,7 +125,8 @@ public sealed class BuildingRegistry
             workTicks: 300,
             ghostColor: new Color(0.5f, 0.4f, 0.3f, 0.5f),
             materials: new() { { "Wood", 6 } },
-            beautyOffset: 2f
+            beautyOffset: 2f,
+            view3DStyle: BuildingView3DStyle.Table
         ));
 
         reg.Register(new BuildingDef(
@@ -135,7 +137,9 @@ public sealed class BuildingRegistry
             workTicks: 150,
             ghostColor: new Color(0.5f, 0.4f, 0.3f, 0.5f),
             materials: new() { { "Wood", 3 } },
-            comfortOffset: 5f
+            comfortOffset: 5f,
+            view3DStyle: BuildingView3DStyle.SolidBlock,
+            visualHeight: 0.7f
         ));
 
         reg.Register(new BuildingDef(
@@ -146,7 +150,9 @@ public sealed class BuildingRegistry
             workTicks: 60,
             ghostColor: new Color(1f, 0.8f, 0.3f, 0.5f),
             materials: new() { { "Wood", 1 } },
-            beautyOffset: 3f
+            beautyOffset: 3f,
+            view3DStyle: BuildingView3DStyle.SolidBlock,
+            visualHeight: 1.0f
         ));
 
         // ===== Production =====
@@ -159,7 +165,8 @@ public sealed class BuildingRegistry
             workTicks: 480,
             requiredSkill: "Construction", minSkillLevel: 3f,
             ghostColor: new Color(0.5f, 0.5f, 0.3f, 0.5f),
-            materials: new() { { "Wood", 10 }, { "Stone", 5 } }
+            materials: new() { { "Wood", 10 }, { "Stone", 5 } },
+            view3DStyle: BuildingView3DStyle.Workstation
         ));
 
         reg.Register(new BuildingDef(
@@ -170,7 +177,8 @@ public sealed class BuildingRegistry
             workTicks: 540,
             requiredSkill: "Construction", minSkillLevel: 4f,
             ghostColor: new Color(0.7f, 0.3f, 0.2f, 0.5f),
-            materials: new() { { "Stone", 15 } }
+            materials: new() { { "Stone", 15 } },
+            view3DStyle: BuildingView3DStyle.Stove
         ));
 
         reg.Register(new BuildingDef(
@@ -181,7 +189,8 @@ public sealed class BuildingRegistry
             workTicks: 600,
             requiredSkill: "Construction", minSkillLevel: 5f,
             ghostColor: new Color(0.3f, 0.5f, 0.7f, 0.5f),
-            materials: new() { { "Wood", 10 }, { "Stone", 10 } }
+            materials: new() { { "Wood", 10 }, { "Stone", 10 } },
+            view3DStyle: BuildingView3DStyle.Workstation
         ));
 
         return reg;

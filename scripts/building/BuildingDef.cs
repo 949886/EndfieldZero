@@ -3,6 +3,16 @@ using Godot;
 
 namespace EndfieldZero.Building;
 
+public enum BuildingView3DStyle
+{
+    Billboard,
+    SolidBlock,
+    Bed,
+    Table,
+    Workstation,
+    Stove,
+}
+
 /// <summary>
 /// Static definition for a building type.
 /// Describes what a building looks like, costs, and how it affects the world.
@@ -66,6 +76,12 @@ public class BuildingDef
     /// <summary>Optional: comfort modifier when using.</summary>
     public float ComfortOffset { get; }
 
+    /// <summary>How this building should look in the fixed 3D view.</summary>
+    public BuildingView3DStyle View3DStyle { get; }
+
+    /// <summary>Optional height override for simple blocky 3D meshes.</summary>
+    public float? VisualHeight { get; }
+
     public BuildingDef(
         string id, string displayName, string category,
         Vector2I size, ushort placedBlockId,
@@ -75,7 +91,9 @@ public class BuildingDef
         Color? ghostColor = null,
         Dictionary<string, int> materials = null,
         string satisfiesNeed = null,
-        float beautyOffset = 0f, float comfortOffset = 0f)
+        float beautyOffset = 0f, float comfortOffset = 0f,
+        BuildingView3DStyle view3DStyle = BuildingView3DStyle.Billboard,
+        float? visualHeight = null)
     {
         Id = id;
         DisplayName = displayName;
@@ -93,5 +111,7 @@ public class BuildingDef
         SatisfiesNeed = satisfiesNeed;
         BeautyOffset = beautyOffset;
         ComfortOffset = comfortOffset;
+        View3DStyle = view3DStyle;
+        VisualHeight = visualHeight;
     }
 }

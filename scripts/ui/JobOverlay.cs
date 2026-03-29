@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EndfieldZero.Core;
 using EndfieldZero.Jobs;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.UI;
@@ -85,7 +86,7 @@ public partial class JobOverlay : MeshInstance3D
             // Quad on XZ plane at Y = 0.01 (slightly above ground to avoid z-fighting)
             float qx = job.TargetBlockCoord.X * px;
             float qz = job.TargetBlockCoord.Y * px;
-            float y = 0.01f;
+            float y = (WorldManager.Instance?.GetSurfaceTopY(job.TargetBlockCoord.X, job.TargetBlockCoord.Y) ?? 0f) + 0.01f;
 
             // Inset slightly for visual clarity
             float inset = px * 0.05f;
@@ -106,7 +107,7 @@ public partial class JobOverlay : MeshInstance3D
             // Progress bar if in progress
             if (job.Status == JobStatus.InProgress && job.Progress > 0f)
             {
-                float barY = 0.02f;
+                float barY = y + 0.01f;
                 float barWidth = (px - inset * 2) * job.Progress;
                 float barHeight = px * 0.08f;
                 Color barColor = new(0.2f, 1f, 0.2f, 0.7f);

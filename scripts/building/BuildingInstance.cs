@@ -1,15 +1,14 @@
+using System.Collections.Generic;
 using EndfieldZero.Core;
 using EndfieldZero.Farming;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.Building;
 
 /// <summary>
-/// Runtime building entity — a completed (non-block) building in the world.
-/// Used for furniture and production buildings that don't exist as blocks.
-///
-/// Rendered as a Sprite3D (billboard) with a colored rectangle.
-/// Implements ISelectable for click-to-inspect.
+/// Runtime building entity for furniture and production buildings.
+/// In angled view the important buildings use simple blocky 3D meshes.
 /// </summary>
 public partial class BuildingInstance : Node3D, ISelectable
 {
@@ -20,31 +19,31 @@ public partial class BuildingInstance : Node3D, ISelectable
         ? new Vector2I(Def.Size.Y, Def.Size.X)
         : Def.Size;
 
-    // --- Selection ---
     public bool IsSelected { get; set; }
     public string SelectionTitle => Def.DisplayName;
     public string SelectionInfo
     {
         get
         {
-            string info = $"📦 类别: {CategoryName(Def.Category)}";
-            info += $"\n📐 尺寸: {Def.Size.X}×{Def.Size.Y}";
+            string info = $"馃摝 绫诲埆: {CategoryName(Def.Category)}";
+            info += $"\n馃搻 灏哄: {Def.Size.X}脳{Def.Size.Y}";
 
             if (Def.SatisfiesNeed != null)
-                info += $"\n💤 满足需求: {Def.SatisfiesNeed}";
+                info += $"\n馃挙 婊¤冻闇€姹? {Def.SatisfiesNeed}";
             if (Def.ComfortOffset > 0)
-                info += $"\n🛋️ 舒适: +{Def.ComfortOffset:F0}";
+                info += $"\n馃泲锔?鑸掗€? +{Def.ComfortOffset:F0}";
             if (Def.BeautyOffset > 0)
-                info += $"\n🌸 美感: +{Def.BeautyOffset:F0}";
+                info += $"\n馃尭 缇庢劅: +{Def.BeautyOffset:F0}";
 
             return info;
         }
     }
 
-    private Sprite3D _sprite;
+    private Node3D _visualRoot;
+    private Sprite3D _billboardSprite;
     private SelectionCircleNode _selectionCircle;
+    private readonly List<GeometryInstance3D> _occlusionParts = new();
 
-    /// <summary>Initialize this building with its definition and position.</summary>
     public void Init(BuildingDef def, Vector2I blockCoord, int rotation = 0)
     {
         Def = def;
@@ -56,37 +55,28 @@ public partial class BuildingInstance : Node3D, ISelectable
 
         Position = new Vector3(
             (blockCoord.X + effSize.X * 0.5f) * px,
-            0.02f,
-            (blockCoord.Y + effSize.Y * 0.5f) * px
-        );
+            ResolveBaseHeight() + 0.01f,
+            (blockCoord.Y + effSize.Y * 0.5f) * px);
+        RotationDegrees = new Vector3(0f, BuildRotation * 90f, 0f);
     }
 
-    public System.Collections.Generic.IEnumerable<Vector2I> OccupiedCells()
+    public IEnumerable<Vector2I> OccupiedCells()
     {
         var size = EffectiveSize;
         for (int dz = 0; dz < size.Y; dz++)
+        {
             for (int dx = 0; dx < size.X; dx++)
                 yield return new Vector2I(BlockCoord.X + dx, BlockCoord.Y + dz);
+        }
     }
 
     public override void _Ready()
     {
-        // Create colored placeholder sprite
-        _sprite = new Sprite3D
-        {
-            PixelSize = 0.06f,
-            Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
-            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-            Shaded = false,
-        };
+        _visualRoot = new Node3D();
+        AddChild(_visualRoot);
 
-        // Try loading a matching sprite, fallback to generated texture
-        var tex = TryLoadSprite();
-        _sprite.Texture = tex ?? GeneratePlaceholderTexture();
-        AddChild(_sprite);
+        BuildVisual();
 
-        // Selection circle
         _selectionCircle = new SelectionCircleNode();
         AddChild(_selectionCircle);
         _selectionCircle.Visible = false;
@@ -95,16 +85,206 @@ public partial class BuildingInstance : Node3D, ISelectable
     public override void _Process(double delta)
     {
         _selectionCircle.Visible = IsSelected;
+        UpdateOcclusion();
+    }
+
+    private float ResolveBaseHeight()
+    {
+        if (WorldManager.Instance == null)
+            return 0f;
+
+        float baseHeight = 0f;
+        foreach (var cell in OccupiedCells())
+            baseHeight = Mathf.Max(baseHeight, WorldManager.Instance.GetSurfaceTopY(cell.X, cell.Y));
+        return baseHeight;
+    }
+
+    private void BuildVisual()
+    {
+        if (Def.View3DStyle == BuildingView3DStyle.Billboard)
+        {
+            BuildBillboardVisual();
+            return;
+        }
+
+        switch (Def.View3DStyle)
+        {
+            case BuildingView3DStyle.Bed:
+                BuildBedVisual();
+                break;
+            case BuildingView3DStyle.Table:
+                BuildTableVisual();
+                break;
+            case BuildingView3DStyle.Workstation:
+                BuildWorkstationVisual();
+                break;
+            case BuildingView3DStyle.Stove:
+                BuildStoveVisual();
+                break;
+            default:
+                BuildSolidBlockVisual();
+                break;
+        }
+    }
+
+    private void BuildBillboardVisual()
+    {
+        _billboardSprite = new Sprite3D
+        {
+            PixelSize = 0.06f,
+            Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            Shaded = false,
+        };
+
+        Texture2D tex = TryLoadSprite();
+        _billboardSprite.Texture = tex ?? GeneratePlaceholderTexture();
+        _visualRoot.AddChild(_billboardSprite);
+    }
+
+    private void BuildSolidBlockVisual()
+    {
+        float px = Settings.BlockPixelSize;
+        float height = Def.VisualHeight ?? 0.9f * px;
+        AddBox(
+            new Vector3(EffectiveSize.X * px * 0.7f, height, EffectiveSize.Y * px * 0.7f),
+            new Vector3(0f, height * 0.5f, 0f),
+            Def.GhostColor with { A = 1f });
+    }
+
+    private void BuildBedVisual()
+    {
+        float px = Settings.BlockPixelSize;
+        Color frame = new Color(0.62f, 0.44f, 0.28f);
+        Color blanket = new Color(0.76f, 0.78f, 0.93f);
+        Color pillow = new Color(0.96f, 0.96f, 0.92f);
+
+        AddBox(new Vector3(px * 0.82f, px * 0.18f, px * 1.65f), new Vector3(0f, px * 0.09f, 0f), frame);
+        AddBox(new Vector3(px * 0.75f, px * 0.24f, px * 1.1f), new Vector3(0f, px * 0.22f, px * 0.14f), blanket);
+        AddBox(new Vector3(px * 0.7f, px * 0.14f, px * 0.35f), new Vector3(0f, px * 0.2f, -px * 0.53f), pillow);
+    }
+
+    private void BuildTableVisual()
+    {
+        float px = Settings.BlockPixelSize;
+        Color wood = new Color(0.58f, 0.41f, 0.28f);
+        AddBox(new Vector3(px * 1.6f, px * 0.14f, px * 0.72f), new Vector3(0f, px * 0.5f, 0f), wood);
+
+        float legOffsetX = px * 0.65f;
+        float legOffsetZ = px * 0.22f;
+        for (int sx = -1; sx <= 1; sx += 2)
+        {
+            for (int sz = -1; sz <= 1; sz += 2)
+            {
+                AddBox(
+                    new Vector3(px * 0.12f, px * 0.5f, px * 0.12f),
+                    new Vector3(legOffsetX * sx, px * 0.25f, legOffsetZ * sz),
+                    wood * 0.85f);
+            }
+        }
+    }
+
+    private void BuildWorkstationVisual()
+    {
+        float px = Settings.BlockPixelSize;
+        Color wood = new Color(0.56f, 0.42f, 0.26f);
+        Color accent = new Color(0.77f, 0.69f, 0.48f);
+        AddBox(new Vector3(px * 1.6f, px * 0.18f, px * 0.72f), new Vector3(0f, px * 0.54f, 0f), wood);
+        AddBox(new Vector3(px * 1.45f, px * 0.12f, px * 0.2f), new Vector3(0f, px * 0.72f, -px * 0.22f), accent);
+        AddBox(new Vector3(px * 0.18f, px * 0.54f, px * 0.18f), new Vector3(-px * 0.62f, px * 0.27f, px * 0.18f), wood * 0.88f);
+        AddBox(new Vector3(px * 0.18f, px * 0.54f, px * 0.18f), new Vector3(px * 0.62f, px * 0.27f, px * 0.18f), wood * 0.88f);
+    }
+
+    private void BuildStoveVisual()
+    {
+        float px = Settings.BlockPixelSize;
+        Color stone = new Color(0.35f, 0.33f, 0.37f);
+        Color trim = new Color(0.78f, 0.48f, 0.22f);
+
+        AddBox(new Vector3(px * 1.2f, px * 0.85f, px * 0.75f), new Vector3(0f, px * 0.425f, 0f), stone);
+        AddBox(new Vector3(px * 0.6f, px * 0.08f, px * 0.45f), new Vector3(0f, px * 0.62f, 0f), trim);
+
+        var chimney = new MeshInstance3D
+        {
+            Mesh = new CylinderMesh
+            {
+                TopRadius = px * 0.1f,
+                BottomRadius = px * 0.12f,
+                Height = px * 0.6f,
+                RadialSegments = 10,
+            },
+            Position = new Vector3(px * 0.32f, px * 1.02f, -px * 0.14f),
+            MaterialOverride = CreateMaterial(stone * 0.92f),
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.On,
+        };
+        _visualRoot.AddChild(chimney);
+        _occlusionParts.Add(chimney);
+    }
+
+    private void AddBox(Vector3 size, Vector3 offset, Color color)
+    {
+        var mesh = new MeshInstance3D
+        {
+            Mesh = new BoxMesh { Size = size },
+            Position = offset,
+            MaterialOverride = CreateMaterial(color),
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.On,
+        };
+        _visualRoot.AddChild(mesh);
+        _occlusionParts.Add(mesh);
+    }
+
+    private StandardMaterial3D CreateMaterial(Color color)
+    {
+        return new StandardMaterial3D
+        {
+            AlbedoColor = color,
+            Roughness = 0.9f,
+            Metallic = 0f,
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+        };
+    }
+
+    private void UpdateOcclusion()
+    {
+        if (_occlusionParts.Count == 0 || GameCamera.Instance == null)
+            return;
+
+        if (GameCamera.Instance.ViewMode != CameraViewMode.Angled3D)
+        {
+            foreach (var part in _occlusionParts)
+                part.Transparency = 0f;
+            return;
+        }
+
+        Vector3 focus = GameCamera.Instance.GetOcclusionAnchor();
+        Vector2 cameraXZ = new Vector2(GameCamera.Instance.GlobalPosition.X, GameCamera.Instance.GlobalPosition.Z);
+        Vector2 focusXZ = new Vector2(focus.X, focus.Z);
+        Vector2 buildingXZ = new Vector2(GlobalPosition.X, GlobalPosition.Z);
+
+        float dist = DistanceToSegment(buildingXZ, cameraXZ, focusXZ);
+        Vector2 path = focusXZ - cameraXZ;
+        float t = path.LengthSquared() > 0.0001f
+            ? (buildingXZ - cameraXZ).Dot(path) / path.LengthSquared()
+            : 0f;
+        bool between = t > 0.05f && t < 0.98f;
+        bool aboveFocus = GlobalPosition.Y >= focus.Y - 0.15f;
+        float transparency = dist <= GameCamera.Instance.OcclusionRadius && between && aboveFocus
+            ? 1f - GameCamera.Instance.OcclusionAlpha
+            : 0f;
+
+        foreach (var part in _occlusionParts)
+            part.Transparency = transparency;
     }
 
     private Texture2D TryLoadSprite()
     {
-        // Try category-specific sprite sheets
         string path = Def.Id switch
         {
-            "workbench" or "stove" or "research_desk" =>
-                "res://sprites/Sprout Lands/Objects/work station.png",
-            _ => null
+            "workbench" or "stove" or "research_desk" => "res://sprites/Sprout Lands/Objects/work station.png",
+            _ => null,
         };
 
         if (path != null && ResourceLoader.Exists(path))
@@ -115,12 +295,11 @@ public partial class BuildingInstance : Node3D, ISelectable
 
     private ImageTexture GeneratePlaceholderTexture()
     {
-        // Generate small colored icon based on building type
         int size = 16;
         var image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
 
-        var color = Def.GhostColor with { A = 1f };
-        var border = color * 0.7f;
+        Color color = Def.GhostColor with { A = 1f };
+        Color border = color * 0.7f;
         border.A = 1f;
 
         for (int y = 0; y < size; y++)
@@ -132,35 +311,26 @@ public partial class BuildingInstance : Node3D, ISelectable
             }
         }
 
-        // Add icon pattern based on type
-        switch (Def.Category)
-        {
-            case "Furniture":
-                // Draw a small symbol
-                for (int i = 4; i < 12; i++)
-                {
-                    image.SetPixel(i, 7, Colors.White);
-                    image.SetPixel(i, 8, Colors.White);
-                }
-                break;
-            case "Production":
-                // Cross pattern
-                for (int i = 3; i < 13; i++)
-                {
-                    image.SetPixel(8, i, Colors.White);
-                    image.SetPixel(i, 8, Colors.White);
-                }
-                break;
-        }
-
         return ImageTexture.CreateFromImage(image);
+    }
+
+    private static float DistanceToSegment(Vector2 point, Vector2 a, Vector2 b)
+    {
+        Vector2 ab = b - a;
+        float denom = ab.LengthSquared();
+        if (denom <= 0.0001f)
+            return point.DistanceTo(a);
+
+        float t = Mathf.Clamp((point - a).Dot(ab) / denom, 0f, 1f);
+        Vector2 closest = a + ab * t;
+        return point.DistanceTo(closest);
     }
 
     private static string CategoryName(string cat) => cat switch
     {
-        "Structure" => "结构",
-        "Furniture" => "家具",
-        "Production" => "生产",
+        "Structure" => "缁撴瀯",
+        "Furniture" => "瀹跺叿",
+        "Production" => "鐢熶骇",
         _ => cat,
     };
 }
