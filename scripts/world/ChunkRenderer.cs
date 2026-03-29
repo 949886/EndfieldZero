@@ -23,36 +23,37 @@ public partial class ChunkRenderer : MeshInstance3D
     }
 
     private Chunk _chunk;
-    private static ShaderMaterial _sharedMaterial;
+    private static ShaderMaterial _angledMaterial;
+    private static ShaderMaterial _topDownMaterial;
 
     public void SetChunk(Chunk chunk)
     {
         _chunk = chunk;
-        MaterialOverride = GetSharedMaterial();
         CastShadow = ShadowCastingSetting.On;
+        ApplyMaterialForCurrentView();
     }
 
     public static void UpdateSharedViewState(Vector3 cameraPos, Vector3 focusPos, bool occlusionEnabled, float occlusionRadius, float occlusionAlpha)
     {
-        if (_sharedMaterial == null)
+        if (_angledMaterial == null)
             return;
 
-        _sharedMaterial.SetShaderParameter("occlusion_camera_pos", cameraPos);
-        _sharedMaterial.SetShaderParameter("occlusion_focus_pos", focusPos);
-        _sharedMaterial.SetShaderParameter("occlusion_enabled", occlusionEnabled);
-        _sharedMaterial.SetShaderParameter("occlusion_radius", occlusionRadius);
-        _sharedMaterial.SetShaderParameter("occlusion_alpha", occlusionAlpha);
+        _angledMaterial.SetShaderParameter("occlusion_camera_pos", cameraPos);
+        _angledMaterial.SetShaderParameter("occlusion_focus_pos", focusPos);
+        _angledMaterial.SetShaderParameter("occlusion_enabled", occlusionEnabled);
+        _angledMaterial.SetShaderParameter("occlusion_radius", occlusionRadius);
+        _angledMaterial.SetShaderParameter("occlusion_alpha", occlusionAlpha);
     }
 
-    private static ShaderMaterial GetSharedMaterial()
+    private static ShaderMaterial GetAngledMaterial()
     {
-        if (_sharedMaterial != null)
-            return _sharedMaterial;
+        if (_angledMaterial != null)
+            return _angledMaterial;
 
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode cull_disabled;
+render_mode unshaded, cull_disabled;
 
 uniform bool occlusion_enabled = false;
 uniform vec3 occlusion_camera_pos = vec3(0.0);
@@ -77,7 +78,6 @@ void vertex() {
 }
 
 void fragment() {
-    float light = 0.72 + 0.28 * max(dot(normalize(world_normal), normalize(vec3(0.35, 0.85, 0.25))), 0.0);
     float alpha = COLOR.a;
 
     if (occlusion_enabled && abs(world_normal.y) < 0.35) {
@@ -95,17 +95,37 @@ void fragment() {
         alpha = mix(alpha, min(alpha, occlusion_alpha), fade);
     }
 
-    ALBEDO = COLOR.rgb * light;
+    ALBEDO = COLOR.rgb;
     ALPHA = alpha;
 }";
-        _sharedMaterial = new ShaderMaterial { Shader = shader };
-        return _sharedMaterial;
+        _angledMaterial = new ShaderMaterial { Shader = shader };
+        return _angledMaterial;
+    }
+
+    private static ShaderMaterial GetTopDownMaterial()
+    {
+        if (_topDownMaterial != null)
+            return _topDownMaterial;
+
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled;
+
+void fragment() {
+    ALBEDO = COLOR.rgb;
+    ALPHA = COLOR.a;
+}";
+        _topDownMaterial = new ShaderMaterial { Shader = shader };
+        return _topDownMaterial;
     }
 
     public void RebuildMesh()
     {
         if (_chunk == null)
             return;
+
+        ApplyMaterialForCurrentView();
 
         int size = Settings.ChunkSize;
         float px = Settings.BlockPixelSize;
@@ -115,9 +135,17 @@ void fragment() {
         var normals = new List<Vector3>();
         var colors = new List<Color>();
 
-        BuildTopFaces(visuals, size, px, vertices, normals, colors);
-        BuildSideFaces(visuals, size, px, vertices, normals, colors);
-        BuildCrossPlanes(visuals, size, px, vertices, normals, colors);
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        if (angledView)
+        {
+            BuildTopFaces(visuals, size, px, vertices, normals, colors);
+            BuildSideFaces(visuals, size, px, vertices, normals, colors);
+            BuildCrossPlanes(visuals, size, px, vertices, normals, colors);
+        }
+        else
+        {
+            BuildClassicTopFaces(visuals, size, px, vertices, normals, colors);
+        }
 
         if (vertices.Count == 0)
         {
@@ -136,6 +164,13 @@ void fragment() {
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
         Mesh = mesh;
         _chunk.IsDirty = false;
+    }
+
+    private void ApplyMaterialForCurrentView()
+    {
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        MaterialOverride = angledView ? GetAngledMaterial() : GetTopDownMaterial();
+        CastShadow = angledView ? ShadowCastingSetting.On : ShadowCastingSetting.Off;
     }
 
     private CellVisual[,] BuildCellVisuals(int size, float px)
@@ -246,6 +281,63 @@ void fragment() {
         }
     }
 
+    private void BuildClassicTopFaces(CellVisual[,] visuals, int size, float px, List<Vector3> vertices, List<Vector3> normals, List<Color> colors)
+    {
+        var merged = new bool[size, size];
+
+        for (int z = 0; z < size; z++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                if (merged[x, z])
+                    continue;
+
+                CellVisual cell = visuals[x, z];
+                if (cell == null || !cell.HasSurface)
+                    continue;
+
+                int width = 1;
+                while (x + width < size && CanMergeClassicTop(cell, visuals[x + width, z], merged[x + width, z]))
+                    width++;
+
+                int height = 1;
+                bool canExpand = true;
+                while (canExpand && z + height < size)
+                {
+                    for (int dx = 0; dx < width; dx++)
+                    {
+                        if (!CanMergeClassicTop(cell, visuals[x + dx, z + height], merged[x + dx, z + height]))
+                        {
+                            canExpand = false;
+                            break;
+                        }
+                    }
+
+                    if (canExpand)
+                        height++;
+                }
+
+                for (int dz = 0; dz < height; dz++)
+                {
+                    for (int dx = 0; dx < width; dx++)
+                        merged[x + dx, z + dz] = true;
+                }
+
+                float left = x * px;
+                float top = z * px;
+                float right = (x + width) * px;
+                float bottom = (z + height) * px;
+                float y = cell.BaseY;
+
+                Vector3 tl = new(left, y, top);
+                Vector3 tr = new(right, y, top);
+                Vector3 br = new(right, y, bottom);
+                Vector3 bl = new(left, y, bottom);
+                AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Up, cell.Color);
+            }
+        }
+    }
+
     private void BuildSideFaces(CellVisual[,] visuals, int size, float px, List<Vector3> vertices, List<Vector3> normals, List<Color> colors)
     {
         for (int z = 0; z < size; z++)
@@ -272,7 +364,7 @@ void fragment() {
                     Vector3 tr = new(left, cell.SurfaceY, bottom);
                     Vector3 br = new(left, westNeighbor, bottom);
                     Vector3 bl = new(left, westNeighbor, top);
-                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Left, cell.Color);
+                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Left, TintForSide(cell.Color, Vector3.Left));
                 }
 
                 if (cell.SurfaceY > eastNeighbor + 0.001f)
@@ -281,7 +373,7 @@ void fragment() {
                     Vector3 tr = new(right, cell.SurfaceY, top);
                     Vector3 br = new(right, eastNeighbor, top);
                     Vector3 bl = new(right, eastNeighbor, bottom);
-                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Right, cell.Color);
+                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Right, TintForSide(cell.Color, Vector3.Right));
                 }
 
                 if (cell.SurfaceY > northNeighbor + 0.001f)
@@ -290,7 +382,7 @@ void fragment() {
                     Vector3 tr = new(left, cell.SurfaceY, top);
                     Vector3 br = new(left, northNeighbor, top);
                     Vector3 bl = new(right, northNeighbor, top);
-                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Forward, cell.Color);
+                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Forward, TintForSide(cell.Color, Vector3.Forward));
                 }
 
                 if (cell.SurfaceY > southNeighbor + 0.001f)
@@ -299,7 +391,7 @@ void fragment() {
                     Vector3 tr = new(right, cell.SurfaceY, bottom);
                     Vector3 br = new(right, southNeighbor, bottom);
                     Vector3 bl = new(left, southNeighbor, bottom);
-                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Back, cell.Color);
+                    AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Back, TintForSide(cell.Color, Vector3.Back));
                 }
             }
         }
@@ -360,6 +452,31 @@ void fragment() {
             && candidate.Block.TypeId == seed.Block.TypeId
             && candidate.VisualKind == seed.VisualKind
             && Mathf.IsEqualApprox(candidate.SurfaceY, seed.SurfaceY);
+    }
+
+    private static bool CanMergeClassicTop(CellVisual seed, CellVisual candidate, bool alreadyMerged)
+    {
+        return !alreadyMerged
+            && candidate != null
+            && candidate.HasSurface
+            && candidate.Block.TypeId == seed.Block.TypeId
+            && Mathf.IsEqualApprox(candidate.BaseY, seed.BaseY);
+    }
+
+    private static Color TintForSide(Color color, Vector3 normal)
+    {
+        float brightness = normal switch
+        {
+            var n when n == Vector3.Left => 0.82f,
+            var n when n == Vector3.Right => 0.88f,
+            var n when n == Vector3.Forward => 0.78f,
+            var n when n == Vector3.Back => 0.72f,
+            _ => 0.8f,
+        };
+
+        Color tinted = color * brightness;
+        tinted.A = color.A;
+        return tinted;
     }
 
     private static void AddQuad(

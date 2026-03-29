@@ -247,6 +247,12 @@ public partial class WorldManager : Node3D
             worldZ * Settings.BlockPixelSize + half);
     }
 
+    public void RefreshViewDependentVisuals()
+    {
+        foreach (var chunk in _loadedChunks.Values)
+            chunk.IsDirty = true;
+    }
+
     private void LoadChunk(Vector2I chunkCoord)
     {
         var chunk = new Chunk(chunkCoord);

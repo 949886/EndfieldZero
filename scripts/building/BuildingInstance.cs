@@ -39,10 +39,12 @@ public partial class BuildingInstance : Node3D, ISelectable
         }
     }
 
-    private Node3D _visualRoot;
+    private Node3D _billboardRoot;
+    private Node3D _meshRoot;
     private Sprite3D _billboardSprite;
     private SelectionCircleNode _selectionCircle;
     private readonly List<GeometryInstance3D> _occlusionParts = new();
+    private bool _hasAuthoredSprite;
 
     public void Init(BuildingDef def, Vector2I blockCoord, int rotation = 0)
     {
@@ -72,10 +74,14 @@ public partial class BuildingInstance : Node3D, ISelectable
 
     public override void _Ready()
     {
-        _visualRoot = new Node3D();
-        AddChild(_visualRoot);
+        _billboardRoot = new Node3D();
+        AddChild(_billboardRoot);
+
+        _meshRoot = new Node3D();
+        AddChild(_meshRoot);
 
         BuildVisual();
+        UpdatePresentationMode();
 
         _selectionCircle = new SelectionCircleNode();
         AddChild(_selectionCircle);
@@ -85,6 +91,7 @@ public partial class BuildingInstance : Node3D, ISelectable
     public override void _Process(double delta)
     {
         _selectionCircle.Visible = IsSelected;
+        UpdatePresentationMode();
         UpdateOcclusion();
     }
 
@@ -101,11 +108,10 @@ public partial class BuildingInstance : Node3D, ISelectable
 
     private void BuildVisual()
     {
+        BuildBillboardVisual();
+
         if (Def.View3DStyle == BuildingView3DStyle.Billboard)
-        {
-            BuildBillboardVisual();
             return;
-        }
 
         switch (Def.View3DStyle)
         {
@@ -139,8 +145,10 @@ public partial class BuildingInstance : Node3D, ISelectable
         };
 
         Texture2D tex = TryLoadSprite();
+        _hasAuthoredSprite = tex != null;
         _billboardSprite.Texture = tex ?? GeneratePlaceholderTexture();
-        _visualRoot.AddChild(_billboardSprite);
+        _billboardSprite.Modulate = Colors.White;
+        _billboardRoot.AddChild(_billboardSprite);
     }
 
     private void BuildSolidBlockVisual()
@@ -216,9 +224,9 @@ public partial class BuildingInstance : Node3D, ISelectable
             },
             Position = new Vector3(px * 0.32f, px * 1.02f, -px * 0.14f),
             MaterialOverride = CreateMaterial(stone * 0.92f),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.On,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         };
-        _visualRoot.AddChild(chimney);
+        _meshRoot.AddChild(chimney);
         _occlusionParts.Add(chimney);
     }
 
@@ -229,9 +237,9 @@ public partial class BuildingInstance : Node3D, ISelectable
             Mesh = new BoxMesh { Size = size },
             Position = offset,
             MaterialOverride = CreateMaterial(color),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.On,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         };
-        _visualRoot.AddChild(mesh);
+        _meshRoot.AddChild(mesh);
         _occlusionParts.Add(mesh);
     }
 
@@ -244,13 +252,18 @@ public partial class BuildingInstance : Node3D, ISelectable
             Metallic = 0f,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
             CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
         };
     }
 
     private void UpdateOcclusion()
     {
-        if (_occlusionParts.Count == 0 || GameCamera.Instance == null)
+        if (_occlusionParts.Count == 0 || GameCamera.Instance == null || _meshRoot == null || !_meshRoot.Visible)
+        {
+            foreach (var part in _occlusionParts)
+                part.Transparency = 0f;
             return;
+        }
 
         if (GameCamera.Instance.ViewMode != CameraViewMode.Angled3D)
         {
@@ -277,6 +290,31 @@ public partial class BuildingInstance : Node3D, ISelectable
 
         foreach (var part in _occlusionParts)
             part.Transparency = transparency;
+    }
+
+    private void UpdatePresentationMode()
+    {
+        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool showMesh = angled3D && Def.View3DStyle != BuildingView3DStyle.Billboard;
+        bool keepSprite = !showMesh || _hasAuthoredSprite;
+
+        if (_billboardRoot != null)
+        {
+            _billboardRoot.Visible = keepSprite;
+            _billboardRoot.Position = angled3D && showMesh
+                ? new Vector3(0f, Settings.BlockPixelSize * 0.35f, 0f)
+                : Vector3.Zero;
+        }
+
+        if (_meshRoot != null)
+            _meshRoot.Visible = showMesh;
+
+        if (_billboardSprite != null)
+        {
+            _billboardSprite.Modulate = angled3D && showMesh
+                ? new Color(1f, 1f, 1f, 0.92f)
+                : Colors.White;
+        }
     }
 
     private Texture2D TryLoadSprite()

@@ -135,6 +135,7 @@ public partial class GameCamera : Camera3D
             return;
 
         ViewMode = mode;
+        WorldManager.Instance?.RefreshViewDependentVisuals();
         AnimateCameraState();
     }
 
