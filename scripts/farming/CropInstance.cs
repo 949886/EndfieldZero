@@ -82,6 +82,7 @@ public partial class CropInstance : Node3D, ISelectable
         EventBus.Tick += OnTick;
 
         UpdateSprite();
+        UpdatePresentationMode();
     }
 
     public override void _ExitTree()
@@ -92,6 +93,7 @@ public partial class CropInstance : Node3D, ISelectable
     public override void _Process(double delta)
     {
         _selectionCircle.Visible = IsSelected;
+        UpdatePresentationMode();
     }
 
     private void OnTick(long tick)
@@ -125,6 +127,30 @@ public partial class CropInstance : Node3D, ISelectable
     {
         if (_sprite == null) return;
         _sprite.Texture = Def.GetStageTexture(CurrentStage);
+        UpdateSpriteAnchor();
+    }
+
+    private void UpdatePresentationMode()
+    {
+        if (_sprite == null)
+            return;
+
+        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        _sprite.NoDepthTest = angled3D;
+        _sprite.RenderPriority = angled3D ? 8 : 0;
+        _sprite.AlphaCut = angled3D
+            ? SpriteBase3D.AlphaCutMode.Disabled
+            : SpriteBase3D.AlphaCutMode.OpaquePrepass;
+        UpdateSpriteAnchor();
+    }
+
+    private void UpdateSpriteAnchor()
+    {
+        if (_sprite?.Texture == null)
+            return;
+
+        float halfHeight = _sprite.Texture.GetHeight() * _sprite.PixelSize * 0.5f;
+        _sprite.Position = new Vector3(0f, halfHeight, 0f);
     }
 
     private void CreateHarvestJob()

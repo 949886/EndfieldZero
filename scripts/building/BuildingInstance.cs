@@ -149,6 +149,7 @@ public partial class BuildingInstance : Node3D, ISelectable
         _billboardSprite.Texture = tex ?? GeneratePlaceholderTexture();
         _billboardSprite.Modulate = Colors.White;
         _billboardRoot.AddChild(_billboardSprite);
+        UpdateBillboardPresentation();
     }
 
     private void BuildSolidBlockVisual()
@@ -314,6 +315,24 @@ public partial class BuildingInstance : Node3D, ISelectable
             _billboardSprite.Modulate = angled3D && showMesh
                 ? new Color(1f, 1f, 1f, 0.92f)
                 : Colors.White;
+        }
+
+        UpdateBillboardPresentation();
+    }
+
+    private void UpdateBillboardPresentation()
+    {
+        if (_billboardSprite == null)
+            return;
+
+        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        _billboardSprite.NoDepthTest = angled3D;
+        _billboardSprite.RenderPriority = angled3D ? 7 : 0;
+
+        if (_billboardSprite.Texture != null)
+        {
+            float halfHeight = _billboardSprite.Texture.GetHeight() * _billboardSprite.PixelSize * 0.5f;
+            _billboardSprite.Position = new Vector3(0f, halfHeight, 0f);
         }
     }
 

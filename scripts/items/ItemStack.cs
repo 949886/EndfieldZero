@@ -132,14 +132,62 @@ public partial class ItemStack : Node3D, ISelectable
         _selectionCircle = new SelectionCircleNode();
         AddChild(_selectionCircle);
         _selectionCircle.Visible = false;
+        UpdatePresentationMode();
     }
 
     public override void _Process(double delta)
     {
         _selectionCircle.Visible = IsSelected;
         Visible = State != ItemState.BeingCarried;
+        UpdatePresentationMode();
         if (_countLabel != null)
             _countLabel.Text = Count > 1 ? $"×{Count}" : "";
+    }
+
+    private void UpdatePresentationMode()
+    {
+        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+
+        if (_sprite != null)
+        {
+            _sprite.NoDepthTest = angled3D;
+            _sprite.RenderPriority = angled3D ? 9 : 0;
+            _sprite.AlphaCut = angled3D
+                ? SpriteBase3D.AlphaCutMode.Disabled
+                : SpriteBase3D.AlphaCutMode.OpaquePrepass;
+            UpdateSpriteAnchor();
+        }
+
+        if (_countLabel != null)
+        {
+            _countLabel.RenderPriority = angled3D ? 10 : 0;
+            _countLabel.Position = new Vector3(0.15f, GetSpriteTopY() + 0.12f, 0f);
+        }
+    }
+
+    private void UpdateSpriteAnchor()
+    {
+        if (_sprite == null)
+            return;
+
+        float halfHeight = GetSpriteHalfHeight();
+        _sprite.Position = new Vector3(0f, halfHeight, 0f);
+    }
+
+    private float GetSpriteHalfHeight()
+    {
+        if (_sprite == null)
+            return 0f;
+
+        if (_sprite.RegionEnabled)
+            return ItemDef.TileSize * _sprite.PixelSize * 0.5f;
+
+        return (_sprite.Texture?.GetHeight() ?? 0) * _sprite.PixelSize * 0.5f;
+    }
+
+    private float GetSpriteTopY()
+    {
+        return GetSpriteHalfHeight() * 2f;
     }
 
     private ImageTexture GenerateIcon()
