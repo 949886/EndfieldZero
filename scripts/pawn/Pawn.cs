@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EndfieldZero.AI;
 using EndfieldZero.Core;
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.Pawn;
@@ -62,6 +63,7 @@ public partial class Pawn : CharacterBody3D
         _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
         _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _animController = new PawnAnimController(_sprite, _animPlayer);
+        UpdateSpritePresentation();
 
         // Initialize AI
         AI = new PawnAI(this);
@@ -83,6 +85,8 @@ public partial class Pawn : CharacterBody3D
     public override void _PhysicsProcess(double delta)
     {
         if (!IsAlive) return;
+
+        UpdateSpritePresentation();
 
         // Update selection circle visibility
         _selectionCircle?.SetSelected(IsSelected);
@@ -252,5 +256,15 @@ public partial class Pawn : CharacterBody3D
         AI?.Dispose();
         GD.Print($"[Pawn] {Data.PawnName} died: {cause}");
         EventBus.FirePawnDied(Data.Id);
+    }
+
+    private void UpdateSpritePresentation()
+    {
+        if (_sprite == null)
+            return;
+
+        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        _sprite.NoDepthTest = angled3D;
+        _sprite.RenderPriority = angled3D ? 10 : 0;
     }
 }
