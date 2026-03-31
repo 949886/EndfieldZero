@@ -321,9 +321,16 @@ public partial class GameCamera : Camera3D
         }
 
         float yaw = 45f + YawIndex * 90f;
-        Vector3 forward = GetPlanarForward(yaw);
-        Vector3 position = FocusWorldPosition - forward * AngledDistance + Vector3.Up * AngledHeight;
-        float farPlane = Mathf.Max(AngledDistance + AngledHeight + _currentOrthoSize * 6f, 256f);
+        float pitchRadians = Mathf.DegToRad(AngledPitchDegrees);
+        float pitchMagnitude = Mathf.Clamp(Mathf.Abs(pitchRadians), Mathf.DegToRad(5f), Mathf.DegToRad(85f));
+        float groundDepthHalfSpan = (_currentOrthoSize * 0.5f) / Mathf.Tan(pitchMagnitude);
+        float baseFocusDistance = AngledDistance * Mathf.Cos(pitchRadians) - AngledHeight * Mathf.Sin(pitchRadians);
+        float focusDistance = Mathf.Max(baseFocusDistance, Near + groundDepthHalfSpan + Settings.BlockPixelSize * 2f);
+
+        Vector3 forward = GetForwardDirection(yaw, pitchRadians);
+        Vector3 position = FocusWorldPosition - forward * focusDistance;
+        float verticalBuffer = Mathf.Max(CameraHeight, Settings.MaxLayers * Settings.BlockPixelSize * 4f);
+        float farPlane = Mathf.Max(focusDistance + groundDepthHalfSpan + verticalBuffer, 256f);
         return new CameraState(position, new Vector3(AngledPitchDegrees, yaw, 0f), farPlane);
     }
 
@@ -362,6 +369,16 @@ public partial class GameCamera : Camera3D
     {
         float radians = Mathf.DegToRad(yawDegrees);
         return new Vector3(Mathf.Sin(radians), 0f, Mathf.Cos(radians)).Normalized();
+    }
+
+    private static Vector3 GetForwardDirection(float yawDegrees, float pitchRadians)
+    {
+        Vector3 planarForward = GetPlanarForward(yawDegrees);
+        float planarScale = Mathf.Cos(pitchRadians);
+        return new Vector3(
+            planarForward.X * planarScale,
+            Mathf.Sin(pitchRadians),
+            planarForward.Z * planarScale).Normalized();
     }
 
     private Vector3 ProjectToPlane(Vector2 screenPos, float planeY)
