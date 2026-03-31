@@ -6,7 +6,8 @@ namespace EndfieldZero.World;
 
 /// <summary>
 /// Generates a lightweight blocky mesh for a single chunk.
-/// Flat tiles keep a thin top surface, while walls/ores/trees expose vertical faces.
+/// Both camera modes render the highest visible top face for each column,
+/// while angled mode also exposes vertical faces for raised columns.
 /// </summary>
 public partial class ChunkRenderer : MeshInstance3D
 {
@@ -53,7 +54,7 @@ public partial class ChunkRenderer : MeshInstance3D
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode unshaded, cull_disabled;
+render_mode unshaded, cull_disabled, depth_prepass_alpha;
 
 uniform bool occlusion_enabled = false;
 uniform vec3 occlusion_camera_pos = vec3(0.0);
@@ -96,7 +97,10 @@ void fragment() {
     }
 
     ALBEDO = COLOR.rgb;
-    ALPHA = alpha;
+
+    if (alpha < 0.999) {
+        ALPHA = alpha;
+    }
 }";
         _angledMaterial = new ShaderMaterial { Shader = shader };
         return _angledMaterial;
@@ -114,7 +118,6 @@ render_mode unshaded, cull_disabled;
 
 void fragment() {
     ALBEDO = COLOR.rgb;
-    ALPHA = COLOR.a;
 }";
         _topDownMaterial = new ShaderMaterial { Shader = shader };
         return _topDownMaterial;
@@ -136,15 +139,12 @@ void fragment() {
         var colors = new List<Color>();
 
         bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        BuildTopFaces(visuals, size, px, vertices, normals, colors);
+
         if (angledView)
         {
-            BuildTopFaces(visuals, size, px, vertices, normals, colors);
             BuildSideFaces(visuals, size, px, vertices, normals, colors);
             BuildCrossPlanes(visuals, size, px, vertices, normals, colors);
-        }
-        else
-        {
-            BuildClassicTopFaces(visuals, size, px, vertices, normals, colors);
         }
 
         if (vertices.Count == 0)
@@ -281,63 +281,6 @@ void fragment() {
         }
     }
 
-    private void BuildClassicTopFaces(CellVisual[,] visuals, int size, float px, List<Vector3> vertices, List<Vector3> normals, List<Color> colors)
-    {
-        var merged = new bool[size, size];
-
-        for (int z = 0; z < size; z++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                if (merged[x, z])
-                    continue;
-
-                CellVisual cell = visuals[x, z];
-                if (cell == null || !cell.HasSurface)
-                    continue;
-
-                int width = 1;
-                while (x + width < size && CanMergeClassicTop(cell, visuals[x + width, z], merged[x + width, z]))
-                    width++;
-
-                int height = 1;
-                bool canExpand = true;
-                while (canExpand && z + height < size)
-                {
-                    for (int dx = 0; dx < width; dx++)
-                    {
-                        if (!CanMergeClassicTop(cell, visuals[x + dx, z + height], merged[x + dx, z + height]))
-                        {
-                            canExpand = false;
-                            break;
-                        }
-                    }
-
-                    if (canExpand)
-                        height++;
-                }
-
-                for (int dz = 0; dz < height; dz++)
-                {
-                    for (int dx = 0; dx < width; dx++)
-                        merged[x + dx, z + dz] = true;
-                }
-
-                float left = x * px;
-                float top = z * px;
-                float right = (x + width) * px;
-                float bottom = (z + height) * px;
-                float y = cell.BaseY;
-
-                Vector3 tl = new(left, y, top);
-                Vector3 tr = new(right, y, top);
-                Vector3 br = new(right, y, bottom);
-                Vector3 bl = new(left, y, bottom);
-                AddQuad(vertices, normals, colors, tl, tr, br, bl, Vector3.Up, cell.Color);
-            }
-        }
-    }
-
     private void BuildSideFaces(CellVisual[,] visuals, int size, float px, List<Vector3> vertices, List<Vector3> normals, List<Color> colors)
     {
         for (int z = 0; z < size; z++)
@@ -452,15 +395,6 @@ void fragment() {
             && candidate.Block.TypeId == seed.Block.TypeId
             && candidate.VisualKind == seed.VisualKind
             && Mathf.IsEqualApprox(candidate.SurfaceY, seed.SurfaceY);
-    }
-
-    private static bool CanMergeClassicTop(CellVisual seed, CellVisual candidate, bool alreadyMerged)
-    {
-        return !alreadyMerged
-            && candidate != null
-            && candidate.HasSurface
-            && candidate.Block.TypeId == seed.Block.TypeId
-            && Mathf.IsEqualApprox(candidate.BaseY, seed.BaseY);
     }
 
     private static Color TintForSide(Color color, Vector3 normal)

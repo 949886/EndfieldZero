@@ -251,7 +251,6 @@ public partial class BuildingInstance : Node3D, ISelectable
             AlbedoColor = color,
             Roughness = 0.9f,
             Metallic = 0f,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
             CullMode = BaseMaterial3D.CullModeEnum.Disabled,
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
         };
