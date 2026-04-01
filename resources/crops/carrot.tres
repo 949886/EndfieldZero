@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="CropDef" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="CropDef" format=3 uid="uid://cmb14q3jdfw0n"]
 
-[ext_resource type="Script" path="res://scripts/farming/CropDef.cs" id="1"]
-[ext_resource type="Texture2D" path="res://sprites/Sprout Lands/Objects/Farming Plants.png" id="2"]
+[ext_resource type="Script" uid="uid://b3vdeor7bh4te" path="res://scripts/farming/CropDef.cs" id="1"]
+[ext_resource type="Texture2D" uid="uid://dcn5wlisodcjp" path="res://sprites/Sprout Lands/Objects/Farming Plants.png" id="2"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_stage_0"]
 atlas = ExtResource("2")
@@ -24,7 +24,6 @@ script = ExtResource("1")
 Id = "carrot"
 DisplayName = "胡萝卜"
 TicksPerStage = 480
-MinGrowingSkill = 0.0
 HarvestYield = 3
 XpPerTick = 0.3
 StageTiles = Array[AtlasTexture]([SubResource("AtlasTexture_stage_0"), SubResource("AtlasTexture_stage_1"), SubResource("AtlasTexture_stage_2"), SubResource("AtlasTexture_stage_3")])
