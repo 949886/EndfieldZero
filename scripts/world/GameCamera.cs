@@ -32,6 +32,7 @@ public partial class GameCamera : Camera3D
     [Export] public float TransitionDuration { get; set; } = 0.3f;
     [Export] public float OcclusionRadius { get; set; } = 0.65f;
     [Export] public float OcclusionAlpha { get; set; } = 0.22f;
+    [Export] public float OcclusionScreenRadiusPixels { get; set; } = 110f;
 
     public static GameCamera Instance { get; private set; }
     public CameraViewMode ViewMode { get; private set; } = CameraViewMode.TopDown;
@@ -148,36 +149,33 @@ public partial class GameCamera : Camera3D
         AnimateCameraState();
     }
 
-    public Vector3 GetOcclusionAnchor()
+    public bool TryGetSelectedPawnOcclusionAnchor(out Vector3 anchor)
     {
-        var viewport = GetViewport();
-        if (viewport == null)
-            return FocusWorldPosition;
-
-        var world = WorldManager.Instance;
-        if (world != null)
-        {
-            Vector2 mouse = viewport.GetMousePosition();
-            var hoverHit = world.ScreenToBlockHit(mouse, this);
-            if (hoverHit.Hit)
-                return new Vector3(hoverHit.BlockCenterWorld.X, hoverHit.SurfaceY, hoverHit.BlockCenterWorld.Z);
-        }
-
-        if (SelectionManager.Instance?.SelectedEntity is Node3D selectedEntity)
-            return selectedEntity.GlobalPosition;
-
         if (SelectionManager.Instance?.Selected.Count > 0 && SelectionManager.Instance.Selected[0] is Node3D selectedPawn)
-            return selectedPawn.GlobalPosition;
-
-        if (world != null)
         {
-            Vector2 center = viewport.GetVisibleRect().Size * 0.5f;
-            var centerHit = world.ScreenToBlockHit(center, this);
-            if (centerHit.Hit)
-                return new Vector3(centerHit.BlockCenterWorld.X, centerHit.SurfaceY, centerHit.BlockCenterWorld.Z);
+            anchor = selectedPawn.GlobalPosition;
+            return true;
         }
 
-        return FocusWorldPosition;
+        anchor = Vector3.Zero;
+        return false;
+    }
+
+    public bool TryGetSelectedPawnScreenPosition(out Vector2 screenPos)
+    {
+        if (TryGetSelectedPawnOcclusionAnchor(out Vector3 anchor))
+        {
+            screenPos = UnprojectPosition(anchor);
+            return true;
+        }
+
+        screenPos = Vector2.Zero;
+        return false;
+    }
+
+    public Vector2 GetOcclusionMouseScreenPosition()
+    {
+        return GetViewport()?.GetMousePosition() ?? Vector2.Zero;
     }
 
     public Vector2 GetScreenMotion(Vector3 worldDirection)
@@ -213,6 +211,7 @@ public partial class GameCamera : Camera3D
         AngledDistance = Mathf.Max(AngledDistance, Settings.BlockPixelSize);
         AngledHeight = Mathf.Max(AngledHeight, Settings.BlockPixelSize);
         TransitionDuration = Mathf.Max(TransitionDuration, 0.01f);
+        OcclusionScreenRadiusPixels = Mathf.Max(OcclusionScreenRadiusPixels, 1f);
     }
 
     private void HandleKeyboardMovement(float dt)
@@ -356,12 +355,28 @@ public partial class GameCamera : Camera3D
 
     private void UpdateOcclusionState()
     {
-        Vector3 anchor = GetOcclusionAnchor();
+        var viewport = GetViewport();
+        Vector2 screenSize = viewport?.GetVisibleRect().Size ?? Vector2.One;
+        Vector2 mouseScreen = GetOcclusionMouseScreenPosition();
+        Vector2 mouseScreenUv = new(
+            screenSize.X > 0.0001f ? mouseScreen.X / screenSize.X : 0.5f,
+            screenSize.Y > 0.0001f ? mouseScreen.Y / screenSize.Y : 0.5f);
+        bool hasSelectedPawn = TryGetSelectedPawnScreenPosition(out Vector2 selectedScreen);
+        Vector2 selectedScreenUv = hasSelectedPawn
+            ? new Vector2(
+                screenSize.X > 0.0001f ? selectedScreen.X / screenSize.X : 0.5f,
+                screenSize.Y > 0.0001f ? selectedScreen.Y / screenSize.Y : 0.5f)
+            : new Vector2(-10f, -10f);
+        Vector2 occlusionRadiusUv = new(
+            screenSize.X > 0.0001f ? OcclusionScreenRadiusPixels / screenSize.X : 0.1f,
+            screenSize.Y > 0.0001f ? OcclusionScreenRadiusPixels / screenSize.Y : 0.1f);
+
         ChunkRenderer.UpdateSharedViewState(
-            GlobalPosition,
-            anchor,
+            mouseScreenUv,
+            selectedScreenUv,
+            occlusionRadiusUv,
             ViewMode == CameraViewMode.Angled3D,
-            OcclusionRadius,
+            hasSelectedPawn,
             OcclusionAlpha);
     }
 

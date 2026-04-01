@@ -34,15 +34,22 @@ public partial class ChunkRenderer : MeshInstance3D
         ApplyMaterialForCurrentView();
     }
 
-    public static void UpdateSharedViewState(Vector3 cameraPos, Vector3 focusPos, bool occlusionEnabled, float occlusionRadius, float occlusionAlpha)
+    public static void UpdateSharedViewState(
+        Vector2 mouseScreenUv,
+        Vector2 selectedScreenUv,
+        Vector2 occlusionRadiusUv,
+        bool occlusionEnabled,
+        bool selectedOcclusionEnabled,
+        float occlusionAlpha)
     {
         if (_angledMaterial == null)
             return;
 
-        _angledMaterial.SetShaderParameter("occlusion_camera_pos", cameraPos);
-        _angledMaterial.SetShaderParameter("occlusion_focus_pos", focusPos);
+        _angledMaterial.SetShaderParameter("occlusion_mouse_screen_uv", mouseScreenUv);
+        _angledMaterial.SetShaderParameter("occlusion_selected_screen_uv", selectedScreenUv);
+        _angledMaterial.SetShaderParameter("occlusion_radius_uv", occlusionRadiusUv);
         _angledMaterial.SetShaderParameter("occlusion_enabled", occlusionEnabled);
-        _angledMaterial.SetShaderParameter("occlusion_radius", occlusionRadius);
+        _angledMaterial.SetShaderParameter("selected_occlusion_enabled", selectedOcclusionEnabled);
         _angledMaterial.SetShaderParameter("occlusion_alpha", occlusionAlpha);
     }
 
@@ -57,21 +64,14 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, depth_prepass_alpha;
 
 uniform bool occlusion_enabled = false;
-uniform vec3 occlusion_camera_pos = vec3(0.0);
-uniform vec3 occlusion_focus_pos = vec3(0.0);
-uniform float occlusion_radius = 0.65;
+uniform bool selected_occlusion_enabled = false;
+uniform vec2 occlusion_mouse_screen_uv = vec2(0.5);
+uniform vec2 occlusion_selected_screen_uv = vec2(-10.0);
+uniform vec2 occlusion_radius_uv = vec2(0.12);
 uniform float occlusion_alpha = 0.22;
 
 varying vec3 world_pos;
 varying vec3 world_normal;
-
-float segment_distance_xz(vec2 p, vec2 a, vec2 b) {
-    vec2 ab = b - a;
-    float denom = max(dot(ab, ab), 0.0001);
-    float t = clamp(dot(p - a, ab) / denom, 0.0, 1.0);
-    vec2 q = a + ab * t;
-    return length(p - q);
-}
 
 void vertex() {
     world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -82,16 +82,17 @@ void fragment() {
     float alpha = COLOR.a;
 
     if (occlusion_enabled && abs(world_normal.y) < 0.35) {
-        vec2 cam = occlusion_camera_pos.xz;
-        vec2 focus = occlusion_focus_pos.xz;
-        float path_distance = segment_distance_xz(world_pos.xz, cam, focus);
-        float near_path = 1.0 - smoothstep(occlusion_radius, occlusion_radius * 1.9, path_distance);
+        vec2 radius = max(occlusion_radius_uv, vec2(0.0001));
+        float mouse_distance = length((SCREEN_UV - occlusion_mouse_screen_uv) / radius);
+        float mouse_fade = 1.0 - smoothstep(1.0, 1.75, mouse_distance);
 
-        vec2 path = focus - cam;
-        float t = dot(world_pos.xz - cam, path) / max(dot(path, path), 0.0001);
-        float between = step(0.05, t) * step(t, 0.98);
-        float above_focus = step(occlusion_focus_pos.y - 0.15, world_pos.y);
-        float fade = near_path * between * above_focus;
+        float selected_fade = 0.0;
+        if (selected_occlusion_enabled) {
+            float selected_distance = length((SCREEN_UV - occlusion_selected_screen_uv) / radius);
+            selected_fade = 1.0 - smoothstep(1.0, 1.75, selected_distance);
+        }
+
+        float fade = max(mouse_fade, selected_fade);
 
         alpha = mix(alpha, min(alpha, occlusion_alpha), fade);
     }

@@ -272,19 +272,14 @@ public partial class BuildingInstance : Node3D, ISelectable
             return;
         }
 
-        Vector3 focus = GameCamera.Instance.GetOcclusionAnchor();
-        Vector2 cameraXZ = new Vector2(GameCamera.Instance.GlobalPosition.X, GameCamera.Instance.GlobalPosition.Z);
-        Vector2 focusXZ = new Vector2(focus.X, focus.Z);
-        Vector2 buildingXZ = new Vector2(GlobalPosition.X, GlobalPosition.Z);
+        Vector2 buildingScreen = GameCamera.Instance.UnprojectPosition(GlobalPosition);
+        Vector2 mouseScreen = GameCamera.Instance.GetOcclusionMouseScreenPosition();
+        float nearestDistance = buildingScreen.DistanceTo(mouseScreen);
 
-        float dist = DistanceToSegment(buildingXZ, cameraXZ, focusXZ);
-        Vector2 path = focusXZ - cameraXZ;
-        float t = path.LengthSquared() > 0.0001f
-            ? (buildingXZ - cameraXZ).Dot(path) / path.LengthSquared()
-            : 0f;
-        bool between = t > 0.05f && t < 0.98f;
-        bool aboveFocus = GlobalPosition.Y >= focus.Y - 0.15f;
-        float transparency = dist <= GameCamera.Instance.OcclusionRadius && between && aboveFocus
+        if (GameCamera.Instance.TryGetSelectedPawnScreenPosition(out Vector2 selectedPawnScreen))
+            nearestDistance = Mathf.Min(nearestDistance, buildingScreen.DistanceTo(selectedPawnScreen));
+
+        float transparency = nearestDistance <= GameCamera.Instance.OcclusionScreenRadiusPixels
             ? 1f - GameCamera.Instance.OcclusionAlpha
             : 0f;
 
@@ -368,18 +363,6 @@ public partial class BuildingInstance : Node3D, ISelectable
         }
 
         return ImageTexture.CreateFromImage(image);
-    }
-
-    private static float DistanceToSegment(Vector2 point, Vector2 a, Vector2 b)
-    {
-        Vector2 ab = b - a;
-        float denom = ab.LengthSquared();
-        if (denom <= 0.0001f)
-            return point.DistanceTo(a);
-
-        float t = Mathf.Clamp((point - a).Dot(ab) / denom, 0f, 1f);
-        Vector2 closest = a + ab * t;
-        return point.DistanceTo(closest);
     }
 
     private static string CategoryName(string cat) => cat switch
