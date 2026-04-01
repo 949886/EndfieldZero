@@ -41,6 +41,7 @@ public partial class Pawn : CharacterBody3D
     private List<Vector3> _path = new();
     private int _pathIndex;
     private static float PathNodeReachDist => 0.5f * Settings.BlockPixelSize;
+    private const float SurfaceClearance = 0.02f;
 
     // Player command timer — AI resumes after idle for a while
     private long _playerCommandEndTick;
@@ -63,6 +64,7 @@ public partial class Pawn : CharacterBody3D
         _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
         _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _animController = new PawnAnimController(_sprite, _animPlayer);
+        SnapToSurface();
         UpdateSpritePresentation();
 
         // Initialize AI
@@ -149,6 +151,8 @@ public partial class Pawn : CharacterBody3D
             Velocity = Vector3.Zero;
             _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
         }
+
+        SnapToSurface();
     }
 
     private void OnTick(long tick)
@@ -266,5 +270,29 @@ public partial class Pawn : CharacterBody3D
         bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
         _sprite.NoDepthTest = angled3D;
         _sprite.RenderPriority = angled3D ? 10 : 0;
+        UpdateSpriteAnchor();
+    }
+
+    private void SnapToSurface()
+    {
+        if (WorldManager.Instance == null)
+            return;
+
+        Vector2I blockCoord = Pathfinding.PathfindingService.WorldToBlock(GlobalPosition);
+        float surfaceY = WorldManager.Instance.GetSurfaceTopY(blockCoord.X, blockCoord.Y);
+        GlobalPosition = new Vector3(GlobalPosition.X, surfaceY + SurfaceClearance, GlobalPosition.Z);
+    }
+
+    private void UpdateSpriteAnchor()
+    {
+        if (_sprite == null)
+            return;
+
+        Texture2D frameTexture = _sprite.SpriteFrames?.GetFrameTexture(_sprite.Animation, _sprite.Frame);
+        if (frameTexture == null)
+            return;
+
+        float halfHeight = frameTexture.GetHeight() * _sprite.PixelSize * 0.5f;
+        _sprite.Position = new Vector3(0f, halfHeight, 0f);
     }
 }
