@@ -44,11 +44,11 @@ public class SatisfyNeedAction : AIAction
 
     public override bool CanExecute(AIContext context)
     {
-        // Only execute when at least one need is below 50
+        // Only execute when at least one need is below 30
         var pawn = context.Pawn;
-        return pawn.Needs.Hunger < 50f || pawn.Needs.Rest < 50f
-            || pawn.Needs.Joy < 50f || pawn.Needs.Social < 50f
-            || pawn.Needs.Comfort < 50f || pawn.Needs.Beauty < 50f;
+        return pawn.Needs.Hunger < 30f || pawn.Needs.Rest < 30f
+            || pawn.Needs.Joy < 30f || pawn.Needs.Social < 30f
+            || pawn.Needs.Comfort < 30f || pawn.Needs.Beauty < 30f;
     }
 
     public override void OnStart(AIContext context)

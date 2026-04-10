@@ -214,6 +214,21 @@ public partial class SelectionManager : Control
         var camera = GetViewport().GetCamera3D();
         if (camera == null || WorldManager.Instance == null) return;
 
+        // 1. Check if an enemy is clicked
+        var targetEnemy = FindEnemyAtScreenPos(screenPos, camera, 60f);
+        if (targetEnemy != null && targetEnemy.IsAlive)
+        {
+            foreach (var pawn in _selected)
+            {
+                pawn.AttackTargetPawn = targetEnemy;
+                pawn.IsPlayerControlled = true;
+                pawn.Stop(); // Clear move targets so CombatAction takes over
+            }
+            SpawnMovePing(targetEnemy.GlobalPosition); // Show feedback
+            return;
+        }
+
+        // 2. Otherwise move to block
         var hit = WorldManager.Instance.ScreenToBlockHit(screenPos, camera);
         if (!hit.Hit) return;
 
@@ -338,6 +353,30 @@ public partial class SelectionManager : Control
             {
                 closestDist = dist;
                 closest = pawn;
+            }
+        }
+
+        return closest;
+    }
+
+    private Pawn.EnemyPawn FindEnemyAtScreenPos(Vector2 screenPos, Camera3D camera, float maxDist)
+    {
+        if (PawnManager.Instance == null) return null;
+
+        Pawn.EnemyPawn closest = null;
+        float closestDist = maxDist;
+
+        foreach (var enemy in PawnManager.Instance.GetAllEnemies())
+        {
+            if (!enemy.IsAlive) continue;
+
+            Vector2 pawnScreen = camera.UnprojectPosition(enemy.GlobalPosition);
+            float dist = pawnScreen.DistanceTo(screenPos);
+
+            if (dist < closestDist)
+            {
+                closestDist = dist;
+                closest = enemy;
             }
         }
 

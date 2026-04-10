@@ -75,7 +75,7 @@ public class DoJobAction : AIAction
         if (!_isAtTarget)
         {
             float dist = context.Pawn.GlobalPosition.DistanceTo(_claimedJob.TargetWorldPos);
-            if (dist < WorkReachDist || !context.Pawn.IsMoving)
+            if (dist < WorkReachDist)
             {
                 _isAtTarget = true;
                 _claimedJob.Start();
@@ -83,6 +83,14 @@ public class DoJobAction : AIAction
 
                 // Face toward job target
                 context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos);
+            }
+            else if (!context.Pawn.IsMoving)
+            {
+                // Stopped moving but not at target = Path blocked!
+                GD.Print($"[AI] {context.Pawn.Data.PawnName} path to job blocked. Cancelling.");
+                _claimedJob.Fail();
+                _isComplete = true;
+                return;
             }
             return;
         }

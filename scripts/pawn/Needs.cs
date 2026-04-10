@@ -21,13 +21,13 @@ public class Needs
     public float Social  { get; set; } = 100f;
 
     // --- Decay rates per tick at 1× speed ---
-    // 可被 Trait 修改
-    public float HungerDecay  { get; set; } = 0.015f;   // ~110 分钟满→空
-    public float RestDecay    { get; set; } = 0.012f;    // ~140 分钟
-    public float JoyDecay     { get; set; } = 0.008f;    // ~210 分钟
-    public float ComfortDecay { get; set; } = 0.005f;    // 按环境动态
-    public float BeautyDecay  { get; set; } = 0.003f;    // 按环境动态
-    public float SocialDecay  { get; set; } = 0.006f;    // ~280 分钟
+    // 可被 Trait 修改 (降低了5倍，防止殖民者频繁卡在原地发呆)
+    public float HungerDecay  { get; set; } = 0.003f;
+    public float RestDecay    { get; set; } = 0.0024f;
+    public float JoyDecay     { get; set; } = 0.0016f;
+    public float ComfortDecay { get; set; } = 0.001f;
+    public float BeautyDecay  { get; set; } = 0.0006f;
+    public float SocialDecay  { get; set; } = 0.0012f;
 
     /// <summary>Tick all needs: apply decay, clamp to [0, 100].</summary>
     public void Tick()
