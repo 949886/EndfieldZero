@@ -218,12 +218,9 @@ public partial class Storyteller : Node
 
     private void UpdateThreatLevel()
     {
-        // Check if any hostiles alive
         if (PawnManager.Instance == null) return;
 
-        int hostileCount = 0;
-        foreach (var pawn in PawnManager.Instance.GetAllPawns())
-            if (pawn.IsAlive && pawn.Data.IsHostile) hostileCount++;
+        int hostileCount = PawnManager.Instance.GetHostileCount();
 
         string newLevel = hostileCount > 0 ? "combat" : "peace";
         if (newLevel != _currentThreatLevel)

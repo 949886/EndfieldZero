@@ -22,7 +22,7 @@ public class CombatAction : AIAction
         ? $"战斗:{_target.Data.PawnName}"
         : "战斗";
 
-    private Pawn.Pawn _target;
+    private Pawn.EnemyPawn _target;
     private int _attackCooldown;
     private bool _isComplete;
 
@@ -150,7 +150,7 @@ public class CombatAction : AIAction
         return false;
     }
 
-    private Pawn.Pawn FindTarget(Pawn.Pawn self)
+    private Pawn.EnemyPawn FindTarget(Pawn.Pawn self)
     {
         // Player-issued attack target takes priority
         if (self.AttackTargetPawn != null && GodotObject.IsInstanceValid(self.AttackTargetPawn)
@@ -162,24 +162,14 @@ public class CombatAction : AIAction
         string myFaction = self.Data.Faction;
         float detectionRange = 20f * Settings.BlockPixelSize;
 
-        Pawn.Pawn best = null;
+        Pawn.EnemyPawn best = null;
         float bestDist = float.MaxValue;
 
         if (PawnManager.Instance == null) return null;
 
-        foreach (var other in PawnManager.Instance.GetAllPawns())
+        foreach (var other in PawnManager.Instance.GetAllEnemies())
         {
-            if (other == self || !other.IsAlive) continue;
-            if (other.Health?.IsDead ?? true) continue;
-
-            // Faction check: attack enemies
-            bool isEnemy = false;
-            if (myFaction == "Colony" || myFaction == "Neutral")
-                isEnemy = other.Data.IsHostile;
-            else if (myFaction == "Hostile" || myFaction == "Animal")
-                isEnemy = other.Data.Faction == "Colony";
-
-            if (!isEnemy) continue;
+            if (!other.IsAlive) continue;
 
             float dist = self.GlobalPosition.DistanceTo(other.GlobalPosition);
             if (dist < detectionRange && dist < bestDist)

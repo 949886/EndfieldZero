@@ -201,22 +201,13 @@ public class PawnAI
 
         if (PawnManager.Instance == null) return;
 
-        string myFaction = _pawn.Data.Faction;
         float detectionRange = 25f * Settings.BlockPixelSize;
 
-        foreach (var other in PawnManager.Instance.GetAllPawns())
+        foreach (var enemy in PawnManager.Instance.GetAllEnemies())
         {
-            if (other == _pawn || !other.IsAlive) continue;
+            if (!enemy.IsAlive) continue;
 
-            bool isEnemy;
-            if (myFaction == "Colony" || myFaction == "Neutral")
-                isEnemy = other.Data.IsHostile;
-            else
-                isEnemy = other.Data.Faction == "Colony";
-
-            if (!isEnemy) continue;
-
-            float dist = _pawn.GlobalPosition.DistanceTo(other.GlobalPosition);
+            float dist = _pawn.GlobalPosition.DistanceTo(enemy.GlobalPosition);
             if (dist < detectionRange)
             {
                 _context.NearbyEnemyCount++;

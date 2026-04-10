@@ -35,7 +35,7 @@ public partial class Pawn : CharacterBody3D
     public bool IsDrafted { get; set; }
 
     /// <summary>Target pawn for attack command (player-issued).</summary>
-    public Pawn AttackTargetPawn { get; set; }
+    public EnemyPawn AttackTargetPawn { get; set; }
 
     private PawnAnimController _animController;
     private AnimatedSprite3D _sprite;
@@ -68,7 +68,7 @@ public partial class Pawn : CharacterBody3D
         Needs = new Needs();
         Data.ApplyTraitNeedModifiers(Needs);
         Mood = new MoodTracker(Data);
-        Health = new HealthComponent(this);
+        Health = new HealthComponent(Data, cause => Die(cause));
 
         _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
         _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");

@@ -15,11 +15,17 @@ public partial class PawnManager : Node3D
     /// <summary>Path to the pawn.tscn scene.</summary>
     [Export] public PackedScene PawnScene { get; set; }
 
+    /// <summary>Path to the enemy_pawn.tscn scene.</summary>
+    [Export] public PackedScene EnemyPawnScene { get; set; }
+
     /// <summary>Number of initial colonists to spawn.</summary>
     [Export] public int InitialColonistCount { get; set; } = 3;
 
-    /// <summary>Registry of active pawns.</summary>
+    /// <summary>Registry of active colonist pawns.</summary>
     private readonly Dictionary<int, Pawn.Pawn> _pawns = new();
+
+    /// <summary>Registry of active enemy pawns.</summary>
+    private readonly Dictionary<int, Pawn.EnemyPawn> _enemies = new();
 
     /// <summary>Next available pawn ID.</summary>
     private int _nextId = 1;
@@ -122,11 +128,17 @@ public partial class PawnManager : Node3D
         return new Vector3(x, 0f, z);
     }
 
-    /// <summary>Spawn a hostile pawn (for raids/animal attacks).</summary>
-    public Pawn.Pawn SpawnHostile(Vector3 position, string faction = "Hostile",
+    /// <summary>Spawn a hostile enemy pawn (for raids/animal attacks).</summary>
+    public Pawn.EnemyPawn SpawnHostile(Vector3 position, string faction = "Hostile",
         string weaponId = "", string name = null)
     {
-        var instance = PawnScene.Instantiate<Pawn.Pawn>();
+        if (EnemyPawnScene == null)
+        {
+            GD.PrintErr("[PawnManager] EnemyPawnScene not assigned!");
+            return null;
+        }
+
+        var instance = EnemyPawnScene.Instantiate<Pawn.EnemyPawn>();
         var data = GenerateRandomPawnData();
         data.Faction = faction;
         data.EquippedWeaponId = weaponId;
@@ -135,7 +147,7 @@ public partial class PawnManager : Node3D
         instance.Position = position;
         AddChild(instance);
 
-        _pawns[data.Id] = instance;
+        _enemies[data.Id] = instance;
         return instance;
     }
 
@@ -176,6 +188,31 @@ public partial class PawnManager : Node3D
         int count = 0;
         foreach (var pawn in _pawns.Values)
             if (pawn.IsAlive && pawn.Data.Faction == "Colony") count++;
+        return count;
+    }
+
+    /// <summary>Get all living enemy pawns.</summary>
+    public IEnumerable<Pawn.EnemyPawn> GetAllEnemies()
+    {
+        // Clean up dead/freed enemies
+        var toRemove = new List<int>();
+        foreach (var kv in _enemies)
+        {
+            if (!GodotObject.IsInstanceValid(kv.Value) || !kv.Value.IsAlive)
+                toRemove.Add(kv.Key);
+        }
+        foreach (var id in toRemove)
+            _enemies.Remove(id);
+
+        return _enemies.Values;
+    }
+
+    /// <summary>Count living hostiles.</summary>
+    public int GetHostileCount()
+    {
+        int count = 0;
+        foreach (var enemy in GetAllEnemies())
+            if (enemy.IsAlive) count++;
         return count;
     }
 }

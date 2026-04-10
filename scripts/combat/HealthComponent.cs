@@ -11,7 +11,8 @@ namespace EndfieldZero.Combat;
 /// </summary>
 public class HealthComponent
 {
-    private readonly Pawn.Pawn _pawn;
+    private readonly Pawn.PawnData _data;
+    private readonly Action<string> _onDeath;
 
     public float MaxHp { get; private set; }
     public float CurrentHp { get; private set; }
@@ -20,11 +21,12 @@ public class HealthComponent
 
     public List<Wound> Wounds { get; } = new();
 
-    public HealthComponent(Pawn.Pawn pawn)
+    public HealthComponent(Pawn.PawnData data, Action<string> onDeath)
     {
-        _pawn = pawn;
+        _data = data;
+        _onDeath = onDeath;
         // Base 80 + Strength × 4 → range ~92-160
-        MaxHp = 80f + pawn.Data.GetStat("Strength") * 4f;
+        MaxHp = 80f + data.GetStat("Strength") * 4f;
         CurrentHp = MaxHp;
     }
 
@@ -43,11 +45,11 @@ public class HealthComponent
                      : WoundSeverity.Scratch;
         Wounds.Add(new Wound(part, severity, actual));
 
-        EventBus.FirePawnDamaged(_pawn.Data.Id, actual, sourceId);
+        EventBus.FirePawnDamaged(_data.Id, actual, sourceId);
 
         if (IsDead)
         {
-            _pawn.Die("combat");
+            _onDeath?.Invoke("combat");
         }
 
         return actual;
