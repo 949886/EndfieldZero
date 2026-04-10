@@ -19,6 +19,7 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class JobOverlay : MeshInstance3D
 {
+    private const int OverlayRenderPriority = 6;
     private static ShaderMaterial _overlayMaterial;
 
     private static readonly Dictionary<string, Color> JobTypeColors = new()
@@ -35,10 +36,19 @@ public partial class JobOverlay : MeshInstance3D
     public override void _Ready()
     {
         MaterialOverride = GetOverlayMaterial();
+        CastShadow = ShadowCastingSetting.Off;
+        ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
+    }
+
+    public override void _ExitTree()
+    {
+        ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
     }
 
     public override void _Process(double delta)
     {
+        ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
+        Visible = true;
         RebuildOverlayMesh();
     }
 
@@ -155,13 +165,13 @@ public partial class JobOverlay : MeshInstance3D
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_draw_never;
+render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled;
 
 void fragment() {
     ALBEDO = COLOR.rgb;
     ALPHA = COLOR.a;
 }";
-        _overlayMaterial = new ShaderMaterial { Shader = shader };
+        _overlayMaterial = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
         return _overlayMaterial;
     }
 }

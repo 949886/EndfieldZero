@@ -1,5 +1,6 @@
 using Godot;
 using EndfieldZero.World;
+using EndfieldZero.UI;
 
 namespace EndfieldZero.Building;
 
@@ -14,6 +15,7 @@ namespace EndfieldZero.Building;
 /// </summary>
 public partial class BlueprintOverlay : MeshInstance3D
 {
+    private const int OverlayRenderPriority = 6;
     private static ShaderMaterial _overlayMat;
 
     // Preview state (set by ToolModeManager)
@@ -26,10 +28,18 @@ public partial class BlueprintOverlay : MeshInstance3D
     {
         MaterialOverride = GetOverlayMaterial();
         CastShadow = ShadowCastingSetting.Off;
+        ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
+    }
+
+    public override void _ExitTree()
+    {
+        ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
     }
 
     public override void _Process(double delta)
     {
+        ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
+        Visible = true;
         RebuildMesh();
     }
 
@@ -120,9 +130,9 @@ public partial class BlueprintOverlay : MeshInstance3D
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_draw_never;
+render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled;
 void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
-        _overlayMat = new ShaderMaterial { Shader = shader };
+        _overlayMat = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
         return _overlayMat;
     }
 }
