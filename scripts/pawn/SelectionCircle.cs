@@ -12,6 +12,8 @@ namespace EndfieldZero.Pawn;
 /// </summary>
 public partial class SelectionCircle : MeshInstance3D
 {
+    private const int CircleRenderPriority = 7;
+
     [Export] public float OuterRadius { get; set; } = 0.35f;
     [Export] public float InnerRadius { get; set; } = 0.28f;
     [Export] public int Segments { get; set; } = 32;
@@ -22,7 +24,8 @@ public partial class SelectionCircle : MeshInstance3D
     public override void _Ready()
     {
         // Position slightly above ground so it's visible
-        Position = new Vector3(0f, 0.03f, 0f);
+        Position = new Vector3(0f, 0.6f, 0f);
+        SortingOffset = 0.25f;
         CastShadow = ShadowCastingSetting.Off;
         MaterialOverride = GetCircleMaterial();
 
@@ -79,7 +82,7 @@ void fragment() {
     ALBEDO = COLOR.rgb;
     ALPHA = COLOR.a;
 }";
-        _circleMat = new ShaderMaterial { Shader = shader };
+        _circleMat = new ShaderMaterial { Shader = shader, RenderPriority = CircleRenderPriority };
         return _circleMat;
     }
 }

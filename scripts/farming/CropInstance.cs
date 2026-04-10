@@ -178,11 +178,13 @@ public partial class CropInstance : Node3D, ISelectable
 /// </summary>
 public partial class SelectionCircleNode : MeshInstance3D
 {
+    private const int CircleRenderPriority = 7;
     private static ShaderMaterial _mat;
 
     public override void _Ready()
     {
-        Position = new Vector3(0f, 0.01f, 0f);
+        Position = new Vector3(0f, 0.03f, 0f);
+        SortingOffset = 0.25f;
         CastShadow = ShadowCastingSetting.Off;
         MaterialOverride = GetMaterial();
         BuildRingMesh(0.15f, 0.22f, 32);
@@ -216,7 +218,7 @@ public partial class SelectionCircleNode : MeshInstance3D
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_test_disabled;
 void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
-        _mat = new ShaderMaterial { Shader = shader };
+        _mat = new ShaderMaterial { Shader = shader, RenderPriority = CircleRenderPriority };
         return _mat;
     }
 }

@@ -9,6 +9,7 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class MoveCommandPing : MeshInstance3D
 {
+    private const int PingRenderPriority = 11;
     private float _life;
     private const float Duration = 0.6f;
     private const float MaxRadius = 0.6f;
@@ -18,6 +19,7 @@ public partial class MoveCommandPing : MeshInstance3D
 
     public override void _Ready()
     {
+        SortingOffset = 0.5f;
         CastShadow = ShadowCastingSetting.Off;
         MaterialOverride = GetPingMaterial();
         Position = new Vector3(Position.X, Position.Y + 0.02f, Position.Z);
@@ -75,13 +77,13 @@ public partial class MoveCommandPing : MeshInstance3D
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_draw_never;
+render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled;
 
 void fragment() {
     ALBEDO = COLOR.rgb;
     ALPHA = COLOR.a;
 }";
-        _pingMat = new ShaderMaterial { Shader = shader };
+        _pingMat = new ShaderMaterial { Shader = shader, RenderPriority = PingRenderPriority };
         return _pingMat;
     }
 }
