@@ -1,3 +1,4 @@
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.Pawn;
@@ -12,26 +13,32 @@ namespace EndfieldZero.Pawn;
 /// </summary>
 public partial class SelectionCircle : MeshInstance3D
 {
+    private const int TopDownCircleRenderPriority = -128;
     private const int CircleRenderPriority = 7;
+    private static readonly Vector3 TopDownOffset = new(0f, 0.03f, 0f);
+    private static readonly Vector3 AngledOffset = new(0f, 0.7f, 0f);
 
     [Export] public float OuterRadius { get; set; } = 0.35f;
     [Export] public float InnerRadius { get; set; } = 0.28f;
     [Export] public int Segments { get; set; } = 32;
 
-    private static ShaderMaterial _circleMat;
+    private static ShaderMaterial _topDownCircleMat;
+    private static ShaderMaterial _angledCircleMat;
     private bool _wasVisible;
 
     public override void _Ready()
     {
-        // Position slightly above ground so it's visible
-        Position = new Vector3(0f, 0.6f, 0f);
-        SortingOffset = 0.25f;
         CastShadow = ShadowCastingSetting.Off;
-        MaterialOverride = GetCircleMaterial();
+        ApplyMaterialForCurrentView();
 
         // Start hidden
         Visible = false;
         BuildRingMesh();
+    }
+
+    public override void _Process(double delta)
+    {
+        ApplyMaterialForCurrentView();
     }
 
     /// <summary>Show or hide the selection circle.</summary>
@@ -69,10 +76,33 @@ public partial class SelectionCircle : MeshInstance3D
         Mesh = mesh;
     }
 
-    private static ShaderMaterial GetCircleMaterial()
+    private void ApplyMaterialForCurrentView()
     {
-        if (_circleMat != null) return _circleMat;
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        Position = angledView ? AngledOffset : TopDownOffset;
+        SortingOffset = angledView ? 0.25f : 0f;
+        MaterialOverride = angledView ? GetAngledCircleMaterial() : GetTopDownCircleMaterial();
+    }
 
+    private static ShaderMaterial GetTopDownCircleMaterial()
+    {
+        if (_topDownCircleMat != null) return _topDownCircleMat;
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+
+void fragment() {
+    ALBEDO = COLOR.rgb;
+    ALPHA = COLOR.a;
+}";
+        _topDownCircleMat = new ShaderMaterial { Shader = shader, RenderPriority = TopDownCircleRenderPriority };
+        return _topDownCircleMat;
+    }
+
+    private static ShaderMaterial GetAngledCircleMaterial()
+    {
+        if (_angledCircleMat != null) return _angledCircleMat;
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
@@ -82,7 +112,7 @@ void fragment() {
     ALBEDO = COLOR.rgb;
     ALPHA = COLOR.a;
 }";
-        _circleMat = new ShaderMaterial { Shader = shader, RenderPriority = CircleRenderPriority };
-        return _circleMat;
+        _angledCircleMat = new ShaderMaterial { Shader = shader, RenderPriority = CircleRenderPriority };
+        return _angledCircleMat;
     }
 }

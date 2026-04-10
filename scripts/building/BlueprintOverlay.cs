@@ -15,8 +15,10 @@ namespace EndfieldZero.Building;
 /// </summary>
 public partial class BlueprintOverlay : MeshInstance3D
 {
+    private const int TopDownRenderPriority = -128;
     private const int OverlayRenderPriority = 6;
-    private static ShaderMaterial _overlayMat;
+    private static ShaderMaterial _topDownOverlayMat;
+    private static ShaderMaterial _angledOverlayMat;
 
     // Preview state (set by ToolModeManager)
     public BuildingDef PreviewDef { get; set; }
@@ -26,9 +28,9 @@ public partial class BlueprintOverlay : MeshInstance3D
 
     public override void _Ready()
     {
-        MaterialOverride = GetOverlayMaterial();
         CastShadow = ShadowCastingSetting.Off;
         ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
+        ApplyMaterialForCurrentView();
     }
 
     public override void _ExitTree()
@@ -40,6 +42,7 @@ public partial class BlueprintOverlay : MeshInstance3D
     {
         ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
         Visible = true;
+        ApplyMaterialForCurrentView();
         RebuildMesh();
     }
 
@@ -124,15 +127,33 @@ public partial class BlueprintOverlay : MeshInstance3D
         verts.Add(tr); cols.Add(color);
     }
 
-    private static ShaderMaterial GetOverlayMaterial()
+    private void ApplyMaterialForCurrentView()
     {
-        if (_overlayMat != null) return _overlayMat;
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        MaterialOverride = angledView ? GetAngledOverlayMaterial() : GetTopDownOverlayMaterial();
+    }
+
+    private static ShaderMaterial GetTopDownOverlayMaterial()
+    {
+        if (_topDownOverlayMat != null) return _topDownOverlayMat;
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
+        _topDownOverlayMat = new ShaderMaterial { Shader = shader, RenderPriority = TopDownRenderPriority };
+        return _topDownOverlayMat;
+    }
+
+    private static ShaderMaterial GetAngledOverlayMaterial()
+    {
+        if (_angledOverlayMat != null) return _angledOverlayMat;
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled;
 void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
-        _overlayMat = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
-        return _overlayMat;
+        _angledOverlayMat = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
+        return _angledOverlayMat;
     }
 }

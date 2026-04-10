@@ -178,16 +178,23 @@ public partial class CropInstance : Node3D, ISelectable
 /// </summary>
 public partial class SelectionCircleNode : MeshInstance3D
 {
+    private const int TopDownCircleRenderPriority = -128;
     private const int CircleRenderPriority = 7;
-    private static ShaderMaterial _mat;
+    private static readonly Vector3 TopDownOffset = new(0f, 0.01f, 0f);
+    private static readonly Vector3 AngledOffset = new(0f, 0.03f, 0f);
+    private static ShaderMaterial _topDownMat;
+    private static ShaderMaterial _angledMat;
 
     public override void _Ready()
     {
-        Position = new Vector3(0f, 0.03f, 0f);
-        SortingOffset = 0.25f;
         CastShadow = ShadowCastingSetting.Off;
-        MaterialOverride = GetMaterial();
+        ApplyMaterialForCurrentView();
         BuildRingMesh(0.15f, 0.22f, 32);
+    }
+
+    public override void _Process(double delta)
+    {
+        ApplyMaterialForCurrentView();
     }
 
     private void BuildRingMesh(float innerR, float outerR, int segments)
@@ -210,15 +217,35 @@ public partial class SelectionCircleNode : MeshInstance3D
         Mesh = im;
     }
 
-    private static ShaderMaterial GetMaterial()
+    private void ApplyMaterialForCurrentView()
     {
-        if (_mat != null) return _mat;
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        Position = angledView ? AngledOffset : TopDownOffset;
+        SortingOffset = angledView ? 0.25f : 0f;
+        MaterialOverride = angledView ? GetAngledMaterial() : GetTopDownMaterial();
+    }
+
+    private static ShaderMaterial GetTopDownMaterial()
+    {
+        if (_topDownMat != null) return _topDownMat;
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_test_disabled;
+render_mode unshaded, cull_disabled, depth_draw_never;
 void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
-        _mat = new ShaderMaterial { Shader = shader, RenderPriority = CircleRenderPriority };
-        return _mat;
+        _topDownMat = new ShaderMaterial { Shader = shader, RenderPriority = TopDownCircleRenderPriority };
+        return _topDownMat;
+    }
+
+    private static ShaderMaterial GetAngledMaterial()
+    {
+        if (_angledMat != null) return _angledMat;
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled;
+void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
+        _angledMat = new ShaderMaterial { Shader = shader, RenderPriority = CircleRenderPriority };
+        return _angledMat;
     }
 }

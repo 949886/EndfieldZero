@@ -1,3 +1,4 @@
+using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.UI;
@@ -9,26 +10,28 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class MoveCommandPing : MeshInstance3D
 {
+    private const int TopDownPingRenderPriority = -128;
     private const int PingRenderPriority = 11;
     private float _life;
     private const float Duration = 0.6f;
     private const float MaxRadius = 0.6f;
     private const int Segments = 24;
 
-    private static ShaderMaterial _pingMat;
+    private static ShaderMaterial _topDownPingMat;
+    private static ShaderMaterial _angledPingMat;
 
     public override void _Ready()
     {
-        SortingOffset = 0.5f;
         CastShadow = ShadowCastingSetting.Off;
-        MaterialOverride = GetPingMaterial();
         Position = new Vector3(Position.X, Position.Y + 0.02f, Position.Z);
+        ApplyMaterialForCurrentView();
         _life = Duration;
         BuildMesh(MaxRadius, 0.8f);
     }
 
     public override void _Process(double delta)
     {
+        ApplyMaterialForCurrentView();
         _life -= (float)delta;
         if (_life <= 0f)
         {
@@ -70,10 +73,32 @@ public partial class MoveCommandPing : MeshInstance3D
         Mesh = mesh;
     }
 
-    private static ShaderMaterial GetPingMaterial()
+    private void ApplyMaterialForCurrentView()
     {
-        if (_pingMat != null) return _pingMat;
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        SortingOffset = angledView ? 0.5f : 0f;
+        MaterialOverride = angledView ? GetAngledPingMaterial() : GetTopDownPingMaterial();
+    }
 
+    private static ShaderMaterial GetTopDownPingMaterial()
+    {
+        if (_topDownPingMat != null) return _topDownPingMat;
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+
+void fragment() {
+    ALBEDO = COLOR.rgb;
+    ALPHA = COLOR.a;
+}";
+        _topDownPingMat = new ShaderMaterial { Shader = shader, RenderPriority = TopDownPingRenderPriority };
+        return _topDownPingMat;
+    }
+
+    private static ShaderMaterial GetAngledPingMaterial()
+    {
+        if (_angledPingMat != null) return _angledPingMat;
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
@@ -83,7 +108,7 @@ void fragment() {
     ALBEDO = COLOR.rgb;
     ALPHA = COLOR.a;
 }";
-        _pingMat = new ShaderMaterial { Shader = shader, RenderPriority = PingRenderPriority };
-        return _pingMat;
+        _angledPingMat = new ShaderMaterial { Shader = shader, RenderPriority = PingRenderPriority };
+        return _angledPingMat;
     }
 }

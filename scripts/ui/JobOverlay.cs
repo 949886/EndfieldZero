@@ -19,8 +19,10 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class JobOverlay : MeshInstance3D
 {
+    private const int TopDownRenderPriority = -128;
     private const int OverlayRenderPriority = 6;
-    private static ShaderMaterial _overlayMaterial;
+    private static ShaderMaterial _topDownOverlayMaterial;
+    private static ShaderMaterial _angledOverlayMaterial;
 
     private static readonly Dictionary<string, Color> JobTypeColors = new()
     {
@@ -35,9 +37,9 @@ public partial class JobOverlay : MeshInstance3D
 
     public override void _Ready()
     {
-        MaterialOverride = GetOverlayMaterial();
         CastShadow = ShadowCastingSetting.Off;
         ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
+        ApplyMaterialForCurrentView();
     }
 
     public override void _ExitTree()
@@ -49,6 +51,7 @@ public partial class JobOverlay : MeshInstance3D
     {
         ProjectedWorldOverlayHelper.DestroyCanvasByName(this, $"{Name}Projected");
         Visible = true;
+        ApplyMaterialForCurrentView();
         RebuildOverlayMesh();
     }
 
@@ -158,10 +161,31 @@ public partial class JobOverlay : MeshInstance3D
         return JobTypeColors.GetValueOrDefault(jobType, new Color(0.8f, 0.8f, 0.8f, 0.4f));
     }
 
-    private static ShaderMaterial GetOverlayMaterial()
+    private void ApplyMaterialForCurrentView()
     {
-        if (_overlayMaterial != null) return _overlayMaterial;
+        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        MaterialOverride = angledView ? GetAngledOverlayMaterial() : GetTopDownOverlayMaterial();
+    }
 
+    private static ShaderMaterial GetTopDownOverlayMaterial()
+    {
+        if (_topDownOverlayMaterial != null) return _topDownOverlayMaterial;
+        var shader = new Shader();
+        shader.Code = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+
+void fragment() {
+    ALBEDO = COLOR.rgb;
+    ALPHA = COLOR.a;
+}";
+        _topDownOverlayMaterial = new ShaderMaterial { Shader = shader, RenderPriority = TopDownRenderPriority };
+        return _topDownOverlayMaterial;
+    }
+
+    private static ShaderMaterial GetAngledOverlayMaterial()
+    {
+        if (_angledOverlayMaterial != null) return _angledOverlayMaterial;
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
@@ -171,7 +195,7 @@ void fragment() {
     ALBEDO = COLOR.rgb;
     ALPHA = COLOR.a;
 }";
-        _overlayMaterial = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
-        return _overlayMaterial;
+        _angledOverlayMaterial = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
+        return _angledOverlayMaterial;
     }
 }
