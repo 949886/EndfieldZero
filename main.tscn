@@ -30,6 +30,8 @@
 [ext_resource type="Resource" path="res://resources/crops/beetroot.tres" id="28_beetroot"]
 [ext_resource type="Resource" path="res://resources/crops/corn.tres" id="29_corn"]
 [ext_resource type="Resource" path="res://resources/crops/blueberry.tres" id="30_blueberry"]
+[ext_resource type="Script" path="res://scripts/storyteller/Storyteller.cs" id="31_storyteller"]
+[ext_resource type="Script" path="res://scripts/ui/EventNotification.cs" id="32_eventnotify"]
 
 [node name="Main" type="Node3D" unique_id=1919884210]
 
@@ -57,6 +59,9 @@ CropDefinitions = Array[CropDef]([ExtResource("23_wheat"), ExtResource("24_carro
 
 [node name="ItemManager" type="Node" parent="."]
 script = ExtResource("20_itemmgr")
+
+[node name="Storyteller" type="Node" parent="."]
+script = ExtResource("31_storyteller")
 
 [node name="GameCamera" type="Camera3D" parent="." unique_id=886642279]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1000, 0)
@@ -171,3 +176,11 @@ offset_top = 10.0
 offset_right = 500.0
 offset_bottom = 100.0
 script = ExtResource("5_debughud")
+
+[node name="EventNotification" type="Control" parent="UILayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("32_eventnotify")

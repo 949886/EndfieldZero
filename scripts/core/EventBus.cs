@@ -32,6 +32,15 @@ public static class EventBus
     public static event Action<Season> SeasonChanged;
     public static event Action<WeatherType> WeatherChanged;
 
+    // --- Combat ---
+    public static event Action<int, float, int> PawnDamaged;  // pawnId, amount, sourceId
+    public static event Action CombatStarted;
+    public static event Action CombatEnded;
+
+    // --- Storyteller ---
+    public static event Action<string, string, string> IncidentTriggered;  // id, displayName, description
+    public static event Action<string> ThreatLevelChanged;          // "peace"/"alert"/"combat"
+
     // --- Fire methods ---
     public static void FirePawnSpawned(int id) => PawnSpawned?.Invoke(id);
     public static void FirePawnDied(int id) => PawnDied?.Invoke(id);
@@ -46,4 +55,9 @@ public static class EventBus
     public static void FireDayChanged(int day) => DayChanged?.Invoke(day);
     public static void FireSeasonChanged(Season s) => SeasonChanged?.Invoke(s);
     public static void FireWeatherChanged(WeatherType w) => WeatherChanged?.Invoke(w);
+    public static void FirePawnDamaged(int pawnId, float amount, int sourceId) => PawnDamaged?.Invoke(pawnId, amount, sourceId);
+    public static void FireCombatStarted() => CombatStarted?.Invoke();
+    public static void FireCombatEnded() => CombatEnded?.Invoke();
+    public static void FireIncidentTriggered(string id, string name, string desc) => IncidentTriggered?.Invoke(id, name, desc);
+    public static void FireThreatLevelChanged(string level) => ThreatLevelChanged?.Invoke(level);
 }

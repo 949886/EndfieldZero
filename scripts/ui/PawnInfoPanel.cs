@@ -30,6 +30,9 @@ public partial class PawnInfoPanel : PanelContainer
     private Label _nameLabel;
     private Label _moodLabel;
     private Label _aiLabel;
+    private Label _hpLabel;
+    private ProgressBar _hpBar;
+    private Label _factionLabel;
     private VBoxContainer _needsBars;
     private Label _traitsLabel;
     private Label _statsLabel;
@@ -104,6 +107,43 @@ public partial class PawnInfoPanel : PanelContainer
         _aiLabel.AddThemeFontSizeOverride("font_size", 12);
         _aiLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.85f, 1f));
         vbox.AddChild(_aiLabel);
+
+        // HP bar
+        var hpRow = new HBoxContainer();
+        vbox.AddChild(hpRow);
+
+        _hpLabel = new Label { Text = "HP", CustomMinimumSize = new Vector2(28, 0) };
+        _hpLabel.AddThemeFontSizeOverride("font_size", 11);
+        _hpLabel.AddThemeColorOverride("font_color", new Color(1f, 0.3f, 0.3f));
+        hpRow.AddChild(_hpLabel);
+
+        _hpBar = new ProgressBar
+        {
+            MinValue = 0, MaxValue = 100,
+            ShowPercentage = false,
+            CustomMinimumSize = new Vector2(140, 14),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        var hpBg = new StyleBoxFlat
+        {
+            BgColor = new Color(0.15f, 0.1f, 0.1f),
+            CornerRadiusTopLeft = 3, CornerRadiusTopRight = 3,
+            CornerRadiusBottomLeft = 3, CornerRadiusBottomRight = 3,
+        };
+        var hpFill = new StyleBoxFlat
+        {
+            BgColor = new Color(0.85f, 0.2f, 0.2f),
+            CornerRadiusTopLeft = 3, CornerRadiusTopRight = 3,
+            CornerRadiusBottomLeft = 3, CornerRadiusBottomRight = 3,
+        };
+        _hpBar.AddThemeStyleboxOverride("background", hpBg);
+        _hpBar.AddThemeStyleboxOverride("fill", hpFill);
+        hpRow.AddChild(_hpBar);
+
+        // Faction label
+        _factionLabel = new Label();
+        _factionLabel.AddThemeFontSizeOverride("font_size", 11);
+        vbox.AddChild(_factionLabel);
 
         // Needs bars
         _needsBars = new VBoxContainer();
@@ -216,6 +256,8 @@ public partial class PawnInfoPanel : PanelContainer
     private void ShowPawnLayout(bool isPawn)
     {
         _aiLabel.Visible = isPawn;
+        _hpBar.GetParent<HBoxContainer>().Visible = isPawn;
+        _factionLabel.Visible = isPawn;
         _needsBars.Visible = isPawn;
         _traitsLabel.Visible = isPawn;
         _statsLabel.Visible = isPawn;
@@ -262,7 +304,42 @@ public partial class PawnInfoPanel : PanelContainer
         // AI action
         string aiText = pawn.AI?.CurrentActionName ?? "None";
         if (pawn.IsPlayerControlled) aiText = "玩家控制";
+        if (pawn.IsDrafted) aiText = "⚔️ 征召 | " + aiText;
         _aiLabel.Text = $"▶ {aiText}";
+
+        // HP bar
+        if (pawn.Health != null)
+        {
+            _hpBar.MaxValue = pawn.Health.MaxHp;
+            _hpBar.Value = pawn.Health.CurrentHp;
+            _hpLabel.Text = $"HP {pawn.Health.CurrentHp:F0}/{pawn.Health.MaxHp:F0}";
+        }
+
+        // Faction + weapon
+        string factionStr = pawn.Data.Faction switch
+        {
+            "Colony" => "🏠 殖民者",
+            "Hostile" => "☠️ 敌对",
+            "Neutral" => "🤝 中立",
+            "Animal" => "🐾 动物",
+            _ => pawn.Data.Faction,
+        };
+        Color factionColor = pawn.Data.Faction switch
+        {
+            "Colony" => new Color(0.3f, 0.9f, 0.4f),
+            "Hostile" => new Color(1f, 0.3f, 0.3f),
+            "Neutral" => new Color(0.8f, 0.8f, 0.3f),
+            _ => new Color(0.7f, 0.7f, 0.7f),
+        };
+        string weaponStr = "";
+        if (!string.IsNullOrEmpty(pawn.Data.EquippedWeaponId))
+        {
+            var wDef = Combat.WeaponRegistry.Instance.GetDef(pawn.Data.EquippedWeaponId);
+            weaponStr = wDef != null ? $" | 🗡️ {wDef.DisplayName}" : "";
+        }
+        _factionLabel.Text = factionStr + weaponStr;
+        _factionLabel.AddThemeColorOverride("font_color", factionColor);
+
 
         // Needs bars
         for (int i = 0; i < NeedNames.Length; i++)

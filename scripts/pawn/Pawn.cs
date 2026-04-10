@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using EndfieldZero.AI;
+using EndfieldZero.Combat;
 using EndfieldZero.Core;
 using EndfieldZero.World;
 using Godot;
@@ -22,12 +23,19 @@ public partial class Pawn : CharacterBody3D
     public Needs Needs { get; private set; }
     public MoodTracker Mood { get; private set; }
     public PawnAI AI { get; private set; }
+    public HealthComponent Health { get; private set; }
     public bool IsAlive { get; private set; } = true;
     public bool IsSelected { get; set; }
     public bool IsMoving => _hasTarget || _pathIndex < _path.Count;
 
     /// <summary>When true, AI is paused (player issued a direct command).</summary>
     public bool IsPlayerControlled { get; set; }
+
+    /// <summary>When true, pawn only executes combat/move commands. Need decay halved.</summary>
+    public bool IsDrafted { get; set; }
+
+    /// <summary>Target pawn for attack command (player-issued).</summary>
+    public Pawn AttackTargetPawn { get; set; }
 
     private PawnAnimController _animController;
     private AnimatedSprite3D _sprite;
@@ -60,6 +68,7 @@ public partial class Pawn : CharacterBody3D
         Needs = new Needs();
         Data.ApplyTraitNeedModifiers(Needs);
         Mood = new MoodTracker(Data);
+        Health = new HealthComponent(this);
 
         _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
         _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
@@ -159,8 +168,20 @@ public partial class Pawn : CharacterBody3D
     {
         if (!IsAlive) return;
 
-        Needs.Tick();
+        // Draft mode: halve need decay
+        if (IsDrafted)
+        {
+            // Only tick needs at half rate
+            if (tick % 2 == 0) Needs.Tick();
+        }
+        else
+        {
+            Needs.Tick();
+        }
         Mood.Tick(tick);
+
+        // Natural healing when not in combat
+        Health?.TickHeal();
 
         if (Needs.Hunger <= 0f)
         {

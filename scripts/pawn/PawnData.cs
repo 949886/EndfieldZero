@@ -22,6 +22,11 @@ public partial class PawnData : Resource
     [Export] public Gender Gender { get; set; } = Gender.Male;
     [Export(PropertyHint.MultilineText)] public string BackgroundStory { get; set; } = "";
 
+    // --- Faction & Equipment ---
+    [Export] public string Faction { get; set; } = "Colony";  // Colony, Hostile, Neutral, Animal
+    [Export] public string EquippedWeaponId { get; set; } = ""; // WeaponDef Id, empty = fist
+    public bool IsHostile => Faction == "Hostile" || Faction == "Animal";
+
     // --- Traits ---
     [Export] public Godot.Collections.Array<Trait> Traits { get; set; } = new();
 

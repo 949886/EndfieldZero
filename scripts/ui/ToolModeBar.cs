@@ -41,6 +41,7 @@ public partial class ToolModeBar : HBoxContainer
     private Button _topDownButton;
     private Button _angledButton;
     private Label _hintLabel;
+    private Button _draftButton;
 
     public override void _Ready()
     {
@@ -111,6 +112,22 @@ public partial class ToolModeBar : HBoxContainer
         _hintLabel.AddThemeFontSizeOverride("font_size", 12);
         _hintLabel.AddThemeColorOverride("font_color", new Color(0.65f, 0.65f, 0.72f));
         AddChild(_hintLabel);
+
+        // Draft button
+        var draftSep = new VSeparator();
+        draftSep.CustomMinimumSize = new Vector2(10f, 24f);
+        AddChild(draftSep);
+
+        _draftButton = new Button
+        {
+            Text = "R:征召",
+            Flat = false,
+            CustomMinimumSize = new Vector2(64f, 28f),
+            ToggleMode = true,
+        };
+        _draftButton.AddThemeFontSizeOverride("font_size", 13);
+        _draftButton.Pressed += OnDraftPressed;
+        AddChild(_draftButton);
     }
 
     public override void _Process(double delta)
@@ -141,6 +158,7 @@ public partial class ToolModeBar : HBoxContainer
         }
 
         UpdateViewButtons();
+        UpdateDraftButton();
     }
 
     private Button CreateViewButton(string text, CameraViewMode mode)
@@ -184,5 +202,54 @@ public partial class ToolModeBar : HBoxContainer
         button.AddThemeStyleboxOverride("hover", style);
         button.AddThemeStyleboxOverride("pressed", style);
         button.AddThemeColorOverride("font_color", active ? Colors.White : new Color(0.85f, 0.85f, 0.9f));
+    }
+
+    private void OnDraftPressed()
+    {
+        var sel = SelectionManager.Instance;
+        if (sel == null) return;
+
+        foreach (var pawn in sel.Selected)
+        {
+            if (pawn.Data.Faction == "Colony")
+                pawn.IsDrafted = !pawn.IsDrafted;
+        }
+    }
+
+    private void UpdateDraftButton()
+    {
+        if (_draftButton == null) return;
+
+        var sel = SelectionManager.Instance;
+        bool anyDrafted = false;
+        if (sel != null)
+        {
+            foreach (var pawn in sel.Selected)
+            {
+                if (pawn.IsDrafted) { anyDrafted = true; break; }
+            }
+        }
+
+        var style = new StyleBoxFlat
+        {
+            BgColor = anyDrafted ? new Color(0.7f, 0.15f, 0.15f, 0.85f) : new Color(0.1f, 0.1f, 0.15f, 0.72f),
+            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
+            BorderWidthLeft = 1, BorderWidthTop = 1, BorderWidthRight = 1, BorderWidthBottom = 1,
+            BorderColor = anyDrafted ? new Color(1f, 0.3f, 0.3f, 0.9f) : new Color(0.3f, 0.3f, 0.36f, 0.65f),
+        };
+        _draftButton.AddThemeStyleboxOverride("normal", style);
+        _draftButton.AddThemeStyleboxOverride("hover", style);
+        _draftButton.AddThemeStyleboxOverride("pressed", style);
+        _draftButton.AddThemeColorOverride("font_color", anyDrafted ? Colors.White : new Color(0.85f, 0.85f, 0.9f));
+    }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        if (@event is InputEventKey key && key.Pressed && !key.Echo && key.Keycode == Key.R)
+        {
+            OnDraftPressed();
+            AcceptEvent();
+        }
     }
 }

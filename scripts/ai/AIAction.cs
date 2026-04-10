@@ -84,8 +84,19 @@ public class AIContext
     /// <summary>Whether there are available jobs (0 or 1).</summary>
     public float JobAvailability { get; set; }
 
-    /// <summary>Safety level (0 = danger, 1 = safe). Currently always safe.</summary>
-    public float Safety { get; set; } = 1f;
+    // --- Combat context ---
+    /// <summary>Distance to nearest enemy in world units. MaxValue if none.</summary>
+    public float NearestEnemyDist { get; set; } = float.MaxValue;
+
+    /// <summary>Number of hostile pawns within detection range.</summary>
+    public int NearbyEnemyCount { get; set; }
+
+    /// <summary>Threat level: 0=peace, 0.5=alert, 1=combat.</summary>
+    public float ThreatLevel { get; set; }
+
+    /// <summary>Safety level — dynamic based on nearby enemies.</summary>
+    public float Safety => NearbyEnemyCount == 0 ? 1f
+        : Mathf.Clamp(1f - NearbyEnemyCount * 0.3f, 0f, 1f);
 
     /// <summary>How idle the pawn is (1 = doing nothing, 0 = busy).</summary>
     public float Idleness => Pawn.IsMoving ? 0f : 1f;

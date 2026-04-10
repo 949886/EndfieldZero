@@ -75,4 +75,19 @@ public partial class CropManager : Node
 
     /// <summary>Get all mature crops.</summary>
     public IEnumerable<CropInstance> GetMatureCrops() => _crops.Values.Where(c => c.IsMature);
+
+    /// <summary>Destroy a fraction of crops randomly. Returns count destroyed.</summary>
+    public int DamageRandomCrops(float fraction)
+    {
+        var rng = new System.Random();
+        var toRemove = new List<Vector2I>();
+        foreach (var kv in _crops)
+        {
+            if (rng.NextDouble() < fraction)
+                toRemove.Add(kv.Key);
+        }
+        foreach (var coord in toRemove)
+            RemoveCrop(coord);
+        return toRemove.Count;
+    }
 }

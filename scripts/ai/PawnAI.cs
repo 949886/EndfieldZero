@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using EndfieldZero.Core;
 using EndfieldZero.Jobs;
+using EndfieldZero.Managers;
 using Godot;
 
 namespace EndfieldZero.AI;
@@ -36,6 +37,8 @@ public class PawnAI
         RegisterAction(new Actions.SatisfyNeedAction());
         RegisterAction(new Actions.DoJobAction());
         RegisterAction(new Actions.HaulAction());
+        RegisterAction(new Actions.CombatAction());
+        RegisterAction(new Actions.FleeAction());
 
         // Subscribe to tick
         EventBus.Tick += OnTick;
@@ -66,6 +69,7 @@ public class PawnAI
         _context.Pawn = _pawn;
         _context.CurrentTick = tick;
         _context.JobAvailability = (JobSystem.Instance?.HasAvailableJobs(_pawn) ?? false) ? 1f : 0f;
+        UpdateCombatContext();
 
         // Execute current action every tick
         if (_currentAction != null && _currentAction.IsRunning)
@@ -186,5 +190,43 @@ public class PawnAI
                 result[i] /= sumExp;
 
         return result;
+    }
+
+    /// <summary>Scan all pawns to populate combat context fields.</summary>
+    private void UpdateCombatContext()
+    {
+        _context.NearbyEnemyCount = 0;
+        _context.NearestEnemyDist = float.MaxValue;
+        _context.ThreatLevel = 0f;
+
+        if (PawnManager.Instance == null) return;
+
+        string myFaction = _pawn.Data.Faction;
+        float detectionRange = 25f * Settings.BlockPixelSize;
+
+        foreach (var other in PawnManager.Instance.GetAllPawns())
+        {
+            if (other == _pawn || !other.IsAlive) continue;
+
+            bool isEnemy;
+            if (myFaction == "Colony" || myFaction == "Neutral")
+                isEnemy = other.Data.IsHostile;
+            else
+                isEnemy = other.Data.Faction == "Colony";
+
+            if (!isEnemy) continue;
+
+            float dist = _pawn.GlobalPosition.DistanceTo(other.GlobalPosition);
+            if (dist < detectionRange)
+            {
+                _context.NearbyEnemyCount++;
+                if (dist < _context.NearestEnemyDist)
+                    _context.NearestEnemyDist = dist;
+            }
+        }
+
+        // Set threat level
+        if (_context.NearbyEnemyCount > 0)
+            _context.ThreatLevel = _context.NearbyEnemyCount >= 3 ? 1f : 0.5f;
     }
 }

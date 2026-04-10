@@ -121,4 +121,61 @@ public partial class PawnManager : Node3D
         float z = (index / 3) * spacing;
         return new Vector3(x, 0f, z);
     }
+
+    /// <summary>Spawn a hostile pawn (for raids/animal attacks).</summary>
+    public Pawn.Pawn SpawnHostile(Vector3 position, string faction = "Hostile",
+        string weaponId = "", string name = null)
+    {
+        var instance = PawnScene.Instantiate<Pawn.Pawn>();
+        var data = GenerateRandomPawnData();
+        data.Faction = faction;
+        data.EquippedWeaponId = weaponId;
+        if (name != null) data.PawnName = name;
+        instance.Data = data;
+        instance.Position = position;
+        AddChild(instance);
+
+        _pawns[data.Id] = instance;
+        return instance;
+    }
+
+    /// <summary>Spawn a neutral pawn (traders, wanderers).</summary>
+    public Pawn.Pawn SpawnNeutral(Vector3 position, string name = null)
+    {
+        var instance = PawnScene.Instantiate<Pawn.Pawn>();
+        var data = GenerateRandomPawnData();
+        data.Faction = "Neutral";
+        if (name != null) data.PawnName = name;
+        instance.Data = data;
+        instance.Position = position;
+        AddChild(instance);
+
+        _pawns[data.Id] = instance;
+        return instance;
+    }
+
+    /// <summary>Get approximate center of the colony (average colonist position).</summary>
+    public Vector3 GetColonyCenter()
+    {
+        Vector3 sum = Vector3.Zero;
+        int count = 0;
+        foreach (var pawn in _pawns.Values)
+        {
+            if (pawn.IsAlive && pawn.Data.Faction == "Colony")
+            {
+                sum += pawn.GlobalPosition;
+                count++;
+            }
+        }
+        return count > 0 ? sum / count : Vector3.Zero;
+    }
+
+    /// <summary>Count living colonists.</summary>
+    public int GetColonistCount()
+    {
+        int count = 0;
+        foreach (var pawn in _pawns.Values)
+            if (pawn.IsAlive && pawn.Data.Faction == "Colony") count++;
+        return count;
+    }
 }
