@@ -51,7 +51,7 @@ public partial class SelectionManager : Control
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
     }
 
-    public override void _Input(InputEvent @event)
+    public override void _UnhandledInput(InputEvent @event)
     {
         // Skip selection handling when in a tool mode (Mine/Construct/Grow/Cancel)
         if (ToolModeManager.Instance != null && ToolModeManager.Instance.CurrentMode != ToolMode.Select)
