@@ -18,6 +18,7 @@ namespace EndfieldZero.AI.Actions;
 /// </summary>
 public class CombatAction : AIAction
 {
+    private const int PursuitRepathIntervalTicks = 10;
     public override string Name => _target != null
         ? $"战斗:{_target.Data.PawnName}"
         : "战斗";
@@ -25,6 +26,8 @@ public class CombatAction : AIAction
     private Pawn.EnemyPawn _target;
     private int _attackCooldown;
     private bool _isComplete;
+    private Vector2I? _lastGoalBlock;
+    private long _lastNavigateTick;
 
     public override float[] GetQueryVector(AIContext context)
     {
@@ -61,6 +64,8 @@ public class CombatAction : AIAction
         base.OnStart(context);
         _isComplete = false;
         _attackCooldown = 0;
+        _lastGoalBlock = null;
+        _lastNavigateTick = long.MinValue;
         _target = FindTarget(context.Pawn);
 
         if (_target == null)
@@ -69,7 +74,7 @@ public class CombatAction : AIAction
             return;
         }
 
-        NavigateToTarget(context.Pawn);
+        NavigateToTarget(context.Pawn, context.CurrentTick, forceRefresh: true);
     }
 
     public override void Execute(AIContext context)
@@ -87,7 +92,7 @@ public class CombatAction : AIAction
                 _isComplete = true;
                 return;
             }
-            NavigateToTarget(pawn);
+            NavigateToTarget(pawn, context.CurrentTick, forceRefresh: true);
         }
 
         // Attack cooldown
@@ -118,14 +123,14 @@ public class CombatAction : AIAction
                     _isComplete = true;
                     return;
                 }
-                NavigateToTarget(pawn);
+                NavigateToTarget(pawn, context.CurrentTick, forceRefresh: true);
             }
         }
         else
         {
             // Out of range — move closer
             pawn.ClearWorkTarget();
-            NavigateToTarget(pawn);
+            NavigateToTarget(pawn, context.CurrentTick);
         }
     }
 
@@ -135,6 +140,8 @@ public class CombatAction : AIAction
     {
         Owner?.ClearWorkTarget();
         _target = null;
+        _lastGoalBlock = null;
+        _lastNavigateTick = long.MinValue;
         base.OnStop();
     }
 
@@ -182,7 +189,7 @@ public class CombatAction : AIAction
         return best;
     }
 
-    private void NavigateToTarget(Pawn.Pawn pawn)
+    private void NavigateToTarget(Pawn.Pawn pawn, long currentTick, bool forceRefresh = false)
     {
         if (_target == null) return;
 
@@ -197,18 +204,32 @@ public class CombatAction : AIAction
             targetPos = _target.GlobalPosition + dir * desiredDist;
         }
 
+        var goalBlock = PathfindingService.WorldToBlock(targetPos);
+        bool goalChanged = !_lastGoalBlock.HasValue || _lastGoalBlock.Value != goalBlock;
+        bool canRefreshWhileMoving = currentTick - _lastNavigateTick >= PursuitRepathIntervalTicks;
+
+        if (!forceRefresh && pawn.IsMoving)
+        {
+            if (!goalChanged || !canRefreshWhileMoving)
+                return;
+        }
+
         if (PathfindingService.Instance != null)
         {
             var start = PathfindingService.WorldToBlock(pawn.GlobalPosition);
-            var end = PathfindingService.WorldToBlock(targetPos);
-            var path = PathfindingService.Instance.FindPath(start, end);
+            var path = PathfindingService.Instance.FindPath(start, goalBlock);
             var worldPath = PathfindingService.PathToWorld(path);
             if (worldPath != null && worldPath.Count > 0)
             {
                 pawn.FollowPath(worldPath);
+                _lastGoalBlock = goalBlock;
+                _lastNavigateTick = currentTick;
                 return;
             }
         }
+
         pawn.MoveTo(targetPos);
+        _lastGoalBlock = goalBlock;
+        _lastNavigateTick = currentTick;
     }
 }
