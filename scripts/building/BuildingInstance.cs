@@ -265,7 +265,7 @@ public partial class BuildingInstance : Node3D, ISelectable
             return;
         }
 
-        if (GameCamera.Instance.ViewMode != CameraViewMode.Angled3D)
+        if (!GameCamera.Instance.IsAngledView)
         {
             foreach (var part in _occlusionParts)
                 part.Transparency = 0f;
@@ -289,7 +289,7 @@ public partial class BuildingInstance : Node3D, ISelectable
 
     private void UpdatePresentationMode()
     {
-        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angled3D = GameCamera.Instance?.IsAngledView == true;
         bool showMesh = angled3D && Def.View3DStyle != BuildingView3DStyle.Billboard;
         bool keepSprite = !showMesh || _hasAuthoredSprite;
 
@@ -319,7 +319,7 @@ public partial class BuildingInstance : Node3D, ISelectable
         if (_billboardSprite == null)
             return;
 
-        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angled3D = GameCamera.Instance?.IsAngledView == true;
         _billboardSprite.NoDepthTest = angled3D;
         _billboardSprite.RenderPriority = angled3D ? 7 : 0;
 

@@ -129,7 +129,7 @@ public partial class BlueprintOverlay : MeshInstance3D
 
     private void ApplyMaterialForCurrentView()
     {
-        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angledView = GameCamera.Instance?.IsAngledView == true;
         MaterialOverride = angledView ? GetAngledOverlayMaterial() : GetTopDownOverlayMaterial();
     }
 

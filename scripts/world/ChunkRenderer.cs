@@ -139,7 +139,7 @@ void fragment() {
         var normals = new List<Vector3>();
         var colors = new List<Color>();
 
-        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angledView = GameCamera.Instance?.IsAngledView == true;
         BuildTopFaces(visuals, size, px, vertices, normals, colors);
 
         if (angledView)
@@ -169,7 +169,7 @@ void fragment() {
 
     private void ApplyMaterialForCurrentView()
     {
-        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angledView = GameCamera.Instance?.IsAngledView == true;
         MaterialOverride = angledView ? GetAngledMaterial() : GetTopDownMaterial();
         CastShadow = angledView ? ShadowCastingSetting.On : ShadowCastingSetting.Off;
     }

@@ -301,7 +301,7 @@ public partial class Pawn : CharacterBody3D
         if (_sprite == null)
             return;
 
-        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angled3D = GameCamera.Instance?.IsAngledView == true;
         _sprite.NoDepthTest = angled3D;
         _sprite.RenderPriority = angled3D ? 10 : 0;
         UpdateSpriteAnchor();

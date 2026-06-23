@@ -135,7 +135,7 @@ public partial class CropInstance : Node3D, ISelectable
         if (_sprite == null)
             return;
 
-        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angled3D = GameCamera.Instance?.IsAngledView == true;
         _sprite.NoDepthTest = angled3D;
         _sprite.RenderPriority = angled3D ? 8 : 0;
         _sprite.AlphaCut = angled3D
@@ -219,7 +219,7 @@ public partial class SelectionCircleNode : MeshInstance3D
 
     private void ApplyMaterialForCurrentView()
     {
-        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angledView = GameCamera.Instance?.IsAngledView == true;
         Position = angledView ? AngledOffset : TopDownOffset;
         SortingOffset = angledView ? 0.25f : 0f;
         MaterialOverride = angledView ? GetAngledMaterial() : GetTopDownMaterial();

@@ -146,7 +146,7 @@ public partial class ItemStack : Node3D, ISelectable
 
     private void UpdatePresentationMode()
     {
-        bool angled3D = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angled3D = GameCamera.Instance?.IsAngledView == true;
 
         if (_sprite != null)
         {

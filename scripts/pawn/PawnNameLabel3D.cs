@@ -77,8 +77,7 @@ internal static class PawnNameLabel3D
             return;
         }
 
-        float referenceOrthoSize = GetReferenceOrthoSize(camera);
-        float compensatedPixelSize = BasePixelSize * (camera.Size / referenceOrthoSize);
+        float compensatedPixelSize = GetCompensatedPixelSize(camera, anchorWorldPosition);
         label.PixelSize = compensatedPixelSize;
         shadowLabel.PixelSize = compensatedPixelSize;
         label.GlobalPosition = worldPosition;
@@ -95,6 +94,27 @@ internal static class PawnNameLabel3D
             return Mathf.Max(gameCamera.InitialOrthoSize, PlaneEpsilon);
 
         return Mathf.Max(GameCamera.Instance?.InitialOrthoSize ?? fallback, PlaneEpsilon);
+    }
+
+    private static float GetCompensatedPixelSize(Camera3D camera, Vector3 anchorWorldPosition)
+    {
+        if (camera.Projection != Camera3D.ProjectionType.Perspective)
+        {
+            float referenceOrthoSize = GetReferenceOrthoSize(camera);
+            return BasePixelSize * (camera.Size / referenceOrthoSize);
+        }
+
+        float distance = camera.GlobalPosition.DistanceTo(anchorWorldPosition);
+        float fovFactor = Mathf.Tan(Mathf.DegToRad(camera.Fov) * 0.5f);
+
+        if (camera is GameCamera gameCamera)
+        {
+            float referenceDistance = Mathf.Max(gameCamera.GetPerspectiveReferenceDistance(), PlaneEpsilon);
+            float referenceFovFactor = Mathf.Tan(Mathf.DegToRad(gameCamera.PerspectiveFovDegrees) * 0.5f);
+            return BasePixelSize * ((distance * fovFactor) / Mathf.Max(referenceDistance * referenceFovFactor, PlaneEpsilon));
+        }
+
+        return BasePixelSize * Mathf.Max(distance * fovFactor, PlaneEpsilon);
     }
 
     private static bool TryProjectScreenPointToAnchorPlane(

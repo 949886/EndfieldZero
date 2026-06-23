@@ -22,24 +22,28 @@ public partial class ToolModeBar : HBoxContainer
 
         public ModeInfo(ToolMode mode, string key, string label, Color color)
         {
-            Mode = mode; Key = key; Label = label; Color = color;
+            Mode = mode;
+            Key = key;
+            Label = label;
+            Color = color;
         }
     }
 
     private static readonly ModeInfo[] Modes =
     {
-        new(ToolMode.Select,    "Q", "选择", new Color(0.3f, 0.8f, 0.4f)),
-        new(ToolMode.Mine,      "M", "挖矿", new Color(1f, 0.35f, 0.25f)),
-        new(ToolMode.Construct, "B", "建造", new Color(0.35f, 0.55f, 1f)),
-        new(ToolMode.Grow,      "G", "种植", new Color(0.35f, 0.9f, 0.35f)),
-        new(ToolMode.Zone,      "Z", "区划", new Color(0.8f, 0.6f, 0.25f)),
-        new(ToolMode.Cancel,    "X", "取消", new Color(1f, 0.8f, 0.25f)),
+        new(ToolMode.Select, "Q", "Select", new Color(0.3f, 0.8f, 0.4f)),
+        new(ToolMode.Mine, "M", "Mine", new Color(1f, 0.35f, 0.25f)),
+        new(ToolMode.Construct, "B", "Build", new Color(0.35f, 0.55f, 1f)),
+        new(ToolMode.Grow, "G", "Grow", new Color(0.35f, 0.9f, 0.35f)),
+        new(ToolMode.Zone, "Z", "Zone", new Color(0.8f, 0.6f, 0.25f)),
+        new(ToolMode.Cancel, "X", "Cancel", new Color(1f, 0.8f, 0.25f)),
     };
 
     private PanelContainer[] _buttons;
     private Label[] _labels;
     private Button _topDownButton;
-    private Button _angledButton;
+    private Button _perspectiveButton;
+    private Button _orthographicButton;
     private Label _hintLabel;
     private Button _draftButton;
 
@@ -63,10 +67,14 @@ public partial class ToolModeBar : HBoxContainer
             var style = new StyleBoxFlat
             {
                 BgColor = new Color(0.1f, 0.1f, 0.15f, 0.7f),
-                CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
-                CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
-                ContentMarginLeft = 8, ContentMarginRight = 8,
-                ContentMarginTop = 4, ContentMarginBottom = 4,
+                CornerRadiusTopLeft = 4,
+                CornerRadiusTopRight = 4,
+                CornerRadiusBottomLeft = 4,
+                CornerRadiusBottomRight = 4,
+                ContentMarginLeft = 8,
+                ContentMarginRight = 8,
+                ContentMarginTop = 4,
+                ContentMarginBottom = 4,
             };
             panel.AddThemeStyleboxOverride("panel", style);
 
@@ -99,30 +107,31 @@ public partial class ToolModeBar : HBoxContainer
         separator.CustomMinimumSize = new Vector2(10f, 24f);
         AddChild(separator);
 
-        _topDownButton = CreateViewButton("俯视", CameraViewMode.TopDown);
-        _angledButton = CreateViewButton("3D", CameraViewMode.Angled3D);
+        _topDownButton = CreateViewButton("Top", CameraViewMode.TopDown);
+        _perspectiveButton = CreateViewButton("Persp", CameraViewMode.Perspective3D);
+        _orthographicButton = CreateViewButton("Ortho", CameraViewMode.Orthographic3D);
         AddChild(_topDownButton);
-        AddChild(_angledButton);
+        AddChild(_perspectiveButton);
+        AddChild(_orthographicButton);
 
         _hintLabel = new Label
         {
-            Text = "Tab 切换 | Alt+Q/E 旋转",
+            Text = "Tab cycle | Alt+Q/E rotate",
             MouseFilter = MouseFilterEnum.Ignore,
         };
         _hintLabel.AddThemeFontSizeOverride("font_size", 12);
         _hintLabel.AddThemeColorOverride("font_color", new Color(0.65f, 0.65f, 0.72f));
         AddChild(_hintLabel);
 
-        // Draft button
-        var draftSep = new VSeparator();
-        draftSep.CustomMinimumSize = new Vector2(10f, 24f);
-        AddChild(draftSep);
+        var draftSeparator = new VSeparator();
+        draftSeparator.CustomMinimumSize = new Vector2(10f, 24f);
+        AddChild(draftSeparator);
 
         _draftButton = new Button
         {
-            Text = "R:征召",
+            Text = "R:Draft",
             Flat = false,
-            CustomMinimumSize = new Vector2(64f, 28f),
+            CustomMinimumSize = new Vector2(72f, 28f),
             ToggleMode = true,
         };
         _draftButton.AddThemeFontSizeOverride("font_size", 13);
@@ -145,15 +154,16 @@ public partial class ToolModeBar : HBoxContainer
                     ? Modes[i].Color with { A = 0.4f }
                     : new Color(0.1f, 0.1f, 0.15f, 0.7f);
 
-                int bw = active ? 2 : 0;
-                style.BorderWidthBottom = bw;
-                style.BorderWidthTop = bw;
-                style.BorderWidthLeft = bw;
-                style.BorderWidthRight = bw;
+                int borderWidth = active ? 2 : 0;
+                style.BorderWidthBottom = borderWidth;
+                style.BorderWidthTop = borderWidth;
+                style.BorderWidthLeft = borderWidth;
+                style.BorderWidthRight = borderWidth;
                 style.BorderColor = active ? Modes[i].Color with { A = 0.8f } : Colors.Transparent;
             }
 
-            _labels[i].AddThemeColorOverride("font_color",
+            _labels[i].AddThemeColorOverride(
+                "font_color",
                 active ? Colors.White : new Color(0.6f, 0.6f, 0.65f));
         }
 
@@ -167,7 +177,7 @@ public partial class ToolModeBar : HBoxContainer
         {
             Text = text,
             Flat = false,
-            CustomMinimumSize = new Vector2(56f, 28f),
+            CustomMinimumSize = new Vector2(64f, 28f),
         };
         button.AddThemeFontSizeOverride("font_size", 12);
         button.Pressed += () => GameCamera.Instance?.SetViewMode(mode);
@@ -176,11 +186,12 @@ public partial class ToolModeBar : HBoxContainer
 
     private void UpdateViewButtons()
     {
-        if (_topDownButton == null || _angledButton == null)
+        if (_topDownButton == null || _perspectiveButton == null || _orthographicButton == null)
             return;
 
         ApplyViewButtonState(_topDownButton, GameCamera.Instance?.ViewMode == CameraViewMode.TopDown);
-        ApplyViewButtonState(_angledButton, GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D);
+        ApplyViewButtonState(_perspectiveButton, GameCamera.Instance?.ViewMode == CameraViewMode.Perspective3D);
+        ApplyViewButtonState(_orthographicButton, GameCamera.Instance?.ViewMode == CameraViewMode.Orthographic3D);
     }
 
     private static void ApplyViewButtonState(Button button, bool active)
@@ -206,10 +217,11 @@ public partial class ToolModeBar : HBoxContainer
 
     private void OnDraftPressed()
     {
-        var sel = SelectionManager.Instance;
-        if (sel == null) return;
+        var selection = SelectionManager.Instance;
+        if (selection == null)
+            return;
 
-        foreach (var pawn in sel.Selected)
+        foreach (var pawn in selection.Selected)
         {
             if (pawn.Data.Faction == "Colony")
                 pawn.IsDrafted = !pawn.IsDrafted;
@@ -218,24 +230,34 @@ public partial class ToolModeBar : HBoxContainer
 
     private void UpdateDraftButton()
     {
-        if (_draftButton == null) return;
+        if (_draftButton == null)
+            return;
 
-        var sel = SelectionManager.Instance;
+        var selection = SelectionManager.Instance;
         bool anyDrafted = false;
-        if (sel != null)
+        if (selection != null)
         {
-            foreach (var pawn in sel.Selected)
+            foreach (var pawn in selection.Selected)
             {
-                if (pawn.IsDrafted) { anyDrafted = true; break; }
+                if (pawn.IsDrafted)
+                {
+                    anyDrafted = true;
+                    break;
+                }
             }
         }
 
         var style = new StyleBoxFlat
         {
             BgColor = anyDrafted ? new Color(0.7f, 0.15f, 0.15f, 0.85f) : new Color(0.1f, 0.1f, 0.15f, 0.72f),
-            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
-            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
-            BorderWidthLeft = 1, BorderWidthTop = 1, BorderWidthRight = 1, BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4,
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
             BorderColor = anyDrafted ? new Color(1f, 0.3f, 0.3f, 0.9f) : new Color(0.3f, 0.3f, 0.36f, 0.65f),
         };
         _draftButton.AddThemeStyleboxOverride("normal", style);

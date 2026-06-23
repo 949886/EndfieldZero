@@ -78,7 +78,7 @@ public partial class SelectionCircle : MeshInstance3D
 
     private void ApplyMaterialForCurrentView()
     {
-        bool angledView = GameCamera.Instance?.ViewMode == CameraViewMode.Angled3D;
+        bool angledView = GameCamera.Instance?.IsAngledView == true;
         Position = angledView ? AngledOffset : TopDownOffset;
         SortingOffset = angledView ? 0.25f : 0f;
         MaterialOverride = angledView ? GetAngledCircleMaterial() : GetTopDownCircleMaterial();

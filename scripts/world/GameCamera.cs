@@ -7,12 +7,13 @@ namespace EndfieldZero.World;
 public enum CameraViewMode
 {
     TopDown,
-    Angled3D,
+    Perspective3D,
+    Orthographic3D,
 }
 
 /// <summary>
-/// Shared orthographic camera controller used for both the classic top-down view
-/// and the fixed-angle 3D presentation mode.
+/// Shared camera controller used for the classic top-down orthographic view,
+/// a fixed-angle 3D perspective mode, and a fixed-angle 3D orthographic mode.
 /// </summary>
 public partial class GameCamera : Camera3D
 {
@@ -26,9 +27,10 @@ public partial class GameCamera : Camera3D
     [Export] public float SprintMultiplier { get; set; } = 2.5f;
     [Export] public float CameraHeight { get; set; } = 32f;
     [Export] public float InitialOrthoSize { get; set; } = 93.75f;
-    [Export] public float AngledPitchDegrees { get; set; } = -55f;
+    [Export] public float AngledPitchDegrees { get; set; } = -45f;
     [Export] public float AngledDistance { get; set; } = 26f;
     [Export] public float AngledHeight { get; set; } = 22f;
+    [Export(PropertyHint.Range, "20,110,1")] public float PerspectiveFovDegrees { get; set; } = 60f;
     [Export] public float TransitionDuration { get; set; } = 0.3f;
     [Export] public float OcclusionRadius { get; set; } = 0.65f;
     [Export] public float OcclusionAlpha { get; set; } = 0.22f;
@@ -38,8 +40,19 @@ public partial class GameCamera : Camera3D
     public CameraViewMode ViewMode { get; private set; } = CameraViewMode.TopDown;
     public int YawIndex { get; private set; }
     public Vector2 FocusPointXZ { get; private set; }
-    public float CurrentYawDegrees => ViewMode == CameraViewMode.Angled3D ? 45f + YawIndex * 90f : 0f;
+    public bool IsAngledView => ViewMode != CameraViewMode.TopDown;
+    public bool IsPerspectiveView => ViewMode == CameraViewMode.Perspective3D;
+    public float CurrentYawDegrees => IsAngledView ? 45f + YawIndex * 90f : 0f;
     public Vector3 FocusWorldPosition => new(FocusPointXZ.X, 0f, FocusPointXZ.Y);
+
+    public float GetPerspectiveReferenceDistance()
+    {
+        float fovRadians = Mathf.DegToRad(PerspectiveFovDegrees);
+        float zoomDistance = (InitialOrthoSize * 0.5f) / Mathf.Tan(fovRadians * 0.5f);
+        float pitchRadians = Mathf.DegToRad(AngledPitchDegrees);
+        float baseFocusDistance = AngledDistance * Mathf.Cos(pitchRadians) - AngledHeight * Mathf.Sin(pitchRadians);
+        return Mathf.Max(Mathf.Max(baseFocusDistance, zoomDistance), Near + Settings.BlockPixelSize * 2f);
+    }
 
     private bool _isDragging;
     private float _currentOrthoSize;
@@ -60,9 +73,7 @@ public partial class GameCamera : Camera3D
 
         SanitizeSettings();
 
-        Projection = ProjectionType.Orthogonal;
         _currentOrthoSize = Mathf.Clamp(InitialOrthoSize, MinOrthoSize, MaxOrthoSize);
-        Size = _currentOrthoSize;
         Near = 0.1f;
 
         FocusPointXZ = new Vector2(Position.X, Position.Z);
@@ -98,7 +109,7 @@ public partial class GameCamera : Camera3D
                 return;
             }
 
-            if (ViewMode == CameraViewMode.Angled3D && key.AltPressed)
+            if (IsAngledView && key.AltPressed)
             {
                 if (key.Keycode == Key.Q)
                 {
@@ -125,9 +136,12 @@ public partial class GameCamera : Camera3D
 
     public void ToggleViewMode()
     {
-        SetViewMode(ViewMode == CameraViewMode.TopDown
-            ? CameraViewMode.Angled3D
-            : CameraViewMode.TopDown);
+        SetViewMode(ViewMode switch
+        {
+            CameraViewMode.TopDown => CameraViewMode.Perspective3D,
+            CameraViewMode.Perspective3D => CameraViewMode.Orthographic3D,
+            _ => CameraViewMode.TopDown,
+        });
     }
 
     public void SetViewMode(CameraViewMode mode)
@@ -142,7 +156,7 @@ public partial class GameCamera : Camera3D
 
     public void RotateYaw(int direction)
     {
-        if (ViewMode != CameraViewMode.Angled3D || direction == 0)
+        if (!IsAngledView || direction == 0)
             return;
 
         YawIndex = Mathf.PosMod(YawIndex + direction, 4);
@@ -210,6 +224,7 @@ public partial class GameCamera : Camera3D
         InitialOrthoSize = Mathf.Clamp(InitialOrthoSize, MinOrthoSize, MaxOrthoSize);
         AngledDistance = Mathf.Max(AngledDistance, Settings.BlockPixelSize);
         AngledHeight = Mathf.Max(AngledHeight, Settings.BlockPixelSize);
+        PerspectiveFovDegrees = Mathf.Clamp(PerspectiveFovDegrees, 20f, 110f);
         TransitionDuration = Mathf.Max(TransitionDuration, 0.01f);
         OcclusionScreenRadiusPixels = Mathf.Max(OcclusionScreenRadiusPixels, 1f);
     }
@@ -258,7 +273,8 @@ public partial class GameCamera : Camera3D
             return;
 
         _currentOrthoSize = Mathf.Clamp(_currentOrthoSize, MinOrthoSize, MaxOrthoSize);
-        Size = _currentOrthoSize;
+        if (ViewMode == CameraViewMode.TopDown)
+            Size = _currentOrthoSize;
     }
 
     private void HandleMouseDrag(InputEvent @event)
@@ -284,9 +300,9 @@ public partial class GameCamera : Camera3D
     private void ApplyCameraStateImmediate()
     {
         var state = BuildTargetState();
+        ConfigureProjectionForCurrentMode();
         GlobalPosition = state.Position;
         RotationDegrees = state.RotationDegrees;
-        Size = _currentOrthoSize;
         Far = state.FarPlane;
     }
 
@@ -294,6 +310,7 @@ public partial class GameCamera : Camera3D
     {
         _transitionTween?.Kill();
         var state = BuildTargetState();
+        ConfigureProjectionForCurrentMode();
         _transitionTween = CreateTween();
         _transitionTween.SetTrans(Tween.TransitionType.Cubic);
         _transitionTween.SetEase(Tween.EaseType.Out);
@@ -309,8 +326,6 @@ public partial class GameCamera : Camera3D
 
     private CameraState BuildTargetState()
     {
-        Size = _currentOrthoSize;
-
         if (ViewMode == CameraViewMode.TopDown)
         {
             return new CameraState(
@@ -321,16 +336,47 @@ public partial class GameCamera : Camera3D
 
         float yaw = 45f + YawIndex * 90f;
         float pitchRadians = Mathf.DegToRad(AngledPitchDegrees);
-        float pitchMagnitude = Mathf.Clamp(Mathf.Abs(pitchRadians), Mathf.DegToRad(5f), Mathf.DegToRad(85f));
-        float groundDepthHalfSpan = (_currentOrthoSize * 0.5f) / Mathf.Tan(pitchMagnitude);
-        float baseFocusDistance = AngledDistance * Mathf.Cos(pitchRadians) - AngledHeight * Mathf.Sin(pitchRadians);
-        float focusDistance = Mathf.Max(baseFocusDistance, Near + groundDepthHalfSpan + Settings.BlockPixelSize * 2f);
+        float focusDistance = BuildAngledFocusDistance(pitchRadians);
 
         Vector3 forward = GetForwardDirection(yaw, pitchRadians);
         Vector3 position = FocusWorldPosition - forward * focusDistance;
-        float verticalBuffer = Mathf.Max(CameraHeight, Settings.MaxLayers * Settings.BlockPixelSize * 4f);
-        float farPlane = Mathf.Max(focusDistance + groundDepthHalfSpan + verticalBuffer, 256f);
+        float farPlane = Mathf.Max(2000f, focusDistance + _currentOrthoSize * 4f);
         return new CameraState(position, new Vector3(AngledPitchDegrees, yaw, 0f), farPlane);
+    }
+
+    private void ConfigureProjectionForCurrentMode()
+    {
+        if (ViewMode == CameraViewMode.TopDown)
+        {
+            Projection = ProjectionType.Orthogonal;
+            Size = _currentOrthoSize;
+            return;
+        }
+
+        if (ViewMode == CameraViewMode.Orthographic3D)
+        {
+            Projection = ProjectionType.Orthogonal;
+            Size = _currentOrthoSize;
+            return;
+        }
+
+        Projection = ProjectionType.Perspective;
+        Fov = PerspectiveFovDegrees;
+    }
+
+    private float BuildAngledFocusDistance(float pitchRadians)
+    {
+        float baseFocusDistance = AngledDistance * Mathf.Cos(pitchRadians) - AngledHeight * Mathf.Sin(pitchRadians);
+        if (ViewMode == CameraViewMode.Orthographic3D)
+        {
+            float pitchMagnitude = Mathf.Clamp(Mathf.Abs(pitchRadians), Mathf.DegToRad(5f), Mathf.DegToRad(85f));
+            float groundDepthHalfSpan = (_currentOrthoSize * 0.5f) / Mathf.Tan(pitchMagnitude);
+            return Mathf.Max(baseFocusDistance, Near + groundDepthHalfSpan + Settings.BlockPixelSize * 2f);
+        }
+
+        float perspectiveFovRadians = Mathf.DegToRad(PerspectiveFovDegrees);
+        float zoomDistance = (_currentOrthoSize * 0.5f) / Mathf.Tan(perspectiveFovRadians * 0.5f);
+        return Mathf.Max(Mathf.Max(baseFocusDistance, zoomDistance), Near + Settings.BlockPixelSize * 2f);
     }
 
     private Vector2 GetAxisFromScreen(Vector2 desiredScreenDir)
@@ -375,7 +421,7 @@ public partial class GameCamera : Camera3D
             mouseScreenUv,
             selectedScreenUv,
             occlusionRadiusUv,
-            ViewMode == CameraViewMode.Angled3D,
+            IsAngledView,
             hasSelectedPawn,
             OcclusionAlpha);
     }
