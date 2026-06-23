@@ -72,6 +72,10 @@ public partial class GameSettings : Resource
     [Export(PropertyHint.Range, "0.25,2.0,0.05")] public float HostileRangeMultiplier { get; set; } = 0.9f;
     [Export(PropertyHint.Range, "0.1,1.0,0.05")] public float HostilePreferredRangedDistanceRatio { get; set; } = 0.6f;
     [Export] public int EnemyTargetSearchIntervalTicks { get; set; } = 40;
+    [Export(PropertyHint.Range, "0.0,1.0,0.05")] public float RaidImmediateAttackChance { get; set; } = 0.5f;
+    [Export] public int HostilePrepareDurationTicks { get; set; } = 300;
+    [Export] public float HostilePrepareWanderRadiusBlocks { get; set; } = 6f;
+    [Export] public int HostilePrepareRepickTicks { get; set; } = 45;
     [Export] public float HostileBaseHp { get; set; } = 72f;
     [Export] public float HostileHpPerStrength { get; set; } = 3f;
     [Export] public int HostileShootingMin { get; set; } = 1;
@@ -160,6 +164,10 @@ public static class Settings
     public static float HostileRangeMultiplier => GameSettings.Instance.HostileRangeMultiplier;
     public static float HostilePreferredRangedDistanceRatio => GameSettings.Instance.HostilePreferredRangedDistanceRatio;
     public static int EnemyTargetSearchIntervalTicks => GameSettings.Instance.EnemyTargetSearchIntervalTicks;
+    public static float RaidImmediateAttackChance => GameSettings.Instance.RaidImmediateAttackChance;
+    public static int HostilePrepareDurationTicks => GameSettings.Instance.HostilePrepareDurationTicks;
+    public static float HostilePrepareWanderRadius => GameSettings.Instance.HostilePrepareWanderRadiusBlocks * BlockPixelSize;
+    public static int HostilePrepareRepickTicks => GameSettings.Instance.HostilePrepareRepickTicks;
     public static float HostileBaseHp => GameSettings.Instance.HostileBaseHp;
     public static float HostileHpPerStrength => GameSettings.Instance.HostileHpPerStrength;
     public static int HostileShootingMin => GameSettings.Instance.HostileShootingMin;

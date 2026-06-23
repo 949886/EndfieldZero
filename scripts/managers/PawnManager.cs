@@ -130,7 +130,7 @@ public partial class PawnManager : Node3D
 
     /// <summary>Spawn a hostile enemy pawn (for raids/animal attacks).</summary>
     public Pawn.EnemyPawn SpawnHostile(Vector3 position, string faction = "Hostile",
-        string weaponId = "", string name = null)
+        string weaponId = "", string name = null, HostileWaveContext waveContext = null)
     {
         if (EnemyPawnScene == null)
         {
@@ -144,6 +144,7 @@ public partial class PawnManager : Node3D
         data.EquippedWeaponId = weaponId;
         if (name != null) data.PawnName = name;
         instance.Data = data;
+        instance.WaveContext = waveContext;
         instance.Position = position;
         AddChild(instance);
 

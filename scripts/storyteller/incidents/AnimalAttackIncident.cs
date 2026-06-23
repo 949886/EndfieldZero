@@ -1,6 +1,7 @@
 using System;
 using EndfieldZero.Core;
 using EndfieldZero.Managers;
+using EndfieldZero.Pawn;
 using Godot;
 
 namespace EndfieldZero.Storyteller.Incidents;
@@ -31,6 +32,7 @@ public class AnimalAttackIncident : IncidentWorker
         float angle = (float)(Rng.NextDouble() * Math.PI * 2.0);
         Vector3 spawnBase = center + new Vector3(
             Mathf.Cos(angle) * edgeDist, 0f, Mathf.Sin(angle) * edgeDist);
+        var waveContext = CreateWaveContext(def, EnemyAssaultMode.ImmediateAttack, spawnBase);
 
         GD.Print($"[AnimalAttack] Spawning {count} animals");
 
@@ -40,7 +42,7 @@ public class AnimalAttackIncident : IncidentWorker
             float spacing = 2f * Settings.BlockPixelSize;
             Vector3 pos = spawnBase + new Vector3(i * spacing, 0f, 0f);
 
-            var animal = PawnManager.Instance.SpawnHostile(pos, "Animal", "", name);
+            var animal = PawnManager.Instance.SpawnHostile(pos, "Animal", "", name, waveContext);
 
             // Animals: high agility, moderate strength
             animal.Data.Agility = Rng.Next(Settings.AnimalAttackAgilityMin, Settings.AnimalAttackAgilityMax + 1);

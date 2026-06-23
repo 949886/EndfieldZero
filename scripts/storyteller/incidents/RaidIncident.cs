@@ -1,6 +1,7 @@
 using System;
 using EndfieldZero.Core;
 using EndfieldZero.Managers;
+using EndfieldZero.Pawn;
 using Godot;
 
 namespace EndfieldZero.Storyteller.Incidents;
@@ -37,6 +38,10 @@ public class RaidIncident : IncidentWorker
         // Pick a spawn edge
         Vector3 spawnCenter = GetEdgeSpawn();
         float spacing = 2f * Settings.BlockPixelSize;
+        EnemyAssaultMode assaultMode = Rng.NextDouble() < Settings.RaidImmediateAttackChance
+            ? EnemyAssaultMode.ImmediateAttack
+            : EnemyAssaultMode.DelayedAttack;
+        var waveContext = CreateWaveContext(def, assaultMode, spawnCenter);
 
         GD.Print($"[Raid] Spawning {count} raiders (threat: {threatPoints:F0})");
 
@@ -48,7 +53,7 @@ public class RaidIncident : IncidentWorker
             Vector3 offset = new Vector3((i - count / 2f) * spacing, 0f, Rng.Next(-2, 2) * spacing * 0.5f);
             Vector3 pos = spawnCenter + offset;
 
-            var raider = PawnManager.Instance.SpawnHostile(pos, "Hostile", weapon, name);
+            var raider = PawnManager.Instance.SpawnHostile(pos, "Hostile", weapon, name, waveContext);
 
             // Scale stats slightly with threat
             float statBonus = Mathf.Min(threatPoints / Settings.RaidStatBonusThreatDivisor, Settings.RaidStatBonusCap);

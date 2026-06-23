@@ -4,6 +4,7 @@ using System.Linq;
 using EndfieldZero.Core;
 using EndfieldZero.Items;
 using EndfieldZero.Managers;
+using EndfieldZero.Pawn;
 using EndfieldZero.Storyteller.Incidents;
 using Godot;
 
@@ -142,6 +143,11 @@ public partial class Storyteller : Node
         UpdateThreatLevel();
     }
 
+    public void RefreshThreatLevel()
+    {
+        UpdateThreatLevel();
+    }
+
     private void UpdateThreatPoints()
     {
         int colonists = PawnManager.Instance?.GetColonistCount() ?? 0;
@@ -220,9 +226,25 @@ public partial class Storyteller : Node
     {
         if (PawnManager.Instance == null) return;
 
-        int hostileCount = PawnManager.Instance.GetHostileCount();
+        var hostiles = PawnManager.Instance
+            .GetAllEnemies()
+            .Where(enemy => enemy.IsAlive)
+            .ToList();
 
-        string newLevel = hostileCount > 0 ? "combat" : "peace";
+        string newLevel;
+        if (hostiles.Count == 0)
+        {
+            newLevel = "peace";
+        }
+        else if (hostiles.All(enemy => enemy.CurrentAssaultPhase == EnemyAssaultPhase.Preparing))
+        {
+            newLevel = "alert";
+        }
+        else
+        {
+            newLevel = "combat";
+        }
+
         if (newLevel != _currentThreatLevel)
         {
             _currentThreatLevel = newLevel;
@@ -248,5 +270,14 @@ public partial class Storyteller : Node
 /// </summary>
 public abstract class IncidentWorker
 {
+    protected HostileWaveContext CreateWaveContext(IncidentDef def, EnemyAssaultMode assaultMode, Vector3 rallyCenter)
+    {
+        long currentTick = TimeManager.Instance?.CurrentTick ?? 0;
+        long prepareUntilTick = assaultMode == EnemyAssaultMode.DelayedAttack
+            ? currentTick + Settings.HostilePrepareDurationTicks
+            : currentTick;
+        return new HostileWaveContext(def.Id, assaultMode, prepareUntilTick, rallyCenter);
+    }
+
     public abstract void Execute(IncidentDef def, float threatPoints);
 }

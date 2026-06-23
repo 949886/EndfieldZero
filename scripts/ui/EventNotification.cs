@@ -18,7 +18,6 @@ public partial class EventNotification : Control
     {
         MouseFilter = MouseFilterEnum.Ignore;
 
-        // Container for notifications
         _vbox = new VBoxContainer
         {
             AnchorLeft = 1f,
@@ -28,20 +27,19 @@ public partial class EventNotification : Control
             OffsetLeft = -260f,
             OffsetTop = -600f,
             OffsetRight = -20f,
-            OffsetBottom = -60f,  // A bit higher from bottom edge
+            OffsetBottom = -60f,
             GrowHorizontal = GrowDirection.Begin,
             GrowVertical = GrowDirection.Begin,
-            Alignment = BoxContainer.AlignmentMode.End, // Items stack at the bottom
+            Alignment = BoxContainer.AlignmentMode.End,
             MouseFilter = MouseFilterEnum.Ignore,
         };
         _vbox.AddThemeConstantOverride("separation", 8);
         AddChild(_vbox);
 
-        // Dialog for details
         _detailDialog = new AcceptDialog
         {
-            Title = "事件详情",
-            DialogText = "加载中...",
+            Title = "\u4e8b\u4ef6\u8be6\u60c5",
+            DialogText = "\u52a0\u8f7d\u4e2d...",
             Exclusive = false,
         };
         AddChild(_detailDialog);
@@ -60,24 +58,34 @@ public partial class EventNotification : Control
     {
         Color color = id switch
         {
-            "raid" or "animal_attack" => new Color(0.9f, 0.2f, 0.2f),
-            "cold_snap" or "heat_wave" or "disaster" => new Color(0.9f, 0.7f, 0.1f),
-            "wanderer_joins" or "party" or "aurora" => new Color(0.2f, 0.8f, 0.3f),
+            "raid" or "animal_attack" or "_assault_start" => new Color(0.9f, 0.2f, 0.2f),
+            "_alert" or "cold_snap" or "heat_wave" or "disaster" => new Color(0.9f, 0.7f, 0.1f),
+            "_peace" or "wanderer_joins" or "party" or "aurora" => new Color(0.2f, 0.8f, 0.3f),
             _ => new Color(0.3f, 0.6f, 0.9f),
         };
 
-        CreateNotificationItem(id, displayName, desc, color);
+        CreateNotificationItem(displayName, desc, color);
     }
 
     private void OnThreatLevelChanged(string level)
     {
-        if (level == "combat")
-            OnIncidentTriggered("_combat", "⚠️ 殖民地进入战斗状态!", "由于出现敌对单位，殖民地现在处于警戒和战斗状态。");
+        if (level == "alert")
+        {
+            OnIncidentTriggered(
+                "_alert",
+                "\u654c\u4eba\u6b63\u5728\u96c6\u7ed3",
+                "\u654c\u5bf9\u5355\u4f4d\u6b63\u5728\u5916\u56f4\u5f98\u5f8a\u548c\u96c6\u7ed3\uff0c\u968f\u65f6\u53ef\u80fd\u5411\u6b96\u6c11\u5730\u53d1\u8d77\u8fdb\u653b\u3002");
+        }
         else if (level == "peace")
-            OnIncidentTriggered("_peace", "✅ 威胁已解除，恢复和平", "所有的威胁都已经被清除，殖民地重新回归和平。");
+        {
+            OnIncidentTriggered(
+                "_peace",
+                "\u5a01\u80c1\u5df2\u89e3\u9664\uff0c\u6062\u590d\u548c\u5e73",
+                "\u6240\u6709\u7684\u5a01\u80c1\u90fd\u5df2\u7ecf\u88ab\u6e05\u9664\uff0c\u6b96\u6c11\u5730\u91cd\u65b0\u56de\u5f52\u548c\u5e73\u3002");
+        }
     }
 
-    private void CreateNotificationItem(string id, string text, string desc, Color color)
+    private void CreateNotificationItem(string text, string desc, Color color)
     {
         var panel = new PanelContainer
         {
@@ -89,12 +97,18 @@ public partial class EventNotification : Control
         var style = new StyleBoxFlat
         {
             BgColor = new Color(0.1f, 0.1f, 0.1f, 0.85f),
-            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
-            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
-            ContentMarginLeft = 12, ContentMarginRight = 12,
-            ContentMarginTop = 8, ContentMarginBottom = 8,
-            BorderWidthLeft = 2, BorderWidthTop = 2,
-            BorderWidthRight = 2, BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4,
+            ContentMarginLeft = 12,
+            ContentMarginRight = 12,
+            ContentMarginTop = 8,
+            ContentMarginBottom = 8,
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
             BorderColor = color,
         };
         panel.AddThemeStyleboxOverride("panel", style);
@@ -109,7 +123,7 @@ public partial class EventNotification : Control
         label.AddThemeColorOverride("font_color", color);
         panel.AddChild(label);
 
-        string details = $"事件: {text}\n\n{desc}";
+        string details = $"\u4e8b\u4ef6: {text}\n\n{desc}";
 
         panel.GuiInput += (@event) =>
         {
@@ -117,21 +131,19 @@ public partial class EventNotification : Control
             {
                 if (mb.ButtonIndex == MouseButton.Left)
                 {
-                    // Show details and remove
                     _detailDialog.DialogText = details;
                     _detailDialog.PopupCentered();
                     panel.QueueFree();
                 }
                 else if (mb.ButtonIndex == MouseButton.Right)
                 {
-                    // Dismiss
                     panel.QueueFree();
                 }
+
                 panel.AcceptEvent();
             }
         };
 
-        // Add to VBox (bottom)
         _vbox.AddChild(panel);
     }
 
@@ -141,12 +153,9 @@ public partial class EventNotification : Control
         {
             var events = new[] { "raid", "animal_attack", "cold_snap", "disaster", "wanderer_joins", "party", "aurora" };
             var id = events[new Random().Next(events.Length)];
-            
-            // Delegate to Storyteller to execute actual event logic
+
             Storyteller.Storyteller.Instance?.ForceTriggerIncident(id);
-            
             AcceptEvent();
         }
     }
 }
-

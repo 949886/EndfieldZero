@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using EndfieldZero.AI;
 using EndfieldZero.Combat;
 using EndfieldZero.Core;
 using EndfieldZero.Managers;
@@ -10,9 +9,9 @@ using Godot;
 namespace EndfieldZero.Pawn;
 
 /// <summary>
-/// Enemy pawn — hostile AI-controlled unit.
+/// Enemy pawn - hostile AI-controlled unit.
 /// Unlike colonist Pawn, it cannot be selected/controlled by the player.
-/// Has its own simplified AI: seek nearest colonist → attack → flee when low HP.
+/// Has its own simplified AI: seek nearest colonist -> attack -> flee when low HP.
 ///
 /// Attach to enemy_pawn.tscn root (CharacterBody3D).
 /// </summary>
@@ -20,11 +19,14 @@ public partial class EnemyPawn : CharacterBody3D
 {
     [Export] public PawnData Data { get; set; }
     [Export] public float BaseMoveSpeed { get; set; } = GameSettings.DefaultEnemyBaseMoveSpeedBlocksPerSecondValue;
+    public HostileWaveContext WaveContext { get; set; }
 
     // --- Runtime state ---
     public HealthComponent Health { get; private set; }
     public bool IsAlive { get; private set; } = true;
     public bool IsMoving => _hasTarget || _pathIndex < _path.Count;
+    public EnemyAssaultPhase CurrentAssaultPhase { get; private set; } = EnemyAssaultPhase.Assaulting;
+    public int CurrentWaveId => WaveContext?.WaveId ?? 0;
 
     private PawnAnimController _animController;
     private AnimatedSprite3D _sprite;
@@ -45,6 +47,8 @@ public partial class EnemyPawn : CharacterBody3D
     private int _attackCooldown;
     private long _lastTargetSearchTick;
     private float _detectionRange;
+    private long _prepareNextRepickTick;
+    private readonly RandomNumberGenerator _rng = new();
 
     // Flee state
     private bool _isFleeing;
@@ -68,9 +72,10 @@ public partial class EnemyPawn : CharacterBody3D
 
         BaseMoveSpeed = Settings.EnemyBaseMoveSpeed;
         _detectionRange = Settings.EnemyDetectionRange;
+        _rng.Randomize();
 
-        // Create red hostile indicator circle
         CreateHostileIndicator();
+        InitializeAssaultState();
 
         EventBus.Tick += OnTick;
         GD.Print($"[EnemyPawn] {Data.PawnName} ({Data.Faction}) spawned at {GlobalPosition}");
@@ -105,6 +110,7 @@ public partial class EnemyPawn : CharacterBody3D
                     Velocity = Vector3.Zero;
                     return;
                 }
+
                 target = _path[_pathIndex];
                 direction = target - GlobalPosition;
                 direction.Y = 0;
@@ -147,21 +153,24 @@ public partial class EnemyPawn : CharacterBody3D
     {
         if (!IsAlive) return;
 
-        // Natural healing (slow)
         Health?.TickHeal();
 
-        // Check if dead
         if (Health != null && Health.IsDead)
         {
             Die("killed");
             return;
         }
 
-        // Flee when low HP
         if (!_isFleeing && Health != null && Health.HpPercent < Settings.EnemyFleeHpPercent)
         {
             StartFleeing();
             return;
+        }
+
+        if (CurrentAssaultPhase == EnemyAssaultPhase.Preparing)
+        {
+            if (UpdatePreparing(tick))
+                return;
         }
 
         if (_isFleeing)
@@ -170,35 +179,28 @@ public partial class EnemyPawn : CharacterBody3D
             return;
         }
 
-        // Attack cooldown
         if (_attackCooldown > 0)
         {
             _attackCooldown--;
             return;
         }
 
-        // Find target periodically
-        if (tick - _lastTargetSearchTick >= Settings.EnemyTargetSearchIntervalTicks || _target == null)
+        if (tick - _lastTargetSearchTick >= Settings.EnemyTargetSearchIntervalTicks || !IsTargetValid(_target))
         {
             _lastTargetSearchTick = tick;
             _target = FindNearestColonist();
         }
 
-        if (_target == null) return;
-
-        // Check if target is still valid
-        if (!GodotObject.IsInstanceValid(_target) || !_target.IsAlive)
+        if (_target == null)
         {
-            _target = FindNearestColonist();
-            if (_target == null) return;
+            if (CurrentAssaultPhase == EnemyAssaultPhase.Assaulting && !IsMoving)
+                NavigateToAssaultObjective();
+            return;
         }
 
-        // In attack range?
         if (DamageSystem.IsInRange(this, _target))
         {
-            // Attack
             Stop();
-            // Face target
             Vector3 toTarget = (_target.GlobalPosition - GlobalPosition).Normalized();
             toTarget.Y = 0;
             _animController.Update(toTarget, PawnAnimController.PawnAnimState.Working);
@@ -207,7 +209,6 @@ public partial class EnemyPawn : CharacterBody3D
             var weapon = DamageSystem.GetWeapon(Data);
             _attackCooldown = Mathf.Max(1, Mathf.RoundToInt(weapon.CooldownTicks * Settings.HostileCooldownMultiplier));
 
-            // Check if target died
             if (_target.Health != null && _target.Health.IsDead)
             {
                 _target = FindNearestColonist();
@@ -217,7 +218,6 @@ public partial class EnemyPawn : CharacterBody3D
         }
         else if (!IsMoving)
         {
-            // Move towards target
             NavigateToTarget();
         }
     }
@@ -227,10 +227,10 @@ public partial class EnemyPawn : CharacterBody3D
     private void StartFleeing()
     {
         _isFleeing = true;
+        SetAssaultPhase(EnemyAssaultPhase.Fleeing);
         _target = null;
         Stop();
 
-        // Flee away from colony center
         Vector3 center = PawnManager.Instance?.GetColonyCenter() ?? Vector3.Zero;
         Vector3 awayDir = (GlobalPosition - center).Normalized();
         awayDir.Y = 0;
@@ -240,13 +240,13 @@ public partial class EnemyPawn : CharacterBody3D
         _fleeTarget = GlobalPosition + awayDir * fleeDist;
         MoveTo(_fleeTarget);
         GD.Print($"[EnemyPawn] {Data.PawnName} is fleeing!");
+        RefreshThreatLevel();
     }
 
     private void UpdateFlee()
     {
         if (!IsMoving)
         {
-            // Reached edge — remove from game
             GD.Print($"[EnemyPawn] {Data.PawnName} fled the map");
             Die("fled");
         }
@@ -277,6 +277,14 @@ public partial class EnemyPawn : CharacterBody3D
         return best;
     }
 
+    private bool IsTargetValid(Pawn target)
+    {
+        return target != null
+            && GodotObject.IsInstanceValid(target)
+            && target.IsAlive
+            && target.Data.Faction == "Colony";
+    }
+
     private void NavigateToTarget()
     {
         if (_target == null) return;
@@ -284,7 +292,6 @@ public partial class EnemyPawn : CharacterBody3D
         Vector3 targetPos = _target.GlobalPosition;
         var weapon = DamageSystem.GetWeapon(Data);
 
-        // Ranged: keep at 60% max range
         if (weapon.IsRanged)
         {
             float desiredDist = weapon.Range * Settings.HostileRangeMultiplier * Settings.BlockPixelSize
@@ -293,6 +300,66 @@ public partial class EnemyPawn : CharacterBody3D
             targetPos = _target.GlobalPosition + dir * desiredDist;
         }
 
+        NavigateToPosition(targetPos);
+    }
+
+    private bool UpdatePreparing(long tick)
+    {
+        if (WaveContext == null)
+        {
+            EnterAssaulting();
+            return false;
+        }
+
+        if (tick >= WaveContext.PrepareUntilTick)
+        {
+            EnterAssaulting();
+            return false;
+        }
+
+        if (!IsMoving || tick >= _prepareNextRepickTick)
+            PickPrepareDestination(tick);
+
+        return true;
+    }
+
+    private void PickPrepareDestination(long tick)
+    {
+        if (WaveContext == null)
+        {
+            EnterAssaulting();
+            return;
+        }
+
+        float radius = Settings.HostilePrepareWanderRadius;
+        var offset = new Vector3(
+            _rng.RandfRange(-radius, radius),
+            0f,
+            _rng.RandfRange(-radius, radius));
+        NavigateToPosition(WaveContext.RallyCenter + offset);
+        _prepareNextRepickTick = tick + Settings.HostilePrepareRepickTicks;
+    }
+
+    private void EnterAssaulting()
+    {
+        Stop();
+        _target = null;
+        _lastTargetSearchTick = 0;
+        SetAssaultPhase(EnemyAssaultPhase.Assaulting);
+        EnsureAssaultStartNotification();
+        RefreshThreatLevel();
+    }
+
+    private void NavigateToAssaultObjective()
+    {
+        Vector3 objective = PawnManager.Instance?.GetColonyCenter()
+            ?? WaveContext?.RallyCenter
+            ?? GlobalPosition;
+        NavigateToPosition(objective);
+    }
+
+    private void NavigateToPosition(Vector3 targetPos)
+    {
         if (PathfindingService.Instance != null)
         {
             var start = PathfindingService.WorldToBlock(GlobalPosition);
@@ -305,7 +372,51 @@ public partial class EnemyPawn : CharacterBody3D
                 return;
             }
         }
+
         MoveTo(targetPos);
+    }
+
+    private void InitializeAssaultState()
+    {
+        long currentTick = TimeManager.Instance?.CurrentTick ?? 0;
+        if (WaveContext != null
+            && WaveContext.AssaultMode == EnemyAssaultMode.DelayedAttack
+            && currentTick < WaveContext.PrepareUntilTick)
+        {
+            SetAssaultPhase(EnemyAssaultPhase.Preparing);
+            _prepareNextRepickTick = 0;
+            return;
+        }
+
+        SetAssaultPhase(EnemyAssaultPhase.Assaulting);
+        EnsureAssaultStartNotification();
+    }
+
+    private void SetAssaultPhase(EnemyAssaultPhase nextPhase)
+    {
+        if (CurrentAssaultPhase == nextPhase)
+            return;
+
+        CurrentAssaultPhase = nextPhase;
+        if (nextPhase != EnemyAssaultPhase.Preparing)
+            _prepareNextRepickTick = 0;
+    }
+
+    private void EnsureAssaultStartNotification()
+    {
+        if (WaveContext == null || WaveContext.AssaultNotificationSent)
+            return;
+
+        WaveContext.AssaultNotificationSent = true;
+        string desc = WaveContext.AssaultMode == EnemyAssaultMode.DelayedAttack
+            ? "\u654c\u5bf9\u5355\u4f4d\u7ed3\u675f\u96c6\u7ed3\uff0c\u5f00\u59cb\u5411\u6b96\u6c11\u5730\u53d1\u8d77\u8fdb\u653b\u3002"
+            : "\u654c\u5bf9\u5355\u4f4d\u5df2\u7ecf\u5f00\u59cb\u5411\u6b96\u6c11\u5730\u63a8\u8fdb\u3002";
+        EventBus.FireIncidentTriggered("_assault_start", "\u654c\u4eba\u5f00\u59cb\u8fdb\u653b\uff01", desc);
+    }
+
+    private void RefreshThreatLevel()
+    {
+        EndfieldZero.Storyteller.Storyteller.Instance?.RefreshThreatLevel();
     }
 
     // --- Movement API ---
@@ -340,8 +451,8 @@ public partial class EnemyPawn : CharacterBody3D
         Stop();
         GD.Print($"[EnemyPawn] {Data.PawnName} died: {cause}");
         EventBus.FirePawnDied(Data.Id);
+        RefreshThreatLevel();
 
-        // Remove from scene after short delay
         var timer = GetTree().CreateTimer(0.5);
         timer.Timeout += QueueFree;
     }
@@ -350,7 +461,6 @@ public partial class EnemyPawn : CharacterBody3D
 
     private void CreateHostileIndicator()
     {
-        // Red circle under enemy to distinguish from colonists
         var mesh = new TorusMesh();
         mesh.InnerRadius = 0.3f;
         mesh.OuterRadius = 0.45f;
@@ -368,7 +478,6 @@ public partial class EnemyPawn : CharacterBody3D
         _hostileIndicator = new MeshInstance3D();
         _hostileIndicator.Mesh = mesh;
         _hostileIndicator.Position = new Vector3(0, 0.05f, 0);
-        // Flatten the torus to be a ring on the ground
         _hostileIndicator.RotationDegrees = new Vector3(90, 0, 0);
         AddChild(_hostileIndicator);
     }
