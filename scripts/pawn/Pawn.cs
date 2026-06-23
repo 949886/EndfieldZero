@@ -60,6 +60,8 @@ public partial class Pawn : CharacterBody3D
 
     // Selection circle visual
     private SelectionCircle _selectionCircle;
+    private Label3D _nameLabel;
+    private Label3D _nameShadowLabel;
 
     public override void _Ready()
     {
@@ -82,6 +84,12 @@ public partial class Pawn : CharacterBody3D
         // Create selection circle as child
         _selectionCircle = new SelectionCircle();
         AddChild(_selectionCircle);
+
+        _nameShadowLabel = PawnNameLabel3D.Create(Data.PawnName, shadow: true);
+        AddChild(_nameShadowLabel);
+
+        _nameLabel = PawnNameLabel3D.Create(Data.PawnName);
+        AddChild(_nameLabel);
 
         EventBus.Tick += OnTick;
         GD.Print($"[Pawn] {Data.PawnName} (ID:{Data.Id}) spawned at {GlobalPosition}");
@@ -162,6 +170,11 @@ public partial class Pawn : CharacterBody3D
         }
 
         SnapToSurface();
+    }
+
+    public override void _Process(double delta)
+    {
+        UpdateNameLabel();
     }
 
     private void OnTick(long tick)
@@ -292,6 +305,17 @@ public partial class Pawn : CharacterBody3D
         _sprite.NoDepthTest = angled3D;
         _sprite.RenderPriority = angled3D ? 10 : 0;
         UpdateSpriteAnchor();
+    }
+
+    private void UpdateNameLabel()
+    {
+        PawnNameLabel3D.Update(
+            _nameLabel,
+            _nameShadowLabel,
+            GetViewport()?.GetCamera3D(),
+            GlobalPosition,
+            Data?.PawnName,
+            IsAlive);
     }
 
     private void SnapToSurface()
