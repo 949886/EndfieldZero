@@ -19,7 +19,7 @@ namespace EndfieldZero.Pawn;
 public partial class EnemyPawn : CharacterBody3D
 {
     [Export] public PawnData Data { get; set; }
-    [Export] public float BaseMoveSpeed { get; set; } = 3.5f;
+    [Export] public float BaseMoveSpeed { get; set; } = GameSettings.DefaultEnemyBaseMoveSpeedBlocksPerSecondValue;
 
     // --- Runtime state ---
     public HealthComponent Health { get; private set; }
@@ -44,7 +44,6 @@ public partial class EnemyPawn : CharacterBody3D
     private Pawn _target;
     private int _attackCooldown;
     private long _lastTargetSearchTick;
-    private const int TargetSearchInterval = 30; // ticks between target re-scans
     private float _detectionRange;
 
     // Flee state
@@ -67,7 +66,8 @@ public partial class EnemyPawn : CharacterBody3D
         SnapToSurface();
         UpdateSpritePresentation();
 
-        _detectionRange = 25f * Settings.BlockPixelSize;
+        BaseMoveSpeed = Settings.EnemyBaseMoveSpeed;
+        _detectionRange = Settings.EnemyDetectionRange;
 
         // Create red hostile indicator circle
         CreateHostileIndicator();
@@ -158,7 +158,7 @@ public partial class EnemyPawn : CharacterBody3D
         }
 
         // Flee when low HP
-        if (!_isFleeing && Health != null && Health.HpPercent < 0.25f)
+        if (!_isFleeing && Health != null && Health.HpPercent < Settings.EnemyFleeHpPercent)
         {
             StartFleeing();
             return;
@@ -178,7 +178,7 @@ public partial class EnemyPawn : CharacterBody3D
         }
 
         // Find target periodically
-        if (tick - _lastTargetSearchTick >= TargetSearchInterval || _target == null)
+        if (tick - _lastTargetSearchTick >= Settings.EnemyTargetSearchIntervalTicks || _target == null)
         {
             _lastTargetSearchTick = tick;
             _target = FindNearestColonist();
@@ -205,7 +205,7 @@ public partial class EnemyPawn : CharacterBody3D
             DamageSystem.AttackEnemy(this, _target);
 
             var weapon = DamageSystem.GetWeapon(Data);
-            _attackCooldown = weapon.CooldownTicks;
+            _attackCooldown = Mathf.Max(1, Mathf.RoundToInt(weapon.CooldownTicks * Settings.HostileCooldownMultiplier));
 
             // Check if target died
             if (_target.Health != null && _target.Health.IsDead)
@@ -287,7 +287,8 @@ public partial class EnemyPawn : CharacterBody3D
         // Ranged: keep at 60% max range
         if (weapon.IsRanged)
         {
-            float desiredDist = weapon.Range * Settings.BlockPixelSize * 0.6f;
+            float desiredDist = weapon.Range * Settings.HostileRangeMultiplier * Settings.BlockPixelSize
+                * Settings.HostilePreferredRangedDistanceRatio;
             Vector3 dir = (GlobalPosition - targetPos).Normalized();
             targetPos = _target.GlobalPosition + dir * desiredDist;
         }

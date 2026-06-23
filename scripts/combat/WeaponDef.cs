@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EndfieldZero.Core;
 using Godot;
 
 namespace EndfieldZero.Combat;
@@ -49,13 +50,18 @@ public sealed class WeaponRegistry
     private static WeaponRegistry CreateDefault()
     {
         var reg = new WeaponRegistry();
-        //                            id           name    ranged  dmg  range  cd   acc
-        reg.Register(new WeaponDef("fist",         "拳头",  false,  5f,  1f,   60,  1.0f));
-        reg.Register(new WeaponDef("knife",        "刀",    false, 10f,  1f,   45,  1.0f));
-        reg.Register(new WeaponDef("spear",        "矛",    false, 14f,  1.5f, 60,  1.0f));
-        reg.Register(new WeaponDef("hammer",       "锤",    false, 18f,  1f,   90,  0.9f));
-        reg.Register(new WeaponDef("bow",          "弓",    true,  12f, 15f,  120,  0.85f));
-        reg.Register(new WeaponDef("crossbow",     "弩",    true,  16f, 20f,  180,  0.9f));
+        reg.Register(new WeaponDef("fist", "Fist", false,
+            Settings.FistBaseDamage, Settings.FistRange, Settings.FistCooldownTicks, Settings.FistAccuracyMod));
+        reg.Register(new WeaponDef("knife", "Knife", false,
+            Settings.KnifeBaseDamage, Settings.KnifeRange, Settings.KnifeCooldownTicks, Settings.KnifeAccuracyMod));
+        reg.Register(new WeaponDef("spear", "Spear", false,
+            Settings.SpearBaseDamage, Settings.SpearRange, Settings.SpearCooldownTicks, Settings.SpearAccuracyMod));
+        reg.Register(new WeaponDef("hammer", "Hammer", false,
+            Settings.HammerBaseDamage, Settings.HammerRange, Settings.HammerCooldownTicks, Settings.HammerAccuracyMod));
+        reg.Register(new WeaponDef("bow", "Bow", true,
+            Settings.BowBaseDamage, Settings.BowRange, Settings.BowCooldownTicks, Settings.BowAccuracyMod));
+        reg.Register(new WeaponDef("crossbow", "Crossbow", true,
+            Settings.CrossbowBaseDamage, Settings.CrossbowRange, Settings.CrossbowCooldownTicks, Settings.CrossbowAccuracyMod));
         return reg;
     }
 }

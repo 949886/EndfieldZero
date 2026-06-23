@@ -22,7 +22,7 @@ public class AnimalAttackIncident : IncidentWorker
     {
         if (PawnManager.Instance == null) return;
 
-        int count = Mathf.Clamp((int)(threatPoints / 200f), 1, 4);
+        int count = Mathf.Clamp((int)(threatPoints / Settings.AnimalAttackCountThreatDivisor), 1, Settings.AnimalAttackMaxCount);
 
         var center = PawnManager.Instance.GetColonyCenter();
         float edgeDist = 50f * Settings.BlockPixelSize;
@@ -43,8 +43,8 @@ public class AnimalAttackIncident : IncidentWorker
             var animal = PawnManager.Instance.SpawnHostile(pos, "Animal", "", name);
 
             // Animals: high agility, moderate strength
-            animal.Data.Agility = Rng.Next(8, 14);
-            animal.Data.Strength = Rng.Next(6, 10);
+            animal.Data.Agility = Rng.Next(Settings.AnimalAttackAgilityMin, Settings.AnimalAttackAgilityMax + 1);
+            animal.Data.Strength = Rng.Next(Settings.AnimalAttackStrengthMin, Settings.AnimalAttackStrengthMax + 1);
         }
     }
 }

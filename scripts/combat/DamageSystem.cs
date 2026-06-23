@@ -178,7 +178,7 @@ public static class DamageSystem
         var weapon = GetWeapon(attacker.Data);
         float dist = attacker.GlobalPosition.DistanceTo(target.GlobalPosition)
                      / Settings.BlockPixelSize;
-        return dist <= weapon.Range;
+        return dist <= weapon.Range * Settings.HostileRangeMultiplier;
     }
 
     /// <summary>EnemyPawn attacks a colonist Pawn.</summary>
@@ -194,14 +194,15 @@ public static class DamageSystem
         float statBonus = weapon.IsRanged
             ? attacker.Data.GetStat("Shooting") / 10f
             : attacker.Data.GetStat("Strength") / 10f;
-        float damage = baseDmg * (1f + statBonus);
+        float damage = baseDmg * (1f + statBonus) * Settings.HostileDamageMultiplier;
 
         // Accuracy (ranged distance falloff)
         if (weapon.IsRanged)
         {
             float dist = attacker.GlobalPosition.DistanceTo(target.GlobalPosition)
                          / Settings.BlockPixelSize;
-            float falloff = Mathf.Clamp(1f - dist / (weapon.Range * 1.5f), 0.3f, 1f);
+            float effectiveRange = weapon.Range * Settings.HostileRangeMultiplier;
+            float falloff = Mathf.Clamp(1f - dist / (effectiveRange * 1.5f), 0.3f, 1f);
             damage *= falloff * weapon.AccuracyMod;
 
             float hitChance = 0.7f + attacker.Data.GetStat("Shooting") * 0.02f;

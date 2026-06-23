@@ -23,14 +23,13 @@ public class RaidIncident : IncidentWorker
     {
         if (PawnManager.Instance == null) return;
 
-        // Calculate enemy count: threatPoints / 150, min 1, max 8
-        int count = Mathf.Clamp((int)(threatPoints / 150f), 1, 8);
+        int count = Mathf.Clamp((int)(threatPoints / Settings.RaidCountThreatDivisor), 1, Settings.RaidMaxCount);
 
         // Determine weapons based on threat
         string[] weapons;
-        if (threatPoints < 400f)
+        if (threatPoints < Settings.RaidLowThreatWeaponThreshold)
             weapons = new[] { "", "knife" };           // fist and knife
-        else if (threatPoints < 800f)
+        else if (threatPoints < Settings.RaidMidThreatWeaponThreshold)
             weapons = new[] { "knife", "spear", "bow" };
         else
             weapons = new[] { "spear", "hammer", "bow", "crossbow" };
@@ -52,7 +51,7 @@ public class RaidIncident : IncidentWorker
             var raider = PawnManager.Instance.SpawnHostile(pos, "Hostile", weapon, name);
 
             // Scale stats slightly with threat
-            float statBonus = Mathf.Min(threatPoints / 200f, 5f);
+            float statBonus = Mathf.Min(threatPoints / Settings.RaidStatBonusThreatDivisor, Settings.RaidStatBonusCap);
             raider.Data.Strength += statBonus;
             raider.Data.Agility += statBonus * 0.5f;
         }

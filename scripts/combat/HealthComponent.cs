@@ -26,7 +26,14 @@ public class HealthComponent
         _data = data;
         _onDeath = onDeath;
         // Base 80 + Strength × 4 → range ~92-160
-        MaxHp = 80f + data.GetStat("Strength") * 4f;
+        if (data.IsHostile)
+        {
+            MaxHp = Settings.HostileBaseHp + data.GetStat("Strength") * Settings.HostileHpPerStrength;
+        }
+        else
+        {
+            MaxHp = 80f + data.GetStat("Strength") * 4f;
+        }
         CurrentHp = MaxHp;
     }
 

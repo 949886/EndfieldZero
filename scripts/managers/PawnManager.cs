@@ -139,7 +139,7 @@ public partial class PawnManager : Node3D
         }
 
         var instance = EnemyPawnScene.Instantiate<Pawn.EnemyPawn>();
-        var data = GenerateRandomPawnData();
+        var data = GenerateHostilePawnData();
         data.Faction = faction;
         data.EquippedWeaponId = weaponId;
         if (name != null) data.PawnName = name;
@@ -149,6 +149,18 @@ public partial class PawnManager : Node3D
 
         _enemies[data.Id] = instance;
         return instance;
+    }
+
+    private PawnData GenerateHostilePawnData()
+    {
+        var data = GenerateRandomPawnData();
+        var rng = new RandomNumberGenerator();
+        rng.Randomize();
+
+        data.Shooting = rng.RandiRange(Settings.HostileShootingMin, Settings.HostileShootingMax);
+        data.Strength = rng.RandiRange(Settings.HostileStrengthMin, Settings.HostileStrengthMax);
+        data.Agility = rng.RandiRange(Settings.HostileAgilityMin, Settings.HostileAgilityMax);
+        return data;
     }
 
     /// <summary>Spawn a neutral pawn (traders, wanderers).</summary>
