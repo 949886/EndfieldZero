@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://xtur2p850qfm"]
+
+[ext_resource type="PackedScene" uid="uid://bn5aerh6whfu8" path="res://models/Miyuu/霞沢ミユ.fbx" id="1_712ra"]
+[ext_resource type="PackedScene" uid="uid://bchrjddj3kd1a" path="res://models/Trees/Tree1.blend" id="2_hdrwq"]
+
+[node name="Models" type="Node3D" unique_id=1682558046]
+
+[node name="霞沢ミユ" parent="." unique_id=59729276 instance=ExtResource("1_712ra")]
+
+[node name="Tree1" parent="." unique_id=1061946673 instance=ExtResource("2_hdrwq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8968952, 0, 0.27163172)

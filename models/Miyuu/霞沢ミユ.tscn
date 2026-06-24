@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://v3cu66oogfd0"]
+
+[ext_resource type="PackedScene" uid="uid://bn5aerh6whfu8" path="res://models/Miyuu/霞沢ミユ.fbx" id="1_6oq1a"]
+
+[node name="霞沢ミユ" unique_id=59729276 instance=ExtResource("1_6oq1a")]
+
+[node name="Bip001 L Toe0" parent="CH0145/bone_root/Bip001/Skeleton3D" parent_id_path=PackedInt32Array(1710828283) index="0" unique_id=759697367]
+transform = Transform3D(-1.4591496e-06, 0.9793116, -0.2023579, -1.3820827e-06, -0.20235798, -0.9793119, -1.0000001, -1.1716038e-06, 1.6354024e-06, -0.044207875, 0.09030207, -0.29859245)
+bone_idx = 3
+
+[node name="Bip001 R Toe0" parent="CH0145/bone_root/Bip001/Skeleton3D" parent_id_path=PackedInt32Array(1710828283) index="1" unique_id=1343773561]
+transform = Transform3D(-1.4589168e-06, 0.97931206, 0.20235564, -1.1399388e-06, 0.20235558, -0.979312, -0.9999999, -1.6652048e-06, 8.158386e-07, -0.04420813, -0.090302885, -0.29859215)
+bone_idx = 6
+
+[node name="FX_CH0145_Formation_Pickup_Motion_Emotion_01" parent="CH0145/bone_root/Bip001/Skeleton3D" parent_id_path=PackedInt32Array(1710828283) index="2" unique_id=343133403]
+transform = Transform3D(1.4898983e-08, 0.99999994, 4.160399e-06, 1.3868053e-06, -4.160399e-06, 1, 0.99999994, -1.49010635e-08, -1.3868053e-06, -0.027831275, 4.0105562e-07, 0.2887646)
+bone_idx = 24
+
+[node name="fire_01" parent="CH0145/bone_root/Bip001/Skeleton3D" parent_id_path=PackedInt32Array(1710828283) index="3" unique_id=1315852185]
+transform = Transform3D(1, -1.1920929e-07, 2.6341755e-08, 1.1920929e-07, 1, -5.7951965e-08, -2.6341748e-08, 5.7951965e-08, 1, -0.038010232, -0.71162224, -0.12368942)
+bone_idx = 122
+
+[node name="fire_02" parent="CH0145/bone_root/Bip001/Skeleton3D" parent_id_path=PackedInt32Array(1710828283) index="4" unique_id=1944105579]
+transform = Transform3D(1, -1.1920929e-07, 2.6341755e-08, 1.1920929e-07, 1, -5.7951965e-08, -2.6341748e-08, 5.7951965e-08, 1, -0.038010232, -0.71162224, -0.12368942)
+bone_idx = 122
