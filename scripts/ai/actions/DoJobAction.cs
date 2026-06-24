@@ -82,7 +82,7 @@ public class DoJobAction : AIAction
                 context.Pawn.Stop();
 
                 // Face toward job target
-                context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos);
+                context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos, ResolveWorkAnimation(_claimedJob.JobType));
             }
             else if (!context.Pawn.IsMoving)
             {
@@ -96,7 +96,7 @@ public class DoJobAction : AIAction
         }
 
         // Do work — set working animation every tick
-        context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos);
+        context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos, ResolveWorkAnimation(_claimedJob.JobType));
         _claimedJob.TicksWorked++;
 
         // Grant XP and speed bonuses
@@ -280,6 +280,15 @@ public class DoJobAction : AIAction
                 break;
             }
         }
+    }
+
+    private static PawnVisualAction ResolveWorkAnimation(string jobType)
+    {
+        return jobType switch
+        {
+            "Grow" => PawnVisualAction.Watering,
+            _ => PawnVisualAction.Dig,
+        };
     }
 }
 

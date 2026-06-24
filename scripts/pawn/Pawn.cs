@@ -7,19 +7,25 @@ using Godot;
 
 namespace EndfieldZero.Pawn;
 
+public enum PawnVisualAction
+{
+    Idle,
+    Move,
+    Dig,
+    Attack,
+    Shoot,
+    Watering,
+}
+
 /// <summary>
-/// Main pawn script — attach to pawn.tscn root (CharacterBody3D).
-/// Owns data (PawnData Resource), needs, mood, AI, and animation controller.
-/// Subscribes to the tick system for need decay and mood updates.
-/// AI drives autonomous behavior (wander, satisfy needs, do jobs).
-/// Player commands (via SelectionManager) override AI temporarily.
+/// Shared colonist pawn logic.
+/// Concrete visuals live in Pawn2D and Pawn3D.
 /// </summary>
-public partial class Pawn : CharacterBody3D
+public abstract partial class Pawn : CharacterBody3D
 {
     [Export] public PawnData Data { get; set; }
     [Export] public float BaseMoveSpeed { get; set; } = 3.125f;
 
-    // --- Runtime state ---
     public Needs Needs { get; private set; }
     public MoodTracker Mood { get; private set; }
     public PawnAI AI { get; private set; }
@@ -37,28 +43,20 @@ public partial class Pawn : CharacterBody3D
     /// <summary>Target pawn for attack command (player-issued).</summary>
     public EnemyPawn AttackTargetPawn { get; set; }
 
-    private PawnAnimController _animController;
-    private AnimatedSprite3D _sprite;
-    private AnimationPlayer _animPlayer;
-
-    // Direct movement
     private Vector3 _moveTarget;
     private bool _hasTarget;
 
-    // Path following
     private List<Vector3> _path = new();
     private int _pathIndex;
     private static float PathNodeReachDist => 0.5f * Settings.BlockPixelSize;
     private const float SurfaceClearance = 0.02f;
 
-    // Player command timer — AI resumes after idle for a while
     private long _playerCommandEndTick;
 
-    // Work animation
     private bool _isWorking;
     private Vector3 _workFacing;
+    private PawnVisualAction _workAction = PawnVisualAction.Dig;
 
-    // Selection circle visual
     private SelectionCircle _selectionCircle;
     private Label3D _nameLabel;
     private Label3D _nameShadowLabel;
@@ -72,16 +70,12 @@ public partial class Pawn : CharacterBody3D
         Mood = new MoodTracker(Data);
         Health = new HealthComponent(Data, cause => Die(cause));
 
-        _sprite = GetNode<AnimatedSprite3D>("AnimatedSprite3D");
-        _animPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
-        _animController = new PawnAnimController(_sprite, _animPlayer);
+        InitializeVisuals();
         SnapToSurface();
-        UpdateSpritePresentation();
+        UpdateVisualPresentation();
 
-        // Initialize AI
         AI = new PawnAI(this);
 
-        // Create selection circle as child
         _selectionCircle = new SelectionCircle();
         AddChild(_selectionCircle);
 
@@ -105,9 +99,7 @@ public partial class Pawn : CharacterBody3D
     {
         if (!IsAlive) return;
 
-        UpdateSpritePresentation();
-
-        // Update selection circle visibility
+        UpdateVisualPresentation();
         _selectionCircle?.SetSelected(IsSelected);
 
         float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
@@ -117,20 +109,21 @@ public partial class Pawn : CharacterBody3D
         {
             Vector3 target = _path[_pathIndex];
             Vector3 direction = target - GlobalPosition;
-            direction.Y = 0;
+            direction.Y = 0f;
 
             if (direction.Length() < PathNodeReachDist)
             {
                 _pathIndex++;
                 if (_pathIndex >= _path.Count)
                 {
-                    _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
+                    UpdateVisualAnimation(Vector3.Zero, PawnVisualAction.Idle);
                     Velocity = Vector3.Zero;
                     return;
                 }
+
                 target = _path[_pathIndex];
                 direction = target - GlobalPosition;
-                direction.Y = 0;
+                direction.Y = 0f;
             }
 
             velocity = direction.Normalized() * speed;
@@ -138,12 +131,12 @@ public partial class Pawn : CharacterBody3D
         else if (_hasTarget)
         {
             Vector3 direction = _moveTarget - GlobalPosition;
-            direction.Y = 0;
+            direction.Y = 0f;
 
             if (direction.Length() < PathNodeReachDist)
             {
                 _hasTarget = false;
-                _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
+                UpdateVisualAnimation(Vector3.Zero, PawnVisualAction.Idle);
                 Velocity = Vector3.Zero;
                 return;
             }
@@ -154,19 +147,18 @@ public partial class Pawn : CharacterBody3D
         if (velocity.LengthSquared() > 0.01f)
         {
             Velocity = velocity;
-            _animController.Update(velocity, PawnAnimController.PawnAnimState.Moving);
+            UpdateVisualAnimation(velocity, PawnVisualAction.Move);
             MoveAndSlide();
         }
         else if (_isWorking)
         {
             Velocity = Vector3.Zero;
-            // Use work facing direction for dig animation
-            _animController.Update(_workFacing, PawnAnimController.PawnAnimState.Working);
+            UpdateVisualAnimation(_workFacing, _workAction);
         }
         else
         {
             Velocity = Vector3.Zero;
-            _animController.Update(Vector3.Zero, PawnAnimController.PawnAnimState.Idle);
+            UpdateVisualAnimation(Vector3.Zero, PawnVisualAction.Idle);
         }
 
         SnapToSurface();
@@ -177,23 +169,31 @@ public partial class Pawn : CharacterBody3D
         UpdateNameLabel();
     }
 
+    protected abstract void InitializeVisuals();
+
+    protected abstract void UpdateVisualPresentation();
+
+    protected abstract void UpdateVisualAnimation(Vector3 direction, PawnVisualAction action);
+
+    protected virtual Vector3 GetNameLabelWorldAnchor()
+    {
+        return GlobalPosition;
+    }
+
     private void OnTick(long tick)
     {
         if (!IsAlive) return;
 
-        // Draft mode: halve need decay
         if (IsDrafted)
         {
-            // Only tick needs at half rate
             if (tick % 2 == 0) Needs.Tick();
         }
         else
         {
             Needs.Tick();
         }
-        Mood.Tick(tick);
 
-        // Natural healing when not in combat
+        Mood.Tick(tick);
         Health?.TickHeal();
 
         if (Needs.Hunger <= 0f)
@@ -205,7 +205,7 @@ public partial class Pawn : CharacterBody3D
         if (Needs.Rest <= 0f)
         {
             Needs.Rest = 5f;
-            Mood.AddThought("collapsed", "体力不支倒地", -15f, TimeManager.TicksPerHour * 8);
+            Mood.AddThought("collapsed", "菴灘鴨荳肴髪蛟貞慍", -15f, TimeManager.TicksPerHour * 8);
         }
 
         if (Mood.IsBreakdownRisk() && tick % 300 == 0)
@@ -217,16 +217,10 @@ public partial class Pawn : CharacterBody3D
             EventBus.FireNeedCritical(Data.Id, name);
         }
 
-        // Resume AI after player command timeout
         if (IsPlayerControlled && !IsMoving && tick > _playerCommandEndTick)
-        {
             IsPlayerControlled = false;
-        }
     }
 
-    // --- Public API ---
-
-    /// <summary>Follow an A* path (list of world-space points).</summary>
     public void FollowPath(List<Vector3> worldPath)
     {
         _path = worldPath ?? new List<Vector3>();
@@ -234,7 +228,6 @@ public partial class Pawn : CharacterBody3D
         _hasTarget = false;
     }
 
-    /// <summary>Set a direct movement target on XZ plane.</summary>
     public void MoveTo(Vector3 target)
     {
         _path.Clear();
@@ -243,19 +236,13 @@ public partial class Pawn : CharacterBody3D
         _hasTarget = true;
     }
 
-    /// <summary>
-    /// Player-issued move command. Pauses AI until arrival + timeout.
-    /// </summary>
     public void PlayerMoveTo(Vector3 target)
     {
         IsPlayerControlled = true;
-        _playerCommandEndTick = (TimeManager.Instance?.CurrentTick ?? 0) + 300; // 5 sec grace
+        _playerCommandEndTick = (TimeManager.Instance?.CurrentTick ?? 0) + 300;
         MoveTo(target);
     }
 
-    /// <summary>
-    /// Player-issued path follow. Pauses AI until arrival + timeout.
-    /// </summary>
     public void PlayerFollowPath(List<Vector3> worldPath)
     {
         IsPlayerControlled = true;
@@ -270,41 +257,36 @@ public partial class Pawn : CharacterBody3D
         _pathIndex = 0;
         Velocity = Vector3.Zero;
         _isWorking = false;
+        _workAction = PawnVisualAction.Dig;
     }
 
-    /// <summary>Set a work target — triggers work (dig) animation facing the target.</summary>
-    public void SetWorkTarget(Vector3 targetPos)
+    public void SetWorkTarget(Vector3 targetPos, PawnVisualAction action = PawnVisualAction.Dig)
     {
         _isWorking = true;
-        _workFacing = (targetPos - GlobalPosition).Normalized();
-        _workFacing.Y = 0;
+        _workFacing = targetPos - GlobalPosition;
+        _workFacing.Y = 0f;
+        if (_workFacing.LengthSquared() <= 0.0001f)
+            _workFacing = Vector3.Forward;
+        else
+            _workFacing = _workFacing.Normalized();
+        _workAction = action;
     }
 
-    /// <summary>Clear work target — return to idle.</summary>
     public void ClearWorkTarget()
     {
         _isWorking = false;
+        _workAction = PawnVisualAction.Dig;
     }
 
     public void Die(string cause)
     {
         if (!IsAlive) return;
+
         IsAlive = false;
         Stop();
         AI?.Dispose();
         GD.Print($"[Pawn] {Data.PawnName} died: {cause}");
         EventBus.FirePawnDied(Data.Id);
-    }
-
-    private void UpdateSpritePresentation()
-    {
-        if (_sprite == null)
-            return;
-
-        bool angled3D = GameCamera.Instance?.IsAngledView == true;
-        _sprite.NoDepthTest = angled3D;
-        _sprite.RenderPriority = angled3D ? 10 : 0;
-        UpdateSpriteAnchor();
     }
 
     private void UpdateNameLabel()
@@ -313,7 +295,7 @@ public partial class Pawn : CharacterBody3D
             _nameLabel,
             _nameShadowLabel,
             GetViewport()?.GetCamera3D(),
-            GlobalPosition,
+            GetNameLabelWorldAnchor(),
             Data?.PawnName,
             IsAlive);
     }
@@ -328,16 +310,4 @@ public partial class Pawn : CharacterBody3D
         GlobalPosition = new Vector3(GlobalPosition.X, surfaceY + SurfaceClearance, GlobalPosition.Z);
     }
 
-    private void UpdateSpriteAnchor()
-    {
-        if (_sprite == null)
-            return;
-
-        Texture2D frameTexture = _sprite.SpriteFrames?.GetFrameTexture(_sprite.Animation, _sprite.Frame);
-        if (frameTexture == null)
-            return;
-
-        float halfHeight = frameTexture.GetHeight() * _sprite.PixelSize * 0.5f;
-        _sprite.Position = new Vector3(0f, halfHeight, 0f);
-    }
 }

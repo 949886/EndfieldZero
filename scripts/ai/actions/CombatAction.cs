@@ -8,7 +8,7 @@ using Godot;
 namespace EndfieldZero.AI.Actions;
 
 /// <summary>
-/// CombatAction — engages in combat with a hostile target.
+/// CombatAction • engages in combat with a hostile target.
 ///
 /// Colonists: auto-triggered when Safety &lt; 1 or IsDrafted.
 /// Hostiles:  always active when enemies in range.
@@ -105,12 +105,13 @@ public class CombatAction : AIAction
         // Check range
         if (DamageSystem.IsInRange(pawn, _target))
         {
-            // In range — attack
+            // In range • attack
             pawn.Stop();
-            pawn.SetWorkTarget(_target.GlobalPosition);
-            DamageSystem.Attack(pawn, _target);
-
             var weapon = DamageSystem.GetWeapon(pawn);
+            pawn.SetWorkTarget(
+                _target.GlobalPosition,
+                weapon.IsRanged ? EndfieldZero.Pawn.PawnVisualAction.Shoot : EndfieldZero.Pawn.PawnVisualAction.Attack);
+            DamageSystem.Attack(pawn, _target);
             _attackCooldown = weapon.CooldownTicks;
 
             // If target died, find new target
@@ -128,7 +129,7 @@ public class CombatAction : AIAction
         }
         else
         {
-            // Out of range — move closer
+            // Out of range • move closer
             pawn.ClearWorkTarget();
             NavigateToTarget(pawn, context.CurrentTick);
         }
