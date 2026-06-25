@@ -17,6 +17,8 @@ namespace EndfieldZero.Pawn;
 /// </summary>
 public partial class EnemyPawn : CharacterBody3D
 {
+    private const float DefaultAttackAnimDurationSeconds = 0.8f;
+
     [Export] public PawnData Data { get; set; }
     [Export] public float BaseMoveSpeed { get; set; } = GameSettings.DefaultEnemyBaseMoveSpeedBlocksPerSecondValue;
     public HostileWaveContext WaveContext { get; set; }
@@ -45,6 +47,8 @@ public partial class EnemyPawn : CharacterBody3D
     // Combat state
     private Pawn _target;
     private int _attackCooldown;
+    private float _attackAnimTimeRemaining;
+    private Vector3 _attackFacing = Vector3.Forward;
     private long _lastTargetSearchTick;
     private float _detectionRange;
     private long _prepareNextRepickTick;
@@ -147,6 +151,12 @@ public partial class EnemyPawn : CharacterBody3D
             _animController.Update(velocity, PawnAnimController.PawnAnimState.Moving);
             MoveAndSlide();
         }
+        else if (_attackAnimTimeRemaining > 0f)
+        {
+            Velocity = Vector3.Zero;
+            _animController.Update(_attackFacing, PawnAnimController.PawnAnimState.Attacking);
+            _attackAnimTimeRemaining = Mathf.Max(0f, _attackAnimTimeRemaining - (float)delta);
+        }
         else
         {
             Velocity = Vector3.Zero;
@@ -215,7 +225,7 @@ public partial class EnemyPawn : CharacterBody3D
             Stop();
             Vector3 toTarget = (_target.GlobalPosition - GlobalPosition).Normalized();
             toTarget.Y = 0;
-            _animController.Update(toTarget, PawnAnimController.PawnAnimState.Working);
+            StartAttackAnimation(toTarget);
             DamageSystem.AttackEnemy(this, _target);
 
             var weapon = DamageSystem.GetWeapon(Data);
@@ -454,6 +464,28 @@ public partial class EnemyPawn : CharacterBody3D
         _path.Clear();
         _pathIndex = 0;
         Velocity = Vector3.Zero;
+    }
+
+    private void StartAttackAnimation(Vector3 facing)
+    {
+        facing.Y = 0f;
+        if (facing.LengthSquared() > 0.0001f)
+            _attackFacing = facing.Normalized();
+
+        _animController.Update(_attackFacing, PawnAnimController.PawnAnimState.Attacking);
+        _attackAnimTimeRemaining = GetCurrentAnimationLengthOrDefault();
+    }
+
+    private float GetCurrentAnimationLengthOrDefault()
+    {
+        if (_animPlayer == null)
+            return DefaultAttackAnimDurationSeconds;
+
+        string currentAnimation = _animPlayer.CurrentAnimation;
+        if (!string.IsNullOrEmpty(currentAnimation) && _animPlayer.HasAnimation(currentAnimation))
+            return (float)_animPlayer.GetAnimation(currentAnimation).Length;
+
+        return DefaultAttackAnimDurationSeconds;
     }
 
     public void Die(string cause)

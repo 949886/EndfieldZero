@@ -20,6 +20,7 @@ public class Pawn2DAnimController
         Idle,
         Moving,
         Working,
+        Attacking,
     }
 
     public Pawn2DAnimController(AnimatedSprite3D sprite, AnimationPlayer animPlayer)
@@ -57,6 +58,7 @@ public class Pawn2DAnimController
         {
             PawnAnimState.Moving => "move",
             PawnAnimState.Working => "dig",
+            PawnAnimState.Attacking => "attack",
             _ => "idle",
         };
 
@@ -68,6 +70,7 @@ public class Pawn2DAnimController
                 "idle" => "idle_right",
                 "move" => "move_right",
                 "dig" => "dig",
+                "attack" => "attack_right",
                 _ => "idle",
             };
         }
@@ -80,6 +83,7 @@ public class Pawn2DAnimController
                 "idle" => "idle_back",
                 "move" => "move_up",
                 "dig" => "dig_up",
+                "attack" => "attack_up",
                 _ => "idle",
             };
         }
@@ -89,6 +93,7 @@ public class Pawn2DAnimController
             "idle" => "idle",
             "move" => "move_down",
             "dig" => "dig_down",
+            "attack" => "attack_down",
             _ => "idle",
         };
     }
