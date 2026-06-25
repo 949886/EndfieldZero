@@ -237,15 +237,14 @@ public partial class CombatProjectile : Node3D
 
     private float GetRibbonWidth(float t)
     {
-        float tapered = 1f - t;
-        tapered *= tapered;
-        return Mathf.Lerp(_trailWidth * 0.18f, _trailWidth * 0.95f, tapered);
+        float headWeight = t * t * t * t;
+        return Mathf.Lerp(_trailWidth * 0.025f, _trailWidth * 1.05f, headWeight);
     }
 
     private Color GetRibbonColor(float t)
     {
-        float alpha = Mathf.Lerp(0.03f, 0.72f, 1f - t);
-        float brighten = Mathf.Lerp(0.05f, 0.28f, 1f - t);
+        float alpha = Mathf.Lerp(0.03f, 0.8f, t);
+        float brighten = Mathf.Lerp(0.03f, 0.3f, t);
         Color color = _trailColor.Lightened(brighten);
         color.A = alpha;
         return color;
