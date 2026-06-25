@@ -20,6 +20,7 @@ public partial class PawnData : Resource
     [Export] public string Nickname { get; set; } = "";
     [Export] public int Age { get; set; } = 25;
     [Export] public Gender Gender { get; set; } = Gender.Male;
+    [Export] public string CharacterId { get; set; } = "miyu";
     [Export(PropertyHint.MultilineText)] public string BackgroundStory { get; set; } = "";
 
     // --- Faction & Equipment ---

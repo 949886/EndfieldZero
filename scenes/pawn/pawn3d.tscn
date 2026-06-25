@@ -2,12 +2,14 @@
 
 [ext_resource type="Script" uid="uid://b1wct0toehjre" path="res://scripts/pawn/Pawn3D.cs" id="1_pawn3d"]
 [ext_resource type="PackedScene" uid="uid://v3cu66oogfd0" path="res://models/Miyuu/霞沢ミユ.tscn" id="2_miyu"]
+[ext_resource type="Resource" path="res://resources/characters/miyu_definition.tres" id="3_miyu_def"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_collision"]
 radius = 0.25
 
 [node name="Pawn" type="CharacterBody3D"]
 script = ExtResource("1_pawn3d")
+CharacterDefinition = ExtResource("3_miyu_def")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_collision")

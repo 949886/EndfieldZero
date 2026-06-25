@@ -72,7 +72,7 @@ public abstract partial class Pawn : CharacterBody3D
 
         InitializeVisuals();
         SnapToSurface();
-        UpdateVisualPresentation();
+        UpdateVisualPresentation(0d);
 
         AI = new PawnAI(this);
 
@@ -97,9 +97,8 @@ public abstract partial class Pawn : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        UpdateVisualPresentation(delta);
         if (!IsAlive) return;
-
-        UpdateVisualPresentation();
         _selectionCircle?.SetSelected(IsSelected);
 
         float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
@@ -171,7 +170,7 @@ public abstract partial class Pawn : CharacterBody3D
 
     protected abstract void InitializeVisuals();
 
-    protected abstract void UpdateVisualPresentation();
+    protected abstract void UpdateVisualPresentation(double delta);
 
     protected abstract void UpdateVisualAnimation(Vector3 direction, PawnVisualAction action);
 
@@ -284,9 +283,14 @@ public abstract partial class Pawn : CharacterBody3D
 
         IsAlive = false;
         Stop();
+        OnDied();
         AI?.Dispose();
         GD.Print($"[Pawn] {Data.PawnName} died: {cause}");
         EventBus.FirePawnDied(Data.Id);
+    }
+
+    protected virtual void OnDied()
+    {
     }
 
     private void UpdateNameLabel()

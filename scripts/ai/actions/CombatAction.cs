@@ -107,12 +107,23 @@ public class CombatAction : AIAction
         {
             // In range • attack
             pawn.Stop();
-            var weapon = DamageSystem.GetWeapon(pawn);
-            pawn.SetWorkTarget(
-                _target.GlobalPosition,
-                weapon.IsRanged ? EndfieldZero.Pawn.PawnVisualAction.Shoot : EndfieldZero.Pawn.PawnVisualAction.Attack);
-            DamageSystem.Attack(pawn, _target);
-            _attackCooldown = weapon.CooldownTicks;
+            if (pawn is Pawn.Pawn3D pawn3D)
+            {
+                if (!pawn3D.IsCombatBusy && pawn3D.TryStartAttack(_target))
+                {
+                    var weapon = DamageSystem.GetWeapon(pawn);
+                    _attackCooldown = weapon.CooldownTicks;
+                }
+            }
+            else
+            {
+                var weapon = DamageSystem.GetWeapon(pawn);
+                pawn.SetWorkTarget(
+                    _target.GlobalPosition,
+                    weapon.IsRanged ? EndfieldZero.Pawn.PawnVisualAction.Shoot : EndfieldZero.Pawn.PawnVisualAction.Attack);
+                DamageSystem.Attack(pawn, _target);
+                _attackCooldown = weapon.CooldownTicks;
+            }
 
             // If target died, find new target
             if (_target.Health.IsDead)
@@ -131,6 +142,8 @@ public class CombatAction : AIAction
         {
             // Out of range • move closer
             pawn.ClearWorkTarget();
+            if (pawn is Pawn.Pawn3D pawn3D)
+                pawn3D.CancelCombatAction();
             NavigateToTarget(pawn, context.CurrentTick);
         }
     }
@@ -140,6 +153,8 @@ public class CombatAction : AIAction
     public override void OnStop()
     {
         Owner?.ClearWorkTarget();
+        if (Owner is Pawn.Pawn3D pawn3D)
+            pawn3D.CancelCombatAction();
         _target = null;
         _lastGoalBlock = null;
         _lastNavigateTick = long.MinValue;

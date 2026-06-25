@@ -18,7 +18,7 @@ public partial class Pawn2D : Pawn
             : null;
     }
 
-    protected override void UpdateVisualPresentation()
+    protected override void UpdateVisualPresentation(double delta)
     {
         if (_sprite == null)
             return;

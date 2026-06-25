@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/pawn/CharacterDefinition.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+CharacterId = "miyu"
+IdleAnimation = "CH0145_Normal_Idle"
+MoveAnimation = "CH0145_Move_Ing"
+MoveStopAnimation = "CH0145_Move_End_Normal"
+WorkAnimation = "CH0145_Formation_Pickup"
+WateringAnimation = "CH0145_Formation_Pickup"
+AttackStartAnimation = "CH0145_Normal_Attack_Start"
+AttackLoopAnimation = "CH0145_Normal_Attack_Ing"
+AttackDelayAnimation = "CH0145_Normal_Attack_Delay"
+AttackEndAnimation = "CH0145_Normal_Attack_End"
+ReloadAnimation = "CH0145_Normal_Reload"
+UseKneelAttack = false
+KneelMinDistanceBlocks = 8.0
+KneelIdleAnimation = "CH0145_Kneel_Idle"
+KneelAttackStartAnimation = "CH0145_Kneel_Attack_Start"
+KneelAttackLoopAnimation = "CH0145_Kneel_Attack_Ing"
+KneelAttackDelayAnimation = "CH0145_Kneel_Attack_Delay"
+KneelAttackEndAnimation = "CH0145_Kneel_Attack_End"
+KneelReloadAnimation = "CH0145_Kneel_Reload"
+DeathAnimation = "CH0145_Vital_Death"
+DyingAnimation = "CH0145_Vital_Dying_Ing"
+RetreatAnimation = "CH0145_Vital_Retreat"
+PanicAnimation = "CH0145_Vital_Panic"
+AttackFireTimeSeconds = 0.15
+KneelAttackFireTimeSeconds = 0.15
