@@ -8,13 +8,23 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class BlockInfoBar : PanelContainer
 {
+    private const float MenuGap = 12f;
+
     private Label _titleLabel;
     private Label _detailLabel;
+    private Control _buildMenu;
+    private Control _zoneMenu;
+    private float _defaultOffsetBottom;
+    private float _defaultPanelHeight;
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
         CustomMinimumSize = new Vector2(320f, 0f);
+        _defaultOffsetBottom = OffsetBottom;
+        _defaultPanelHeight = OffsetBottom - OffsetTop;
+        _buildMenu = GetParent()?.GetNodeOrNull<Control>("BuildSubMenu");
+        _zoneMenu = GetParent()?.GetNodeOrNull<Control>("ZoneSubMenu");
 
         var panelStyle = new StyleBoxFlat
         {
@@ -74,6 +84,7 @@ public partial class BlockInfoBar : PanelContainer
 
         Visible = true;
         UpdateContent(column);
+        UpdatePlacement(viewport);
     }
 
     private void UpdateContent(SurfaceColumnInfo column)
@@ -89,6 +100,45 @@ public partial class BlockInfoBar : PanelContainer
             $"Transparent:{YesNo(def.IsTransparent)}  " +
             $"Move:{moveText}  " +
             $"Visual:{FormatVisualKind(def.VisualKind)}";
+    }
+
+    private void UpdatePlacement(Viewport viewport)
+    {
+        float bottomOffset = _defaultOffsetBottom;
+        Rect2? menuRect = GetBlockingMenuRect();
+
+        if (menuRect.HasValue)
+        {
+            float viewportHeight = viewport.GetVisibleRect().Size.Y;
+            float desiredBottomY = menuRect.Value.Position.Y - MenuGap;
+            bottomOffset = Mathf.Min(_defaultOffsetBottom, desiredBottomY - viewportHeight);
+        }
+
+        float panelHeight = Mathf.Max(Size.Y, _defaultPanelHeight);
+        OffsetBottom = bottomOffset;
+        OffsetTop = bottomOffset - panelHeight;
+    }
+
+    private Rect2? GetBlockingMenuRect()
+    {
+        Rect2? bestRect = null;
+
+        if (IsMenuBlocking(_buildMenu))
+            bestRect = _buildMenu.GetGlobalRect();
+
+        if (IsMenuBlocking(_zoneMenu))
+        {
+            Rect2 zoneRect = _zoneMenu.GetGlobalRect();
+            if (!bestRect.HasValue || zoneRect.Position.Y < bestRect.Value.Position.Y)
+                bestRect = zoneRect;
+        }
+
+        return bestRect;
+    }
+
+    private static bool IsMenuBlocking(Control menu)
+    {
+        return menu != null && menu.Visible && menu.Size.Y > 0f;
     }
 
     private static string YesNo(bool value) => value ? "Yes" : "No";
