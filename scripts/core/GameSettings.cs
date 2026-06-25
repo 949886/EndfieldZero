@@ -129,6 +129,10 @@ public partial class GameSettings : Resource
     [Export] public float CrossbowRange { get; set; } = 17f;
     [Export] public int CrossbowCooldownTicks { get; set; } = 200;
     [Export] public float CrossbowAccuracyMod { get; set; } = 0.82f;
+    [Export] public float RifleBaseDamage { get; set; } = 14f;
+    [Export] public float RifleRange { get; set; } = 18f;
+    [Export] public int RifleCooldownTicks { get; set; } = 105;
+    [Export] public float RifleAccuracyMod { get; set; } = 0.9f;
 
     // --- Environment ---
     [Export] public int DaysPerSeason { get; set; } = DefaultDaysPerSeasonValue;
@@ -212,6 +216,10 @@ public static class Settings
     public static float CrossbowRange => GameSettings.Instance.CrossbowRange;
     public static int CrossbowCooldownTicks => GameSettings.Instance.CrossbowCooldownTicks;
     public static float CrossbowAccuracyMod => GameSettings.Instance.CrossbowAccuracyMod;
+    public static float RifleBaseDamage => GameSettings.Instance.RifleBaseDamage;
+    public static float RifleRange => GameSettings.Instance.RifleRange;
+    public static int RifleCooldownTicks => GameSettings.Instance.RifleCooldownTicks;
+    public static float RifleAccuracyMod => GameSettings.Instance.RifleAccuracyMod;
     public static int DaysPerSeason => GameSettings.Instance.DaysPerSeason;
     public static int WeatherChangeIntervalHours => GameSettings.Instance.WeatherChangeIntervalHours;
 }

@@ -469,6 +469,11 @@ public partial class EnemyPawn : CharacterBody3D
         timer.Timeout += QueueFree;
     }
 
+    public Vector3 GetCombatAimPoint()
+    {
+        return GlobalPosition + new Vector3(0f, 0.85f, 0f);
+    }
+
     // --- Visuals ---
 
     private void CreateHostileIndicator()

@@ -161,6 +161,14 @@ public sealed class MiyuCombatController : CharacterCombatController
         if (_attackTarget == null || !GodotObject.IsInstanceValid(_attackTarget) || _attackTarget.Health?.IsDead == true)
             return;
 
+        if (_attackWeapon?.IsRanged == true)
+        {
+            PreparedRangedShot shot = DamageSystem.PrepareRangedAttack(Pawn, _attackTarget);
+            if (shot != null)
+                Pawn.FireRangedShot(shot);
+            return;
+        }
+
         DamageSystem.Attack(Pawn, _attackTarget);
     }
 

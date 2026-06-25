@@ -62,6 +62,8 @@ public sealed class WeaponRegistry
             Settings.BowBaseDamage, Settings.BowRange, Settings.BowCooldownTicks, Settings.BowAccuracyMod));
         reg.Register(new WeaponDef("crossbow", "Crossbow", true,
             Settings.CrossbowBaseDamage, Settings.CrossbowRange, Settings.CrossbowCooldownTicks, Settings.CrossbowAccuracyMod));
+        reg.Register(new WeaponDef("rifle", "Rifle", true,
+            Settings.RifleBaseDamage, Settings.RifleRange, Settings.RifleCooldownTicks, Settings.RifleAccuracyMod));
         return reg;
     }
 }

@@ -70,6 +70,7 @@ public partial class PawnManager : Node3D
     {
         var instance = PawnScene.Instantiate<Pawn.Pawn>();
         var data = GenerateRandomPawnData();
+        data.EquippedWeaponId = "rifle";
         instance.Data = data;
         instance.Position = position;
         AddChild(instance);

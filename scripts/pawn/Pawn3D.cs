@@ -9,6 +9,7 @@ public partial class Pawn3D : Pawn
     [Export] public NodePath ModelRootPath { get; set; } = new("VisualRoot/Miyu");
     [Export] public NodePath AnimationPlayerPath { get; set; } = new("VisualRoot/Miyu/AnimationPlayer2");
     [Export] public NodePath HeadAnchorPath { get; set; } = new("VisualRoot/HeadAnchor");
+    [Export] public NodePath MuzzleAnchorPath { get; set; } = new("VisualRoot/MuzzleAnchor");
     [Export] public Vector3 ModelScale { get; set; } = Vector3.One;
     [Export] public Vector3 ModelOffset { get; set; } = Vector3.Zero;
     [Export] public float ModelYawOffsetDegrees { get; set; } = 0f;
@@ -16,6 +17,7 @@ public partial class Pawn3D : Pawn
     private Node3D _visualRoot;
     private Node3D _modelRoot;
     private Marker3D _headAnchor;
+    private Marker3D _muzzleAnchor;
     private AnimationPlayer _animPlayer;
     private CharacterCombatController _combatController;
     private Vector3 _desiredDirection = Vector3.Zero;
@@ -28,6 +30,7 @@ public partial class Pawn3D : Pawn
         _visualRoot = GetNodeOrNull<Node3D>(VisualRootPath);
         _modelRoot = GetNodeOrNull<Node3D>(ModelRootPath);
         _headAnchor = GetNodeOrNull<Marker3D>(HeadAnchorPath);
+        _muzzleAnchor = GetNodeOrNull<Marker3D>(MuzzleAnchorPath);
 
         if (_modelRoot != null)
         {
@@ -78,6 +81,20 @@ public partial class Pawn3D : Pawn
         _combatController?.CancelAttack();
     }
 
+    public void FireRangedShot(Combat.PreparedRangedShot shot)
+    {
+        Combat.CombatVfxManager manager = Combat.CombatVfxManager.Resolve(this);
+        if (manager == null || shot == null)
+        {
+            shot?.TryApply(out _);
+            return;
+        }
+
+        Vector3 muzzlePosition = GetMuzzleWorldPosition();
+        manager.SpawnMuzzleFlash(CharacterDefinition, muzzlePosition);
+        manager.SpawnProjectile(CharacterDefinition, shot, muzzlePosition);
+    }
+
     private CharacterCombatController CreateController()
     {
         if (CharacterDefinition == null)
@@ -106,5 +123,16 @@ public partial class Pawn3D : Pawn
         }
 
         return null;
+    }
+
+    private Vector3 GetMuzzleWorldPosition()
+    {
+        if (_muzzleAnchor != null)
+            return _muzzleAnchor.GlobalPosition;
+
+        if (_headAnchor != null)
+            return _headAnchor.GlobalPosition + new Vector3(0f, -0.2f, 0f);
+
+        return GlobalPosition + new Vector3(0f, 1.1f, 0f);
     }
 }

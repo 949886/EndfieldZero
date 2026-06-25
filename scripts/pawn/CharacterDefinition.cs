@@ -40,4 +40,18 @@ public partial class CharacterDefinition : Resource
     [ExportGroup("Timeline")]
     [Export(PropertyHint.Range, "0.0,5.0,0.01")] public float AttackFireTimeSeconds { get; set; } = 0.15f;
     [Export(PropertyHint.Range, "0.0,5.0,0.01")] public float KneelAttackFireTimeSeconds { get; set; } = 0.15f;
+
+    [ExportGroup("Ranged Presentation")]
+    [Export] public PackedScene ProjectileScene { get; set; }
+    [Export] public PackedScene MuzzleFlashScene { get; set; }
+    [Export] public PackedScene HitImpactScene { get; set; }
+    [Export] public PackedScene MissImpactScene { get; set; }
+    [Export(PropertyHint.Range, "1.0,200.0,0.1")] public float ProjectileSpeed { get; set; } = 48f;
+    [Export(PropertyHint.Range, "0.1,5.0,0.05")] public float ProjectileMaxLifetime { get; set; } = 1.5f;
+    [Export(PropertyHint.Range, "0.01,0.5,0.01")] public float ProjectileSize { get; set; } = 0.04f;
+    [Export(PropertyHint.Range, "0.01,0.5,0.01")] public float ProjectileTrailWidth { get; set; } = 0.08f;
+    [Export] public Color ProjectileColor { get; set; } = new(0.52f, 0.89f, 1f, 1f);
+    [Export] public Color MuzzleFlashColor { get; set; } = new(1f, 0.84f, 0.5f, 1f);
+    [Export] public Color HitImpactColor { get; set; } = new(1f, 0.52f, 0.22f, 1f);
+    [Export] public Color MissImpactColor { get; set; } = new(0.7f, 0.82f, 1f, 1f);
 }

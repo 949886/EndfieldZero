@@ -1,6 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterDefinition" format=3]
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/pawn/CharacterDefinition.cs" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/combat/projectiles/miyu_tracer_projectile.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/combat/vfx/miyu_muzzle_flash.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/combat/vfx/miyu_hit_impact.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/combat/vfx/miyu_miss_impact.tscn" id="5"]
 
 [resource]
 script = ExtResource("1")
@@ -29,3 +33,15 @@ RetreatAnimation = "CH0145_Vital_Retreat"
 PanicAnimation = "CH0145_Vital_Panic"
 AttackFireTimeSeconds = 0.15
 KneelAttackFireTimeSeconds = 0.15
+ProjectileScene = ExtResource("2")
+MuzzleFlashScene = ExtResource("3")
+HitImpactScene = ExtResource("4")
+MissImpactScene = ExtResource("5")
+ProjectileSpeed = 36.0
+ProjectileMaxLifetime = 1.35
+ProjectileSize = 0.09
+ProjectileTrailWidth = 0.22
+ProjectileColor = Color(0.78, 1, 0.35, 1)
+MuzzleFlashColor = Color(0.95, 1, 0.5, 1)
+HitImpactColor = Color(1, 0.85, 0.28, 1)
+MissImpactColor = Color(0.78, 1, 0.55, 1)

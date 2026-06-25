@@ -123,6 +123,58 @@ public static class DamageSystem
         return actual;
     }
 
+    /// <summary>
+    /// Precompute a ranged shot so visuals can travel before the hit resolves.
+    /// </summary>
+    public static PreparedRangedShot PrepareRangedAttack(Pawn.Pawn attacker, Pawn.EnemyPawn target)
+    {
+        if (attacker?.Health == null || target?.Health == null)
+            return null;
+
+        if (target.Health.IsDead)
+            return null;
+
+        var weapon = GetWeapon(attacker);
+        if (weapon == null || !weapon.IsRanged)
+            return null;
+
+        float damage = weapon.BaseDamage;
+        float statBonus = attacker.Data.GetStat("Shooting") / 10f;
+        damage *= 1f + statBonus;
+
+        float dist = attacker.GlobalPosition.DistanceTo(target.GlobalPosition) / Settings.BlockPixelSize;
+        float falloff = Mathf.Clamp(1f - dist / (weapon.Range * 1.5f), 0.3f, 1f);
+        damage *= falloff * weapon.AccuracyMod;
+
+        float hitChance = 0.7f + attacker.Data.GetStat("Shooting") * 0.02f;
+        hitChance *= falloff;
+        bool missed = Rng.NextDouble() > hitChance;
+
+        float dodgeChance = target.Data.GetStat("Agility") * 0.03f;
+        bool dodged = !missed && Rng.NextDouble() < dodgeChance;
+
+        float critChance = 0.05f + attacker.Data.GetStat("Agility") * 0.01f;
+        bool isCrit = !missed && !dodged && Rng.NextDouble() < critChance;
+        if (isCrit)
+            damage *= 2f;
+
+        Vector3 targetPoint = GetEnemyAimPoint(target);
+        Vector3 impactPoint = missed || dodged
+            ? targetPoint + GetMissOffset(attacker.GlobalPosition, target.GlobalPosition)
+            : targetPoint;
+
+        return new PreparedRangedShot(
+            attacker,
+            target,
+            weapon,
+            !missed && !dodged,
+            dodged,
+            isCrit,
+            damage,
+            targetPoint,
+            impactPoint);
+    }
+
     /// <summary>Get equipped weapon or default fist.</summary>
     public static WeaponDef GetWeapon(Pawn.Pawn pawn)
     {
@@ -232,5 +284,25 @@ public static class DamageSystem
         string critStr = isCrit ? " 暴击!" : "";
         GD.Print($"[Combat] {attacker.Data.PawnName} → {target.Data.PawnName}: {actual:F0} dmg ({weapon.DisplayName}){critStr}");
         return actual;
+    }
+    private static Vector3 GetEnemyAimPoint(Pawn.EnemyPawn target)
+    {
+        return target?.GetCombatAimPoint() ?? Vector3.Zero;
+    }
+
+    private static Vector3 GetMissOffset(Vector3 attackerPosition, Vector3 targetPosition)
+    {
+        Vector3 forward = (targetPosition - attackerPosition).Normalized();
+        if (forward.LengthSquared() <= 0.0001f)
+            forward = Vector3.Forward;
+
+        Vector3 right = Vector3.Up.Cross(forward).Normalized();
+        if (right.LengthSquared() <= 0.0001f)
+            right = Vector3.Right;
+
+        float side = Mathf.Lerp(-0.6f, 0.6f, (float)Rng.NextDouble());
+        float depth = Mathf.Lerp(-0.25f, 0.35f, (float)Rng.NextDouble());
+        float lift = Mathf.Lerp(-0.15f, 0.25f, (float)Rng.NextDouble());
+        return right * side + forward * depth + Vector3.Up * lift;
     }
 }

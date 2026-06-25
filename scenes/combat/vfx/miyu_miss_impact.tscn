@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/CombatBurstVfx.cs" id="1"]
+
+[node name="MiyuMissImpact" type="Node3D"]
+script = ExtResource("1")
+BaseColor = Color(0.72, 0.84, 1, 1)
+LifetimeSeconds = 0.2
+StartScale = 0.12
+EndScale = 0.72
+GroundAligned = true
+RayCount = 3
+RayLength = 0.16
+CoreThickness = 0.05
