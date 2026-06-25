@@ -37,7 +37,7 @@ public partial class GameCamera : Camera3D
     [Export] public float OcclusionScreenRadiusPixels { get; set; } = 110f;
 
     public static GameCamera Instance { get; private set; }
-    public CameraViewMode ViewMode { get; private set; } = CameraViewMode.TopDown;
+    public CameraViewMode ViewMode { get; private set; } = CameraViewMode.Orthographic3D;
     public int YawIndex { get; private set; }
     public Vector2 FocusPointXZ { get; private set; }
     public bool IsAngledView => ViewMode != CameraViewMode.TopDown;
