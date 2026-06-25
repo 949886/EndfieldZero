@@ -1,3 +1,4 @@
+using System.Reflection;
 using Godot;
 
 namespace EndfieldZero.Core;
@@ -10,6 +11,8 @@ namespace EndfieldZero.Core;
 public partial class GameSettings : Resource
 {
     private const string SettingsResourcePath = "res://settings/game_settings.tres";
+    private static readonly PropertyInfo[] EditableProperties = typeof(GameSettings)
+        .GetProperties(BindingFlags.Instance | BindingFlags.Public);
     private static GameSettings _instance;
 
     public const int DefaultChunkSizeValue = 64;
@@ -141,6 +144,42 @@ public partial class GameSettings : Resource
     public static void Reload()
     {
         _instance = null;
+    }
+
+    public static GameSettings CreateDefaultSnapshot()
+    {
+        GameSettings defaults = ResourceLoader.Load<GameSettings>(SettingsResourcePath);
+        return defaults?.Duplicate(true) as GameSettings ?? new GameSettings();
+    }
+
+    public void CopyFrom(GameSettings source)
+    {
+        if (source == null)
+            return;
+
+        foreach (PropertyInfo property in EditableProperties)
+        {
+            if (!property.CanRead || !property.CanWrite)
+                continue;
+            if (property.GetMethod?.IsStatic == true || property.SetMethod?.IsStatic == true)
+                continue;
+
+            property.SetValue(this, property.GetValue(source));
+        }
+
+        EmitChanged();
+    }
+
+    public static void ApplyUserOverrides(PlayerPreferences preferences)
+    {
+        if (preferences == null)
+            return;
+
+        var target = Instance;
+        target.CopyFrom(CreateDefaultSnapshot());
+        foreach (var spec in SettingsFieldRegistry.AdvancedFields)
+            spec.ApplyTo(target, preferences);
+        target.EmitChanged();
     }
 }
 

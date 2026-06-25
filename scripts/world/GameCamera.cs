@@ -75,6 +75,7 @@ public partial class GameCamera : Camera3D
 
         _currentOrthoSize = Mathf.Clamp(InitialOrthoSize, MinOrthoSize, MaxOrthoSize);
         Near = 0.1f;
+        ViewMode = Core.SettingsBootstrap.ActivePreferences?.DefaultViewMode ?? ViewMode;
 
         FocusPointXZ = new Vector2(Position.X, Position.Z);
         ApplyCameraStateImmediate();
@@ -90,7 +91,8 @@ public partial class GameCamera : Camera3D
     public override void _Process(double delta)
     {
         float dt = (float)delta;
-        HandleKeyboardMovement(dt);
+        if (!SettingsOverlay.IsOpen)
+            HandleKeyboardMovement(dt);
 
         if (!IsTransitioning())
             ApplyCameraStateImmediate();
@@ -100,6 +102,9 @@ public partial class GameCamera : Camera3D
 
     public override void _Input(InputEvent @event)
     {
+        if (SettingsOverlay.IsOpen)
+            return;
+
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
             if (key.Keycode == Key.Tab)
@@ -130,6 +135,9 @@ public partial class GameCamera : Camera3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (SettingsOverlay.IsOpen)
+            return;
+
         HandleMouseZoom(@event);
         HandleMouseDrag(@event);
     }

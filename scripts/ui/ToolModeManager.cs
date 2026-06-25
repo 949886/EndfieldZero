@@ -89,6 +89,9 @@ public partial class ToolModeManager : Control
 
     public override void _UnhandledKeyInput(InputEvent @event)
     {
+        if (SettingsOverlay.IsOpen)
+            return;
+
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
             if (key.AltPressed && (key.Keycode == Key.Q || key.Keycode == Key.E))
@@ -127,6 +130,9 @@ public partial class ToolModeManager : Control
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (SettingsOverlay.IsOpen)
+            return;
+
         if (CurrentMode == ToolMode.Select) return;
 
         if (@event is InputEventMouseButton mb)

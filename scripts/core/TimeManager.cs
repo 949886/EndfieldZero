@@ -1,4 +1,5 @@
 using Godot;
+using EndfieldZero.UI;
 
 namespace EndfieldZero.Core;
 
@@ -71,6 +72,9 @@ public partial class TimeManager : Node
     /// <summary>Speed control: pause / 1× / 2× / 3×.</summary>
     public override void _UnhandledKeyInput(InputEvent @event)
     {
+        if (SettingsOverlay.IsOpen)
+            return;
+
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
             switch (key.Keycode)

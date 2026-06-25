@@ -10,14 +10,24 @@ namespace EndfieldZero.UI;
 /// </summary>
 public partial class DebugHud : Label
 {
+    public static DebugHud Instance { get; private set; }
+
     private int _frameCount;
     private double _fpsTimer;
     private float _currentFps;
 
     public override void _Ready()
     {
+        Instance = this;
         AddThemeColorOverride("font_color", Colors.White);
         AddThemeFontSizeOverride("font_size", 14);
+        Visible = Core.SettingsBootstrap.ActivePreferences?.ShowDebugHud ?? true;
+    }
+
+    public override void _ExitTree()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     public override void _Process(double delta)
