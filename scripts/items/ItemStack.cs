@@ -150,11 +150,10 @@ public partial class ItemStack : Node3D, ISelectable
 
         if (_sprite != null)
         {
-            _sprite.NoDepthTest = angled3D;
-            _sprite.RenderPriority = angled3D ? 9 : 0;
-            _sprite.AlphaCut = angled3D
-                ? SpriteBase3D.AlphaCutMode.Disabled
-                : SpriteBase3D.AlphaCutMode.OpaquePrepass;
+            // Ground items should sort with pawns/crops from their actual world position.
+            _sprite.NoDepthTest = false;
+            _sprite.RenderPriority = 0;
+            _sprite.AlphaCut = SpriteBase3D.AlphaCutMode.OpaquePrepass;
             UpdateSpriteAnchor();
         }
 

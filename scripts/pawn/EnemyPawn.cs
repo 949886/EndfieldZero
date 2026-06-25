@@ -535,9 +535,9 @@ public partial class EnemyPawn : CharacterBody3D
     {
         if (_sprite == null) return;
 
-        bool angled3D = GameCamera.Instance?.IsAngledView == true;
-        _sprite.NoDepthTest = angled3D;
-        _sprite.RenderPriority = angled3D ? 10 : 0;
+        _sprite.NoDepthTest = false;
+        _sprite.RenderPriority = 0;
+        _sprite.AlphaCut = SpriteBase3D.AlphaCutMode.OpaquePrepass;
         UpdateSpriteAnchor();
     }
 

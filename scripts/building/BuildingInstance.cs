@@ -142,6 +142,7 @@ public partial class BuildingInstance : Node3D, ISelectable
             TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             Shaded = false,
+            AlphaCut = SpriteBase3D.AlphaCutMode.OpaquePrepass,
         };
 
         Texture2D tex = TryLoadSprite();
@@ -319,9 +320,9 @@ public partial class BuildingInstance : Node3D, ISelectable
         if (_billboardSprite == null)
             return;
 
-        bool angled3D = GameCamera.Instance?.IsAngledView == true;
-        _billboardSprite.NoDepthTest = angled3D;
-        _billboardSprite.RenderPriority = angled3D ? 7 : 0;
+        _billboardSprite.NoDepthTest = false;
+        _billboardSprite.RenderPriority = 0;
+        _billboardSprite.AlphaCut = SpriteBase3D.AlphaCutMode.OpaquePrepass;
 
         if (_billboardSprite.Texture != null)
         {

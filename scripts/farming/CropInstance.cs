@@ -135,12 +135,10 @@ public partial class CropInstance : Node3D, ISelectable
         if (_sprite == null)
             return;
 
-        bool angled3D = GameCamera.Instance?.IsAngledView == true;
-        _sprite.NoDepthTest = angled3D;
-        _sprite.RenderPriority = angled3D ? 8 : 0;
-        _sprite.AlphaCut = angled3D
-            ? SpriteBase3D.AlphaCutMode.Disabled
-            : SpriteBase3D.AlphaCutMode.OpaquePrepass;
+        // Keep crops in the normal depth pipeline so they sort against pawns by position.
+        _sprite.NoDepthTest = false;
+        _sprite.RenderPriority = 0;
+        _sprite.AlphaCut = SpriteBase3D.AlphaCutMode.OpaquePrepass;
         UpdateSpriteAnchor();
     }
 

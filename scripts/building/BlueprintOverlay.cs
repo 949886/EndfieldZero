@@ -151,7 +151,7 @@ void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
         var shader = new Shader();
         shader.Code = @"
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled;
+render_mode unshaded, cull_disabled, depth_draw_never;
 void fragment() { ALBEDO = COLOR.rgb; ALPHA = COLOR.a; }";
         _angledOverlayMat = new ShaderMaterial { Shader = shader, RenderPriority = OverlayRenderPriority };
         return _angledOverlayMat;

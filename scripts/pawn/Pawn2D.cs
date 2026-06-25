@@ -23,9 +23,10 @@ public partial class Pawn2D : Pawn
         if (_sprite == null)
             return;
 
-        bool angled3D = GameCamera.Instance?.IsAngledView == true;
-        _sprite.NoDepthTest = angled3D;
-        _sprite.RenderPriority = angled3D ? 10 : 0;
+        // Let billboard sprites participate in depth so front/back is resolved from world position.
+        _sprite.NoDepthTest = false;
+        _sprite.RenderPriority = 0;
+        _sprite.AlphaCut = SpriteBase3D.AlphaCutMode.OpaquePrepass;
         UpdateSpriteAnchor();
     }
 
