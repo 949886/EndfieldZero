@@ -155,7 +155,7 @@ public partial class SettingsOverlay : Control
 
         var panel = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(1080f, 760f),
+            CustomMinimumSize = new Vector2(0f, 760f),
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Stop,
@@ -165,7 +165,8 @@ public partial class SettingsOverlay : Control
 
         _rootStack = new VBoxContainer
         {
-            CustomMinimumSize = new Vector2(1040f, 720f),
+            CustomMinimumSize = new Vector2(0f, 720f),
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
         };
         _rootStack.AddThemeConstantOverride("separation", 16);
         panel.AddChild(_rootStack);
@@ -186,13 +187,16 @@ public partial class SettingsOverlay : Control
 
         var scroll = new ScrollContainer
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
             SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
         };
         _rootStack.AddChild(scroll);
 
-        _contentStack = new VBoxContainer();
+        _contentStack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+        };
         _contentStack.AddThemeConstantOverride("separation", 10);
         scroll.AddChild(_contentStack);
 
