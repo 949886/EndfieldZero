@@ -33,6 +33,7 @@
 [ext_resource type="Script" path="res://scripts/storyteller/Storyteller.cs" id="31_storyteller"]
 [ext_resource type="Script" path="res://scripts/ui/EventNotification.cs" id="32_eventnotify"]
 [ext_resource type="PackedScene" uid="uid://j23vtybwwhix" path="res://scenes/pawn/enemy_pawn.tscn" id="33_enemypawn"]
+[ext_resource type="Script" path="res://scripts/ui/BlockInfoBar.cs" id="34_blockinfobar"]
 
 [node name="Main" type="Node3D" unique_id=1919884210]
 
@@ -171,6 +172,21 @@ offset_bottom = -10.0
 grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("11_infopanel")
+
+[node name="BlockInfoBar" type="PanelContainer" parent="UILayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -136.0
+offset_right = 180.0
+offset_bottom = -72.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("34_blockinfobar")
 
 [node name="DebugHud" type="Label" parent="UILayer" unique_id=1481170795]
 offset_left = 10.0
