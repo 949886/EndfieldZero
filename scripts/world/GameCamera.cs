@@ -265,6 +265,12 @@ public partial class GameCamera : Camera3D
         if (@event is not InputEventMouseButton mouseButton || !mouseButton.Pressed)
             return;
 
+        Vector2 anchorScreen = GetViewport()?.GetVisibleRect().Size * 0.5f ?? Vector2.Zero;
+        bool keepCenterAnchored = IsAngledView && !IsTransitioning();
+        Vector3 preZoomWorld = keepCenterAnchored
+            ? ProjectToPlane(anchorScreen, 0f)
+            : Vector3.Zero;
+
         if (mouseButton.ButtonIndex == MouseButton.WheelUp)
             _currentOrthoSize *= 1f - ZoomSpeed;
         else if (mouseButton.ButtonIndex == MouseButton.WheelDown)
@@ -274,7 +280,19 @@ public partial class GameCamera : Camera3D
 
         _currentOrthoSize = Mathf.Clamp(_currentOrthoSize, MinOrthoSize, MaxOrthoSize);
         if (ViewMode == CameraViewMode.TopDown)
+        {
             Size = _currentOrthoSize;
+            return;
+        }
+
+        if (keepCenterAnchored)
+        {
+            ApplyCameraStateImmediate();
+            Vector3 postZoomWorld = ProjectToPlane(anchorScreen, 0f);
+            Vector3 compensation = preZoomWorld - postZoomWorld;
+            FocusPointXZ += new Vector2(compensation.X, compensation.Z);
+            ApplyCameraStateImmediate();
+        }
     }
 
     private void HandleMouseDrag(InputEvent @event)
