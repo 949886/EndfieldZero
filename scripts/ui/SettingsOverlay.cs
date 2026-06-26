@@ -638,20 +638,33 @@ public partial class SettingsOverlay : Control
         var button = new Button
         {
             Text = label,
-            Flat = true,
             CustomMinimumSize = new Vector2(0f, compact ? 42f : 50f),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         button.AddThemeFontSizeOverride("font_size", compact ? 18 : 20);
         button.Pressed += onPressed;
 
-        var fill = active ? AccentSoftColor : new Color(0.72f, 0.67f, 0.6f, 0.12f);
-        var border = active ? AccentColor : new Color(0.76f, 0.7f, 0.62f, 0.55f);
+        var fill = active ? new Color(AccentColor, 0.26f) : new Color(0.72f, 0.67f, 0.6f, 0.16f);
+        var hoverFill = active ? new Color(AccentColor, 0.32f) : new Color(0.72f, 0.67f, 0.6f, 0.24f);
+        var pressedFill = active ? new Color(AccentColor, 0.36f) : new Color(0.72f, 0.67f, 0.6f, 0.3f);
         var textColor = active ? AccentColor : MutedTextColor;
-        var style = CreatePanelStyle(fill, 18, 14, 10, border);
-        button.AddThemeStyleboxOverride("normal", style);
-        button.AddThemeStyleboxOverride("hover", style);
-        button.AddThemeStyleboxOverride("pressed", style);
+
+        var normalStyle = CreatePanelStyle(fill, 18, 14, 10);
+        var hoverStyle = CreatePanelStyle(hoverFill, 18, 14, 10);
+        var pressedStyle = CreatePanelStyle(pressedFill, 18, 14, 10);
+        if (active)
+        {
+            normalStyle.ShadowColor = new Color(AccentColor, 0.18f);
+            normalStyle.ShadowSize = 4;
+            hoverStyle.ShadowColor = new Color(AccentColor, 0.22f);
+            hoverStyle.ShadowSize = 4;
+            pressedStyle.ShadowColor = new Color(AccentColor, 0.24f);
+            pressedStyle.ShadowSize = 4;
+        }
+
+        button.AddThemeStyleboxOverride("normal", normalStyle);
+        button.AddThemeStyleboxOverride("hover", hoverStyle);
+        button.AddThemeStyleboxOverride("pressed", pressedStyle);
         button.AddThemeColorOverride("font_color", textColor);
         return button;
     }
@@ -687,9 +700,11 @@ public partial class SettingsOverlay : Control
         button.Pressed += onPressed;
 
         var style = CreatePanelStyle(fillColor, 18, 16, 12);
+        var disabledStyle = CreatePanelStyle(new Color(fillColor, 0.45f), 18, 16, 12);
         button.AddThemeStyleboxOverride("normal", style);
         button.AddThemeStyleboxOverride("hover", style);
         button.AddThemeStyleboxOverride("pressed", style);
+        button.AddThemeStyleboxOverride("disabled", disabledStyle);
         button.AddThemeColorOverride("font_color", Colors.White);
         button.AddThemeColorOverride("font_disabled_color", new Color(1f, 1f, 1f, 0.55f));
         return button;
