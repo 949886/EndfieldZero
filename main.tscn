@@ -35,7 +35,7 @@
 [ext_resource type="Script" path="res://scripts/ui/EventNotification.cs" id="32_eventnotify"]
 [ext_resource type="PackedScene" uid="uid://j23vtybwwhix" path="res://scenes/pawn/enemy_pawn.tscn" id="33_enemypawn"]
 [ext_resource type="Script" path="res://scripts/ui/BlockInfoBar.cs" id="34_blockinfobar"]
-[ext_resource type="Script" path="res://scripts/ui/SettingsOverlay.cs" id="39_settingsoverlay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_overlay.tscn" id="39_settingsoverlay"]
 
 [node name="Main" type="Node3D" unique_id=1919884210]
 
@@ -208,12 +208,4 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("32_eventnotify")
 
-[node name="SettingsOverlay" type="Control" parent="UILayer"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-script = ExtResource("39_settingsoverlay")
+[node name="SettingsOverlay" parent="UILayer" instance=ExtResource("39_settingsoverlay")]

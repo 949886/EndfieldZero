@@ -19,10 +19,7 @@ public partial class SettingsOverlay : Control
 
     private readonly record struct CycleOption<T>(string Label, T Value);
 
-    private static readonly Color BackdropColor = new(0.36f, 0.28f, 0.2f, 0.35f);
-    private static readonly Color PanelColor = new(0.96f, 0.94f, 0.88f, 0.98f);
     private static readonly Color AccentColor = new(0.74f, 0.78f, 0.06f, 1f);
-    private static readonly Color AccentSoftColor = new(0.73f, 0.75f, 0.45f, 0.22f);
     private static readonly Color TextColor = new(0.33f, 0.23f, 0.21f, 1f);
     private static readonly Color MutedTextColor = new(0.56f, 0.48f, 0.44f, 1f);
     private static readonly Color DisabledTextColor = new(0.78f, 0.73f, 0.68f, 1f);
@@ -70,12 +67,16 @@ public partial class SettingsOverlay : Control
     private PlayerPreferences _savedPreferences;
     private PlayerPreferences _draftPreferences;
 
-    private VBoxContainer _rootStack;
     private HBoxContainer _mainTabBar;
+    private Button _graphicsTabButton;
+    private Button _audioTabButton;
+    private Button _gameTabButton;
     private Label _titleLabel;
     private Label _subtitleLabel;
     private VBoxContainer _contentStack;
     private Button _applyButton;
+    private Button _cancelButton;
+    private Button _resetButton;
     private float _resumeGameSpeed = 1f;
     private bool _hadResumeSpeed;
 
@@ -85,7 +86,8 @@ public partial class SettingsOverlay : Control
         ProcessMode = ProcessModeEnum.Always;
         MouseFilter = MouseFilterEnum.Stop;
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        BuildShell();
+        CacheUiNodes();
+        WireUi();
 
         _defaultPreferences = SettingsBootstrap.RuntimeDefaults?.Clone() ?? UserSettingsStore.CaptureRuntimeDefaults();
         _savedPreferences = SettingsBootstrap.ActivePreferences?.Clone() ?? UserSettingsStore.Load(_defaultPreferences);
@@ -141,81 +143,41 @@ public partial class SettingsOverlay : Control
         }
     }
 
-    private void BuildShell()
+    private void CacheUiNodes()
     {
-        var backdrop = new ColorRect
-        {
-            Color = BackdropColor,
-            MouseFilter = MouseFilterEnum.Stop,
-        };
-        backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(backdrop);
-
-        var center = new CenterContainer();
-        center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(center);
-
-        var panel = new PanelContainer
-        {
-            CustomMinimumSize = new Vector2(0f, 760f),
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            MouseFilter = MouseFilterEnum.Stop,
-        };
-        panel.AddThemeStyleboxOverride("panel", CreatePanelStyle(PanelColor, 28, 22, 22));
-        center.AddChild(panel);
-
-        _rootStack = new VBoxContainer
-        {
-            CustomMinimumSize = new Vector2(0f, 720f),
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-        };
-        _rootStack.AddThemeConstantOverride("separation", 16);
-        panel.AddChild(_rootStack);
-
-        _titleLabel = new Label { Text = "Settings" };
-        _titleLabel.AddThemeFontSizeOverride("font_size", 28);
-        _titleLabel.AddThemeColorOverride("font_color", TextColor);
-        _rootStack.AddChild(_titleLabel);
-
-        _mainTabBar = new HBoxContainer();
-        _mainTabBar.CustomMinimumSize = new Vector2(ContentWidth, 0f);
-        _mainTabBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        _mainTabBar.AddThemeConstantOverride("separation", 12);
-        _rootStack.AddChild(_mainTabBar);
-
-        _subtitleLabel = new Label();
-        _subtitleLabel.AddThemeFontSizeOverride("font_size", 13);
-        _subtitleLabel.AddThemeColorOverride("font_color", MutedTextColor);
-        _rootStack.AddChild(_subtitleLabel);
-
-        var scroll = new ScrollContainer
-        {
-            CustomMinimumSize = new Vector2(ContentWidth, 0f),
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-        };
-        _rootStack.AddChild(scroll);
-
-        _contentStack = new VBoxContainer
-        {
-            CustomMinimumSize = new Vector2(ContentWidth, 0f),
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-        };
-        _contentStack.AddThemeConstantOverride("separation", 10);
-        scroll.AddChild(_contentStack);
-
-        var footer = new HBoxContainer();
-        footer.AddThemeConstantOverride("separation", 12);
-        _rootStack.AddChild(footer);
-
-        _applyButton = CreateFooterButton("Apply", AccentColor, ApplyAndClose);
-        footer.AddChild(_applyButton);
-        footer.AddChild(CreateFooterButton("Cancel", new Color(0.7f, 0.63f, 0.56f), CancelAndClose));
-        footer.AddChild(CreateFooterButton("Reset", new Color(0.78f, 0.75f, 0.67f), ResetDraftToDefaults));
+        _mainTabBar = GetNode<HBoxContainer>("Center/Panel/RootStack/MainTabBar");
+        _graphicsTabButton = GetNode<Button>("Center/Panel/RootStack/MainTabBar/GraphicsTab");
+        _audioTabButton = GetNode<Button>("Center/Panel/RootStack/MainTabBar/AudioTab");
+        _gameTabButton = GetNode<Button>("Center/Panel/RootStack/MainTabBar/GameTab");
+        _subtitleLabel = GetNode<Label>("Center/Panel/RootStack/SubtitleLabel");
+        _contentStack = GetNode<VBoxContainer>("Center/Panel/RootStack/Scroll/ContentStack");
+        _applyButton = GetNode<Button>("Center/Panel/RootStack/Footer/ApplyButton");
+        _cancelButton = GetNode<Button>("Center/Panel/RootStack/Footer/CancelButton");
+        _resetButton = GetNode<Button>("Center/Panel/RootStack/Footer/ResetButton");
     }
 
+    private void WireUi()
+    {
+        _graphicsTabButton.Pressed += () =>
+        {
+            _activeMainTab = MainSettingsTab.Graphics;
+            RefreshView();
+        };
+        _audioTabButton.Pressed += () =>
+        {
+            _activeMainTab = MainSettingsTab.Audio;
+            RefreshView();
+        };
+        _gameTabButton.Pressed += () =>
+        {
+            _activeMainTab = MainSettingsTab.Game;
+            RefreshView();
+        };
+
+        _applyButton.Pressed += ApplyAndClose;
+        _cancelButton.Pressed += CancelAndClose;
+        _resetButton.Pressed += ResetDraftToDefaults;
+    }
     private void OpenOverlay()
     {
         _draftPreferences = _savedPreferences.Clone();
@@ -285,22 +247,9 @@ public partial class SettingsOverlay : Control
 
     private void RebuildMainTabs()
     {
-        ClearChildren(_mainTabBar);
-        _mainTabBar.AddChild(CreateTabButton("Graphics", _activeMainTab == MainSettingsTab.Graphics, () =>
-        {
-            _activeMainTab = MainSettingsTab.Graphics;
-            RefreshView();
-        }));
-        _mainTabBar.AddChild(CreateTabButton("Audio", _activeMainTab == MainSettingsTab.Audio, () =>
-        {
-            _activeMainTab = MainSettingsTab.Audio;
-            RefreshView();
-        }));
-        _mainTabBar.AddChild(CreateTabButton("Game", _activeMainTab == MainSettingsTab.Game, () =>
-        {
-            _activeMainTab = MainSettingsTab.Game;
-            RefreshView();
-        }));
+        ApplyTabButtonStyle(_graphicsTabButton, _activeMainTab == MainSettingsTab.Graphics, compact: false);
+        ApplyTabButtonStyle(_audioTabButton, _activeMainTab == MainSettingsTab.Audio, compact: false);
+        ApplyTabButtonStyle(_gameTabButton, _activeMainTab == MainSettingsTab.Game, compact: false);
     }
 
     private void RebuildContent()
@@ -446,7 +395,7 @@ public partial class SettingsOverlay : Control
 
     private void AddAdvancedTabButton(HBoxContainer container, string label, AdvancedSettingsTab tab)
     {
-        container.AddChild(CreateTabButton(label, _activeAdvancedTab == tab, () =>
+        container.AddChild(CreateDynamicTabButton(label, _activeAdvancedTab == tab, () =>
         {
             _activeAdvancedTab = tab;
             RefreshView();
@@ -633,7 +582,7 @@ public partial class SettingsOverlay : Control
         return label;
     }
 
-    private Button CreateTabButton(string label, bool active, Action onPressed, bool compact = false)
+    private Button CreateDynamicTabButton(string label, bool active, Action onPressed, bool compact = false)
     {
         var button = new Button
         {
@@ -643,29 +592,7 @@ public partial class SettingsOverlay : Control
         };
         button.AddThemeFontSizeOverride("font_size", compact ? 18 : 20);
         button.Pressed += onPressed;
-
-        var fill = active ? new Color(AccentColor, 0.26f) : new Color(0.72f, 0.67f, 0.6f, 0.16f);
-        var hoverFill = active ? new Color(AccentColor, 0.32f) : new Color(0.72f, 0.67f, 0.6f, 0.24f);
-        var pressedFill = active ? new Color(AccentColor, 0.36f) : new Color(0.72f, 0.67f, 0.6f, 0.3f);
-        var textColor = active ? AccentColor : MutedTextColor;
-
-        var normalStyle = CreatePanelStyle(fill, 18, 14, 10);
-        var hoverStyle = CreatePanelStyle(hoverFill, 18, 14, 10);
-        var pressedStyle = CreatePanelStyle(pressedFill, 18, 14, 10);
-        if (active)
-        {
-            normalStyle.ShadowColor = new Color(AccentColor, 0.18f);
-            normalStyle.ShadowSize = 4;
-            hoverStyle.ShadowColor = new Color(AccentColor, 0.22f);
-            hoverStyle.ShadowSize = 4;
-            pressedStyle.ShadowColor = new Color(AccentColor, 0.24f);
-            pressedStyle.ShadowSize = 4;
-        }
-
-        button.AddThemeStyleboxOverride("normal", normalStyle);
-        button.AddThemeStyleboxOverride("hover", hoverStyle);
-        button.AddThemeStyleboxOverride("pressed", pressedStyle);
-        button.AddThemeColorOverride("font_color", textColor);
+        ApplyTabButtonStyle(button, active, compact);
         return button;
     }
 
@@ -689,25 +616,32 @@ public partial class SettingsOverlay : Control
         return button;
     }
 
-    private Button CreateFooterButton(string label, Color fillColor, Action onPressed)
+    private void ApplyTabButtonStyle(Button button, bool active, bool compact)
     {
-        var button = new Button
-        {
-            Text = label,
-            CustomMinimumSize = new Vector2(170f, 52f),
-        };
-        button.AddThemeFontSizeOverride("font_size", 22);
-        button.Pressed += onPressed;
+        button.AddThemeFontSizeOverride("font_size", compact ? 18 : 20);
 
-        var style = CreatePanelStyle(fillColor, 18, 16, 12);
-        var disabledStyle = CreatePanelStyle(new Color(fillColor, 0.45f), 18, 16, 12);
-        button.AddThemeStyleboxOverride("normal", style);
-        button.AddThemeStyleboxOverride("hover", style);
-        button.AddThemeStyleboxOverride("pressed", style);
-        button.AddThemeStyleboxOverride("disabled", disabledStyle);
-        button.AddThemeColorOverride("font_color", Colors.White);
-        button.AddThemeColorOverride("font_disabled_color", new Color(1f, 1f, 1f, 0.55f));
-        return button;
+        var fill = active ? new Color(AccentColor, 0.26f) : new Color(0.72f, 0.67f, 0.6f, 0.16f);
+        var hoverFill = active ? new Color(AccentColor, 0.32f) : new Color(0.72f, 0.67f, 0.6f, 0.24f);
+        var pressedFill = active ? new Color(AccentColor, 0.36f) : new Color(0.72f, 0.67f, 0.6f, 0.3f);
+        var textColor = active ? AccentColor : MutedTextColor;
+
+        var normalStyle = CreatePanelStyle(fill, 18, 14, 10);
+        var hoverStyle = CreatePanelStyle(hoverFill, 18, 14, 10);
+        var pressedStyle = CreatePanelStyle(pressedFill, 18, 14, 10);
+        if (active)
+        {
+            normalStyle.ShadowColor = new Color(AccentColor, 0.18f);
+            normalStyle.ShadowSize = 4;
+            hoverStyle.ShadowColor = new Color(AccentColor, 0.22f);
+            hoverStyle.ShadowSize = 4;
+            pressedStyle.ShadowColor = new Color(AccentColor, 0.24f);
+            pressedStyle.ShadowSize = 4;
+        }
+
+        button.AddThemeStyleboxOverride("normal", normalStyle);
+        button.AddThemeStyleboxOverride("hover", hoverStyle);
+        button.AddThemeStyleboxOverride("pressed", pressedStyle);
+        button.AddThemeColorOverride("font_color", textColor);
     }
 
     private void ApplyToggleStyle(Button button, bool active)
