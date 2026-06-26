@@ -8,6 +8,8 @@ namespace EndfieldZero.UI;
 
 public partial class SettingsOverlay : Control
 {
+    private const float ContentWidth = 760f;
+
     private enum MainSettingsTab
     {
         Graphics,
@@ -177,6 +179,8 @@ public partial class SettingsOverlay : Control
         _rootStack.AddChild(_titleLabel);
 
         _mainTabBar = new HBoxContainer();
+        _mainTabBar.CustomMinimumSize = new Vector2(ContentWidth, 0f);
+        _mainTabBar.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _mainTabBar.AddThemeConstantOverride("separation", 12);
         _rootStack.AddChild(_mainTabBar);
 
@@ -187,6 +191,7 @@ public partial class SettingsOverlay : Control
 
         var scroll = new ScrollContainer
         {
+            CustomMinimumSize = new Vector2(ContentWidth, 0f),
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
             SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
@@ -195,6 +200,7 @@ public partial class SettingsOverlay : Control
 
         _contentStack = new VBoxContainer
         {
+            CustomMinimumSize = new Vector2(ContentWidth, 0f),
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
         };
         _contentStack.AddThemeConstantOverride("separation", 10);
@@ -418,6 +424,8 @@ public partial class SettingsOverlay : Control
             return;
 
         var advancedTabs = new HBoxContainer();
+        advancedTabs.CustomMinimumSize = new Vector2(ContentWidth, 0f);
+        advancedTabs.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         advancedTabs.AddThemeConstantOverride("separation", 8);
         _contentStack.AddChild(advancedTabs);
 
@@ -579,7 +587,11 @@ public partial class SettingsOverlay : Control
 
     private Control CreateRow(string label, Control editor, bool enabled)
     {
-        var panel = new PanelContainer();
+        var panel = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(ContentWidth, 0f),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
         panel.AddThemeStyleboxOverride("panel", CreatePanelStyle(RowColor, 18, 16, 14, RowBorderColor));
 
         var row = new HBoxContainer
@@ -627,7 +639,8 @@ public partial class SettingsOverlay : Control
         {
             Text = label,
             Flat = true,
-            CustomMinimumSize = compact ? new Vector2(126f, 42f) : new Vector2(168f, 50f),
+            CustomMinimumSize = new Vector2(0f, compact ? 42f : 50f),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         button.AddThemeFontSizeOverride("font_size", compact ? 18 : 20);
         button.Pressed += onPressed;
