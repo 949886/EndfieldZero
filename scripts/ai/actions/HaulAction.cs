@@ -88,7 +88,7 @@ public class HaulAction : AIAction
             return;
         }
 
-        _haulJob.Reserve(context.Pawn.GetInstanceId().GetHashCode());
+        _haulJob.Reserve(context.Pawn.Data.Id);
         _haulJob.Start();
 
         // Get the item
@@ -190,13 +190,18 @@ public class HaulAction : AIAction
 
     public override bool ShouldInterrupt(AIContext context)
     {
-        // Don't interrupt while carrying an item (finish the delivery)
-        if (_phase == HaulPhase.GoToDest)
-        {
-            if (context.Pawn.Needs.Hunger < 10f || context.Pawn.Needs.Rest < 5f)
-                return true;
-            return false;
-        }
+        if (_haulJob == null)
+            return true;
+
+        if (context.Pawn.Health != null && context.Pawn.Health.HpPercent < 0.3f)
+            return true;
+
+        if (context.NearbyEnemyCount > 0)
+            return true;
+
+        if (_phase == HaulPhase.GoToItem || _phase == HaulPhase.GoToDest || _phase == HaulPhase.Delivering)
+            return context.Pawn.Needs.Hunger < 10f || context.Pawn.Needs.Rest < 5f;
+
         return true;
     }
 

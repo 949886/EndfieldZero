@@ -135,11 +135,18 @@ public class DoJobAction : AIAction
     /// </summary>
     public override bool ShouldInterrupt(AIContext context)
     {
-        if (_isAtTarget && _claimedJob != null && _claimedJob.Status == JobStatus.InProgress)
-        {
-            // Only interrupt for critical needs
+        if (_claimedJob == null)
+            return true;
+
+        if (context.Pawn.Health != null && context.Pawn.Health.HpPercent < 0.3f)
+            return true;
+
+        if (context.NearbyEnemyCount > 0)
+            return true;
+
+        if (_claimedJob.Status == JobStatus.Reserved || _claimedJob.Status == JobStatus.InProgress)
             return context.Pawn.Needs.Hunger < 10f || context.Pawn.Needs.Rest < 5f;
-        }
+
         return true;
     }
 

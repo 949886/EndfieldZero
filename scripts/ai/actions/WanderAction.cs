@@ -1,4 +1,5 @@
 using EndfieldZero.Core;
+using EndfieldZero.Jobs;
 using EndfieldZero.Pathfinding;
 using Godot;
 
@@ -34,6 +35,27 @@ public class WanderAction : AIAction
             0.1f,   // Safety
             0.8f,   // Idleness — very high: only wander when idle
         };
+    }
+
+    public override bool CanExecute(AIContext context)
+    {
+        if (JobSystem.Instance == null)
+            return true;
+
+        int pawnId = context.Pawn.Data.Id;
+        foreach (var job in JobSystem.Instance.AllJobs)
+        {
+            if (job.ReservedByPawnId != pawnId)
+                continue;
+
+            if (job.Status == JobStatus.Reserved || job.Status == JobStatus.InProgress)
+                return false;
+        }
+
+        if (JobSystem.Instance.HasAvailableJobs(context.Pawn))
+            return false;
+
+        return true;
     }
 
     public override void OnStart(AIContext context)
