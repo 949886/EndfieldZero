@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EndfieldZero.Building;
+using EndfieldZero.Research;
 using Godot;
 
 namespace EndfieldZero.UI;
@@ -8,11 +10,6 @@ namespace EndfieldZero.UI;
 /// <summary>
 /// Bottom-of-screen building selection menu.
 /// Shown when in Construct mode, displays categories and buildings.
-///
-///  [ 结构 ] [ 家具 ] [ 生产 ]
-///      ↓
-///  [ 石墙 ] [ 木墙 ] [ 门 ] [ 地板 ]
-///
 /// Selecting a building sets ToolModeManager.SelectedBuildingDef.
 /// </summary>
 public partial class BuildSubMenu : PanelContainer
@@ -25,23 +22,25 @@ public partial class BuildSubMenu : PanelContainer
 
     private string _activeCategory = "";
 
-    // Style
     private static readonly Color PanelBg = new(0.08f, 0.08f, 0.12f, 0.88f);
     private static readonly Color ActiveBtnBg = new(0.25f, 0.5f, 0.7f, 0.6f);
     private static readonly Color InactiveBtnBg = new(0.12f, 0.12f, 0.18f, 0.7f);
 
     public override void _Ready()
     {
-        // Ensure this panel can receive mouse events
         MouseFilter = MouseFilterEnum.Stop;
-        // Main panel style
+
         var style = new StyleBoxFlat
         {
             BgColor = PanelBg,
-            CornerRadiusTopLeft = 6, CornerRadiusTopRight = 6,
-            ContentMarginLeft = 10, ContentMarginRight = 10,
-            ContentMarginTop = 8, ContentMarginBottom = 8,
-            BorderWidthTop = 1, BorderColor = new Color(0.3f, 0.6f, 0.8f, 0.4f),
+            CornerRadiusTopLeft = 6,
+            CornerRadiusTopRight = 6,
+            ContentMarginLeft = 10,
+            ContentMarginRight = 10,
+            ContentMarginTop = 8,
+            ContentMarginBottom = 8,
+            BorderWidthTop = 1,
+            BorderColor = new Color(0.3f, 0.6f, 0.8f, 0.4f),
         };
         AddThemeStyleboxOverride("panel", style);
 
@@ -58,24 +57,30 @@ public partial class BuildSubMenu : PanelContainer
         modeBar.AddChild(_brushModeButton);
         modeBar.AddChild(_boxModeButton);
 
-        // Category bar
         _categoryBar = new HBoxContainer();
         _categoryBar.AddThemeConstantOverride("separation", 4);
         vbox.AddChild(_categoryBar);
 
-        // Items bar
         _itemBar = new HBoxContainer();
         _itemBar.AddThemeConstantOverride("separation", 4);
         vbox.AddChild(_itemBar);
 
-        // Description label
         _descLabel = new Label();
         _descLabel.AddThemeFontSizeOverride("font_size", 11);
         _descLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.8f));
         vbox.AddChild(_descLabel);
 
+        if (TechnologyManager.Instance != null)
+            TechnologyManager.Instance.Changed += OnTechnologyChanged;
+
         BuildCategories();
         Visible = false;
+    }
+
+    public override void _ExitTree()
+    {
+        if (TechnologyManager.Instance != null)
+            TechnologyManager.Instance.Changed -= OnTechnologyChanged;
     }
 
     public override void _Process(double delta)
@@ -89,76 +94,86 @@ public partial class BuildSubMenu : PanelContainer
 
     private void BuildCategories()
     {
-        // Clear
-        foreach (var child in _categoryBar.GetChildren())
+        foreach (Node child in _categoryBar.GetChildren())
+            child.QueueFree();
+        foreach (Node child in _itemBar.GetChildren())
             child.QueueFree();
 
-        var categories = BuildingRegistry.Instance.Categories.ToList();
-        var categoryNames = new Dictionary<string, string>
+        var categories = GetUnlockedCategories();
+        Dictionary<string, string> categoryNames = new()
         {
-            { "Structure", "结构" },
-            { "Furniture", "家具" },
-            { "Production", "生产" },
+            { "Structure", "Structure" },
+            { "Furniture", "Furniture" },
+            { "Production", "Production" },
         };
 
-        foreach (var cat in categories)
+        if (categories.Count == 0)
         {
-            string label = categoryNames.GetValueOrDefault(cat, cat);
-            var btn = CreateButton(label, () => SelectCategory(cat));
-            _categoryBar.AddChild(btn);
+            _activeCategory = "";
+            _descLabel.Text = "No unlocked buildings";
+            return;
         }
 
-        if (categories.Count > 0)
-            SelectCategory(categories[0]);
+        foreach (string category in categories)
+        {
+            string label = categoryNames.GetValueOrDefault(category, category);
+            _categoryBar.AddChild(CreateButton(label, () => SelectCategory(category)));
+        }
+
+        if (!categories.Contains(_activeCategory))
+            _activeCategory = categories[0];
+
+        SelectCategory(_activeCategory);
     }
 
     private void SelectCategory(string category)
     {
         _activeCategory = category;
 
-        // Clear items
-        foreach (var child in _itemBar.GetChildren())
+        foreach (Node child in _itemBar.GetChildren())
             child.QueueFree();
 
-        var defs = BuildingRegistry.Instance.GetByCategory(category).ToList();
+        var defs = BuildingRegistry.Instance
+            .GetByCategory(category)
+            .Where(def => TechnologyManager.Instance?.IsBuildingUnlocked(def.Id) ?? true)
+            .ToList();
 
-        foreach (var def in defs)
+        foreach (BuildingDef def in defs)
         {
             var btn = CreateButton(def.DisplayName, () => SelectBuilding(def));
-            // Color the button with ghost color
-            var btnStyle = btn.GetThemeStylebox("panel") as StyleBoxFlat;
-            if (btnStyle != null)
+            if (btn.GetThemeStylebox("panel") is StyleBoxFlat btnStyle)
                 btnStyle.BorderColor = def.GhostColor with { A = 0.6f };
             _itemBar.AddChild(btn);
         }
 
-        // Update category button highlights
         int i = 0;
-        foreach (var catBtn in _categoryBar.GetChildren())
+        var categories = GetUnlockedCategories();
+        foreach (Node child in _categoryBar.GetChildren())
         {
-            if (catBtn is PanelContainer pc)
+            if (child is PanelContainer panel &&
+                panel.GetThemeStylebox("panel") is StyleBoxFlat style &&
+                i < categories.Count)
             {
-                var s = pc.GetThemeStylebox("panel") as StyleBoxFlat;
-                var cats = BuildingRegistry.Instance.Categories.ToList();
-                if (s != null && i < cats.Count)
-                    s.BgColor = cats[i] == category ? ActiveBtnBg : InactiveBtnBg;
+                style.BgColor = categories[i] == category ? ActiveBtnBg : InactiveBtnBg;
                 i++;
             }
         }
 
-        _descLabel.Text = "";
+        _descLabel.Text = defs.Count == 0 ? "No unlocked buildings in this category" : "";
     }
 
     private void SelectBuilding(BuildingDef def)
     {
-        if (ToolModeManager.Instance != null)
-        {
-            ToolModeManager.Instance.SelectedBuildingDef = def;
-        }
+        if (TechnologyManager.Instance != null && !TechnologyManager.Instance.IsBuildingUnlocked(def.Id))
+            return;
 
-        // Show description
-        var matText = string.Join(", ", def.Materials.Select(m => $"{m.Key}×{m.Value}"));
-        _descLabel.Text = $"{def.DisplayName} ({def.Size.X}×{def.Size.Y}) | 材料: {matText} | 工时: {def.WorkTicks}";
+        if (ToolModeManager.Instance != null)
+            ToolModeManager.Instance.SelectedBuildingDef = def;
+
+        string matText = def.Materials.Count == 0
+            ? "None"
+            : string.Join(", ", def.Materials.Select(material => $"{material.Key} x{material.Value}"));
+        _descLabel.Text = $"{def.DisplayName} ({def.Size.X}x{def.Size.Y}) | Cost: {matText} | Work: {def.WorkTicks}";
     }
 
     private Button CreateModeButton(string text, ToolModeManager.ConstructPlacementMode mode)
@@ -173,12 +188,18 @@ public partial class BuildSubMenu : PanelContainer
         var normalStyle = new StyleBoxFlat
         {
             BgColor = InactiveBtnBg,
-            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
-            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
-            ContentMarginLeft = 8, ContentMarginRight = 8,
-            ContentMarginTop = 4, ContentMarginBottom = 4,
-            BorderWidthLeft = 1, BorderWidthRight = 1,
-            BorderWidthTop = 1, BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4,
+            ContentMarginLeft = 8,
+            ContentMarginRight = 8,
+            ContentMarginTop = 4,
+            ContentMarginBottom = 4,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            BorderWidthTop = 1,
+            BorderWidthBottom = 1,
             BorderColor = new Color(0.3f, 0.4f, 0.5f, 0.5f),
         };
         btn.AddThemeStyleboxOverride("normal", normalStyle);
@@ -209,8 +230,7 @@ public partial class BuildSubMenu : PanelContainer
 
     private void ApplyModeButtonState(Button button, bool active)
     {
-        var style = button.GetThemeStylebox("normal") as StyleBoxFlat;
-        if (style != null)
+        if (button.GetThemeStylebox("normal") is StyleBoxFlat style)
         {
             style.BgColor = active ? ActiveBtnBg : InactiveBtnBg;
             style.BorderColor = active
@@ -222,28 +242,55 @@ public partial class BuildSubMenu : PanelContainer
             active ? Colors.White : new Color(0.8f, 0.8f, 0.86f));
     }
 
-    private PanelContainer CreateButton(string text, System.Action onClick)
+    private PanelContainer CreateButton(string text, Action onClick)
     {
         var panel = new PanelContainer();
         var btnStyle = new StyleBoxFlat
         {
             BgColor = InactiveBtnBg,
-            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
-            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
-            ContentMarginLeft = 8, ContentMarginRight = 8,
-            ContentMarginTop = 4, ContentMarginBottom = 4,
-            BorderWidthLeft = 1, BorderWidthRight = 1,
-            BorderWidthTop = 1, BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4,
+            ContentMarginLeft = 8,
+            ContentMarginRight = 8,
+            ContentMarginTop = 4,
+            ContentMarginBottom = 4,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            BorderWidthTop = 1,
+            BorderWidthBottom = 1,
             BorderColor = new Color(0.3f, 0.4f, 0.5f, 0.4f),
         };
         panel.AddThemeStyleboxOverride("panel", btnStyle);
 
-        var btn = new Button { Text = text, Flat = true };
-        btn.AddThemeFontSizeOverride("font_size", 12);
-        btn.AddThemeColorOverride("font_color", new Color(0.85f, 0.85f, 0.9f));
-        btn.Pressed += onClick;
-        panel.AddChild(btn);
+        var button = new Button { Text = text, Flat = true };
+        button.AddThemeFontSizeOverride("font_size", 12);
+        button.AddThemeColorOverride("font_color", new Color(0.85f, 0.85f, 0.9f));
+        button.Pressed += onClick;
+        panel.AddChild(button);
 
         return panel;
+    }
+
+    private List<string> GetUnlockedCategories()
+    {
+        return BuildingRegistry.Instance.Categories
+            .Where(category => BuildingRegistry.Instance
+                .GetByCategory(category)
+                .Any(def => TechnologyManager.Instance?.IsBuildingUnlocked(def.Id) ?? true))
+            .ToList();
+    }
+
+    private void OnTechnologyChanged()
+    {
+        BuildCategories();
+
+        if (ToolModeManager.Instance?.SelectedBuildingDef != null &&
+            TechnologyManager.Instance != null &&
+            !TechnologyManager.Instance.IsBuildingUnlocked(ToolModeManager.Instance.SelectedBuildingDef.Id))
+        {
+            ToolModeManager.Instance.SelectedBuildingDef = null;
+        }
     }
 }

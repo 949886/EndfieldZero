@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using EndfieldZero.AI;
 using EndfieldZero.Combat;
 using EndfieldZero.Core;
+using EndfieldZero.Research;
 using EndfieldZero.World;
 using Godot;
 
@@ -102,6 +103,8 @@ public abstract partial class Pawn : CharacterBody3D
         _selectionCircle?.SetSelected(IsSelected);
 
         float speed = BaseMoveSpeed * Data.GetMoveSpeedMultiplier();
+        if (Data.Faction == "Colony")
+            speed *= TechnologyManager.Instance?.ColonyMoveSpeedMultiplier ?? 1f;
         Vector3 velocity = Vector3.Zero;
 
         if (_pathIndex < _path.Count)

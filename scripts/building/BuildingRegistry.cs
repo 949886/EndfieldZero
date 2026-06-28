@@ -196,6 +196,20 @@ public sealed class BuildingRegistry
             allowOcclusionFade: false
         ));
 
+        reg.Register(new BuildingDef(
+            "storage_shelf", "储物架", "Production",
+            size: new Vector2I(2, 1),
+            placedBlockId: 0,
+            blocksMovement: true, canRotate: true,
+            workTicks: 420,
+            requiredSkill: "Construction", minSkillLevel: 3f,
+            ghostColor: new Color(0.46f, 0.36f, 0.22f, 0.5f),
+            materials: new() { { "Wood", 12 }, { "Stone", 4 } },
+            beautyOffset: 1f,
+            view3DStyle: BuildingView3DStyle.Workstation,
+            allowOcclusionFade: false
+        ));
+
         return reg;
     }
 }

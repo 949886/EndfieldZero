@@ -72,7 +72,7 @@ public partial class TimeManager : Node
     /// <summary>Speed control: pause / 1× / 2× / 3×.</summary>
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (SettingsOverlay.IsOpen)
+        if (SettingsOverlay.IsOpen || TechnologyTreeOverlay.IsOpen)
             return;
 
         if (@event is InputEventKey key && key.Pressed && !key.Echo)

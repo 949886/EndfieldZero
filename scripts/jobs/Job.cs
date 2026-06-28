@@ -33,7 +33,7 @@ public class Job
     // --- State ---
     public JobStatus Status { get; set; } = JobStatus.Available;
     public int ReservedByPawnId { get; set; } = -1;
-    public int TicksWorked { get; set; }
+    public float TicksWorked { get; set; }
 
     // --- XP ---
     public float XpPerTick { get; set; } = 0.5f;     // XP granted per work tick
@@ -44,6 +44,10 @@ public class Job
     // --- Haul link ---
     public int HaulItemId { get; set; } = -1;           // Linked ItemStack ID (-1 = none)
     public Vector2I HaulDestCoord { get; set; }          // Destination stockpile coordinate
+
+    // --- Research link ---
+    public string ResearchTechnologyId { get; set; } = "";
+    public Vector2I ResearchDeskCell { get; set; }
 
     public Job(string jobType, string displayName)
     {
@@ -98,7 +102,7 @@ public class Job
     }
 
     /// <summary>Remaining work ticks.</summary>
-    public int TicksRemaining => WorkTicks - TicksWorked;
+    public float TicksRemaining => WorkTicks - TicksWorked;
 
     /// <summary>Progress 0-1.</summary>
     public float Progress => WorkTicks > 0 ? (float)TicksWorked / WorkTicks : 1f;

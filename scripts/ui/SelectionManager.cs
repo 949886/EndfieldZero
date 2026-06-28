@@ -53,7 +53,7 @@ public partial class SelectionManager : Control
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (SettingsOverlay.IsOpen)
+        if (SettingsOverlay.IsOpen || TechnologyTreeOverlay.IsOpen)
             return;
 
         // Skip selection handling when in a tool mode (Mine/Construct/Grow/Cancel)

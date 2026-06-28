@@ -116,7 +116,7 @@ public partial class ToolModeBar : HBoxContainer
 
         _hintLabel = new Label
         {
-            Text = "Tab cycle | Alt+Q/E rotate",
+            Text = "T tech | Tab cycle | Alt+Q/E rotate",
             MouseFilter = MouseFilterEnum.Ignore,
         };
         _hintLabel.AddThemeFontSizeOverride("font_size", 12);

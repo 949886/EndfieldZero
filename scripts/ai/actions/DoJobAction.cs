@@ -2,17 +2,15 @@ using EndfieldZero.Core;
 using EndfieldZero.Jobs;
 using EndfieldZero.Pathfinding;
 using EndfieldZero.Pawn;
+using EndfieldZero.Research;
 using EndfieldZero.World;
 using Godot;
 
 namespace EndfieldZero.AI.Actions;
 
 /// <summary>
-/// DoJobAction — claims and executes a job from the JobSystem.
-/// Walks to the job target, then performs work ticks until completion.
-/// Uses work animation (dig) while actively working.
-///
-/// Q vector: very sensitive to JobAvailability dimension.
+/// Claims and executes a job from the JobSystem.
+/// Walks to the job target, then performs work until completion.
 /// </summary>
 public class DoJobAction : AIAction
 {
@@ -30,15 +28,15 @@ public class DoJobAction : AIAction
 
         return new float[]
         {
-            -context.HungerUrgency * 0.3f,   // Don't work if starving
-            -context.RestUrgency * 0.2f,      // Don't work if exhausted
+            -context.HungerUrgency * 0.3f,
+            -context.RestUrgency * 0.2f,
             0.0f,
             0.0f,
             0.0f,
             0.0f,
-            jobWeight * 2.0f,                  // Jobs — very high when available
-            0.3f,                              // Safety
-            0.2f,                              // Idleness
+            jobWeight * 2.0f,
+            0.3f,
+            0.2f,
         };
     }
 
@@ -69,9 +67,9 @@ public class DoJobAction : AIAction
 
     public override void Execute(AIContext context)
     {
-        if (_isComplete || _claimedJob == null) return;
+        if (_isComplete || _claimedJob == null)
+            return;
 
-        // Check if we've arrived at the target
         if (!_isAtTarget)
         {
             float dist = context.Pawn.GlobalPosition.DistanceTo(_claimedJob.TargetWorldPos);
@@ -80,59 +78,28 @@ public class DoJobAction : AIAction
                 _isAtTarget = true;
                 _claimedJob.Start();
                 context.Pawn.Stop();
-
-                // Face toward job target
                 context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos, ResolveWorkAnimation(_claimedJob.JobType));
             }
             else if (!context.Pawn.IsMoving)
             {
-                // Stopped moving but not at target = Path blocked!
                 GD.Print($"[AI] {context.Pawn.Data.PawnName} path to job blocked. Cancelling.");
                 _claimedJob.Fail();
                 _isComplete = true;
                 return;
             }
+
             return;
         }
 
-        // Do work — set working animation every tick
         context.Pawn.SetWorkTarget(_claimedJob.TargetWorldPos, ResolveWorkAnimation(_claimedJob.JobType));
-        _claimedJob.TicksWorked++;
+        _claimedJob.TicksWorked += CalculateWorkContribution(context);
 
-        // Grant XP and speed bonuses
-        if (!string.IsNullOrEmpty(_claimedJob.RequiredSkill))
-        {
-            float skillLevel = context.Pawn.Data.GetStat(_claimedJob.RequiredSkill);
-
-            // High skill = faster work (extra tick every 3 ticks for 10+ skill)
-            if (skillLevel >= 10f && context.CurrentTick % 3 == 0)
-                _claimedJob.TicksWorked++;
-
-            // Very high skill = even faster (extra tick every 2 ticks)
-            if (skillLevel >= 15f && context.CurrentTick % 2 == 0)
-                _claimedJob.TicksWorked++;
-
-            context.Pawn.Data.AddExperience(_claimedJob.RequiredSkill, _claimedJob.XpPerTick);
-        }
-
-        // Mood-based work speed
-        float moodMod = context.Pawn.Mood.GetWorkSpeedModifier();
-        if (moodMod > 1f && context.CurrentTick % 2 == 0)
-            _claimedJob.TicksWorked++;
-
-        // Check completion
-        if (_claimedJob.TicksRemaining <= 0)
-        {
+        if (_claimedJob.TicksRemaining <= 0f)
             CompleteJob(context);
-        }
     }
 
     public override bool IsComplete(AIContext context) => _isComplete;
 
-    /// <summary>
-    /// Prevent AI from switching away while actively working.
-    /// Only allow interruption if starving/exhausted.
-    /// </summary>
     public override bool ShouldInterrupt(AIContext context)
     {
         if (_claimedJob == null)
@@ -154,10 +121,10 @@ public class DoJobAction : AIAction
     {
         if (_claimedJob != null && _claimedJob.Status != JobStatus.Completed)
         {
-            // Release — preserves work progress so another pawn can continue
             _claimedJob.Release();
             _claimedJob = null;
         }
+
         Owner?.ClearWorkTarget();
         base.OnStop();
     }
@@ -176,7 +143,35 @@ public class DoJobAction : AIAction
                 return;
             }
         }
+
         context.Pawn.MoveTo(_claimedJob.TargetWorldPos);
+    }
+
+    private float CalculateWorkContribution(AIContext context)
+    {
+        float workContribution = 1f;
+
+        if (!string.IsNullOrEmpty(_claimedJob.RequiredSkill))
+        {
+            float skillLevel = context.Pawn.Data.GetStat(_claimedJob.RequiredSkill);
+
+            if (skillLevel >= 10f && context.CurrentTick % 3 == 0)
+                workContribution += 1f;
+
+            if (skillLevel >= 15f && context.CurrentTick % 2 == 0)
+                workContribution += 1f;
+
+            context.Pawn.Data.AddExperience(_claimedJob.RequiredSkill, _claimedJob.XpPerTick);
+        }
+
+        float moodMod = context.Pawn.Mood.GetWorkSpeedModifier();
+        if (moodMod > 1f && context.CurrentTick % 2 == 0)
+            workContribution += moodMod - 1f;
+
+        if (_claimedJob.JobType == "Construct")
+            workContribution *= TechnologyManager.Instance?.ConstructionSpeedMultiplier ?? 1f;
+
+        return workContribution;
     }
 
     private void CompleteJob(AIContext context)
@@ -189,19 +184,19 @@ public class DoJobAction : AIAction
         ApplyJobResult(context);
         EventBus.FireJobCompleted(_claimedJob.Id);
 
-        // Positive mood
         string label = _claimedJob.JobType switch
         {
-            "Mine" => "完成了挖矿",
-            "Construct" => "建好了建筑",
-            "Grow" => "种好了作物",
-            "Harvest" => "收获了作物",
-            _ => "完成了工作",
+            "Mine" => "采掘工作完成",
+            "Construct" => "建造任务完成",
+            "Grow" => "播种工作完成",
+            "Harvest" => "收获工作完成",
+            "Research" => "研究推进顺利",
+            _ => "工作完成",
         };
         context.Pawn.Mood.AddThought("finished_work", label, 5f, TimeManager.TicksPerHour * 2);
 
-        // Notify ToolModeManager to clear designation
-        UI.ToolModeManager.Instance?.OnJobCompleted(_claimedJob.TargetBlockCoord);
+        if (_claimedJob.JobType != "Research")
+            UI.ToolModeManager.Instance?.OnJobCompleted(_claimedJob.TargetBlockCoord);
 
         _claimedJob = null;
         _isComplete = true;
@@ -215,7 +210,6 @@ public class DoJobAction : AIAction
             {
                 var coord = _claimedJob.TargetBlockCoord;
 
-                // Determine item drop from block type
                 if (WorldManager.Instance != null)
                 {
                     var block = WorldManager.Instance.GetBlock(coord.X, coord.Y);
@@ -245,14 +239,11 @@ public class DoJobAction : AIAction
                 {
                     Building.BlueprintSystem.Instance?.CompleteBlueprint(_claimedJob.BlueprintId);
                 }
-                else
+                else if (WorldManager.Instance != null)
                 {
-                    if (WorldManager.Instance != null)
-                    {
-                        var coord = _claimedJob.TargetBlockCoord;
-                        WorldManager.Instance.SetBlock(coord.X, coord.Y,
-                            new Block(World.BlockRegistry.StoneWallId));
-                    }
+                    var coord = _claimedJob.TargetBlockCoord;
+                    WorldManager.Instance.SetBlock(coord.X, coord.Y,
+                        new Block(World.BlockRegistry.StoneWallId));
                 }
                 break;
 
@@ -270,7 +261,6 @@ public class DoJobAction : AIAction
             {
                 var coord = _claimedJob.TargetBlockCoord;
 
-                // Drop crop items
                 if (Farming.CropManager.Instance != null && Items.ItemManager.Instance != null)
                 {
                     var crop = Farming.CropManager.Instance.GetCropAt(coord);
@@ -278,14 +268,19 @@ public class DoJobAction : AIAction
                     {
                         var itemId = Items.ItemRegistry.CropDropItemId(crop.Def.Id);
                         if (itemId != null)
-                        {
                             Items.ItemManager.Instance.SpawnItem(coord, itemId, crop.Def.HarvestYield);
-                        }
                     }
                     Farming.CropManager.Instance.RemoveCrop(coord);
                 }
                 break;
             }
+
+            case "Research":
+                TechnologyManager.Instance?.OnResearchJobCompleted(
+                    _claimedJob.Id,
+                    _claimedJob.ResearchTechnologyId,
+                    _claimedJob.TicksWorked);
+                break;
         }
     }
 
@@ -298,4 +293,3 @@ public class DoJobAction : AIAction
         };
     }
 }
-

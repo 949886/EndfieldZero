@@ -89,7 +89,7 @@ public partial class ToolModeManager : Control
 
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (SettingsOverlay.IsOpen)
+        if (SettingsOverlay.IsOpen || TechnologyTreeOverlay.IsOpen)
             return;
 
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
@@ -130,7 +130,7 @@ public partial class ToolModeManager : Control
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (SettingsOverlay.IsOpen)
+        if (SettingsOverlay.IsOpen || TechnologyTreeOverlay.IsOpen)
             return;
 
         if (CurrentMode == ToolMode.Select) return;

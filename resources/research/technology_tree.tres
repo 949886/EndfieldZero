@@ -1,0 +1,117 @@
+[gd_resource type="Resource" script_class="TechnologyTreeDef" format=3 uid="uid://bdads3a6lpwol"]
+
+[ext_resource type="Script" uid="uid://dceq5i82vlibj" path="res://scripts/research/TechnologyDef.cs" id="1_w7tyg"]
+[ext_resource type="Script" uid="uid://bafth0gxde4am" path="res://scripts/research/TechnologyEffectDef.cs" id="2_uuemc"]
+[ext_resource type="Script" uid="uid://b3wj4k56yu402" path="res://scripts/research/TechnologyTreeDef.cs" id="3_42chk"]
+
+[sub_resource type="Resource" id="Resource_g303c"]
+script = ExtResource("2_uuemc")
+TargetId = "wall_stone"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_1j1ha"]
+script = ExtResource("2_uuemc")
+TargetId = "floor_stone"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_fsars"]
+script = ExtResource("1_w7tyg")
+Id = "stone_working"
+DisplayName = "石工基础"
+Description = "掌握基础石材加工，解锁更坚固的墙体和地板。"
+ResearchTicks = 600
+CanvasPosition = Vector2(180, 220)
+Effects = Array[ExtResource("2_uuemc")]([SubResource("Resource_g303c"), SubResource("Resource_1j1ha")])
+
+[sub_resource type="Resource" id="Resource_mx1ke"]
+script = ExtResource("2_uuemc")
+TargetId = "bed"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_qml1c"]
+script = ExtResource("2_uuemc")
+TargetId = "table"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_xk70c"]
+script = ExtResource("2_uuemc")
+TargetId = "chair"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_enimu"]
+script = ExtResource("1_w7tyg")
+Id = "furniture_design"
+DisplayName = "家具设计"
+Description = "规范化基础家具结构，改善殖民地的休息与用餐条件。"
+ResearchTicks = 700
+CanvasPosition = Vector2(180, 470)
+Effects = Array[ExtResource("2_uuemc")]([SubResource("Resource_mx1ke"), SubResource("Resource_qml1c"), SubResource("Resource_xk70c")])
+
+[sub_resource type="Resource" id="Resource_yxbpp"]
+script = ExtResource("2_uuemc")
+EffectType = 1
+Value = 0.2
+
+[sub_resource type="Resource" id="Resource_ol1pi"]
+script = ExtResource("1_w7tyg")
+Id = "tool_standardization"
+DisplayName = "工具标准化"
+Description = "统一施工工具与流程，让建造效率更加稳定。"
+ResearchTicks = 800
+CanvasPosition = Vector2(620, 470)
+PrerequisiteIds = Array[String](["furniture_design"])
+Effects = Array[ExtResource("2_uuemc")]([SubResource("Resource_yxbpp")])
+
+[sub_resource type="Resource" id="Resource_v3uvq"]
+script = ExtResource("2_uuemc")
+TargetId = "workbench"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_7cfj6"]
+script = ExtResource("2_uuemc")
+TargetId = "stove"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_smsin"]
+script = ExtResource("1_w7tyg")
+Id = "advanced_crafting"
+DisplayName = "进阶工坊"
+Description = "建立更成熟的生产流程，解锁高级制造设施。"
+ResearchTicks = 900
+CanvasPosition = Vector2(620, 220)
+PrerequisiteIds = Array[String](["stone_working"])
+Effects = Array[ExtResource("2_uuemc")]([SubResource("Resource_v3uvq"), SubResource("Resource_7cfj6")])
+
+[sub_resource type="Resource" id="Resource_c0sqx"]
+script = ExtResource("2_uuemc")
+EffectType = 2
+Value = 0.1
+
+[sub_resource type="Resource" id="Resource_11807"]
+script = ExtResource("1_w7tyg")
+Id = "colony_logistics"
+DisplayName = "殖民物流"
+Description = "优化殖民地运输链路，提升殖民者整体移动效率。"
+ResearchTicks = 1000
+CanvasPosition = Vector2(1060, 220)
+PrerequisiteIds = Array[String](["advanced_crafting"])
+Effects = Array[ExtResource("2_uuemc")]([SubResource("Resource_c0sqx")])
+
+[sub_resource type="Resource" id="Resource_sq37l"]
+script = ExtResource("2_uuemc")
+TargetId = "storage_shelf"
+Value = 1.0
+
+[sub_resource type="Resource" id="Resource_bv0x4"]
+script = ExtResource("1_w7tyg")
+Id = "modular_storage"
+DisplayName = "模块仓储"
+Description = "将进阶工坊的制造能力延伸到标准化存放设施，解锁新的储物建筑。"
+ResearchTicks = 1000
+CanvasPosition = Vector2(1060, 40)
+PrerequisiteIds = Array[String](["advanced_crafting"])
+Effects = Array[ExtResource("2_uuemc")]([SubResource("Resource_sq37l")])
+
+[resource]
+script = ExtResource("3_42chk")
+Technologies = Array[ExtResource("1_w7tyg")]([SubResource("Resource_fsars"), SubResource("Resource_enimu"), SubResource("Resource_ol1pi"), SubResource("Resource_smsin"), SubResource("Resource_11807"), SubResource("Resource_bv0x4")])

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://7jkii78hyuh2"]
 
 [ext_resource type="SpriteFrames" uid="uid://iy6vpiau7not" path="res://scenes/pawn/rabbit_animations.tres" id="1_5dqq3"]
-[ext_resource type="Script" uid="uid://dtbw3ebud1qsi" path="res://scripts/pawn/Pawn.cs" id="2_pawn"]
+[ext_resource type="Script" uid="uid://kdihpk3snesw" path="res://scripts/pawn/Pawn2D.cs" id="2_pawn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8iv6u"]
 radius = 0.25

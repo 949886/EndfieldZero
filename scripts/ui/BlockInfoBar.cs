@@ -65,6 +65,12 @@ public partial class BlockInfoBar : PanelContainer
 
     public override void _Process(double delta)
     {
+        if (TechnologyTreeOverlay.IsOpen)
+        {
+            Visible = false;
+            return;
+        }
+
         var viewport = GetViewport();
         var camera = viewport?.GetCamera3D();
         var world = WorldManager.Instance;

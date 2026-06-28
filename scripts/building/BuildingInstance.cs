@@ -293,7 +293,7 @@ public partial class BuildingInstance : Node3D, ISelectable
     {
         bool angled3D = GameCamera.Instance?.IsAngledView == true;
         bool showMesh = angled3D && Def.View3DStyle != BuildingView3DStyle.Billboard;
-        bool keepSprite = !showMesh || _hasAuthoredSprite;
+        bool keepSprite = !showMesh;
 
         if (_billboardRoot != null)
         {
