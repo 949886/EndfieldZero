@@ -239,9 +239,11 @@ public sealed class MiyuCombatController : CharacterCombatController
 
     private double GetCurrentAnimationLength()
     {
-        if (!HasAnimation(_currentAnimation))
+        if (AnimationPlayer == null || !HasAnimation(_currentAnimation))
             return 0d;
 
-        return AnimationPlayer.GetAnimation(_currentAnimation)?.Length ?? 0d;
+        return AnimationPlayer.CurrentAnimation == _currentAnimation
+            ? AnimationPlayer.CurrentAnimationLength
+            : 0d;
     }
 }

@@ -483,7 +483,7 @@ public partial class EnemyPawn : CharacterBody3D
 
         string currentAnimation = _animPlayer.CurrentAnimation;
         if (!string.IsNullOrEmpty(currentAnimation) && _animPlayer.HasAnimation(currentAnimation))
-            return (float)_animPlayer.GetAnimation(currentAnimation).Length;
+            return (float)_animPlayer.CurrentAnimationLength;
 
         return DefaultAttackAnimDurationSeconds;
     }
