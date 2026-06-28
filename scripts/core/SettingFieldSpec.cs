@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Godot;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 public enum AdvancedSettingsTab
 {

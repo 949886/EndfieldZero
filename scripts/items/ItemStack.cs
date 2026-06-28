@@ -1,9 +1,9 @@
-using EndfieldZero.Core;
-using EndfieldZero.Farming;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Farming;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Items;
+namespace Cherry.Items;
 
 /// <summary>
 /// Runtime item instance on the ground or in a stockpile.

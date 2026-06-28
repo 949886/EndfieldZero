@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-namespace EndfieldZero.Items;
+namespace Cherry.Items;
 
 /// <summary>
 /// Registry of all item definitions. Singleton pattern.

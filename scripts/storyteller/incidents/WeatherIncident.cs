@@ -1,8 +1,8 @@
-using EndfieldZero.Core;
-using EndfieldZero.Environment;
+using Cherry.Core;
+using Cherry.Environment;
 using Godot;
 
-namespace EndfieldZero.Storyteller.Incidents;
+namespace Cherry.Storyteller.Incidents;
 
 /// <summary>
 /// Weather incidents: Cold Snap and Heat Wave.

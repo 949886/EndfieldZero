@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using EndfieldZero.Combat;
-using EndfieldZero.Core;
-using EndfieldZero.Managers;
-using EndfieldZero.Pathfinding;
-using EndfieldZero.World;
+using Cherry.Combat;
+using Cherry.Core;
+using Cherry.Managers;
+using Cherry.Pathfinding;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>
 /// Enemy pawn - hostile AI-controlled unit.
@@ -438,7 +438,7 @@ public partial class EnemyPawn : CharacterBody3D
 
     private void RefreshThreatLevel()
     {
-        EndfieldZero.Storyteller.Storyteller.Instance?.RefreshThreatLevel();
+        Cherry.Storyteller.Storyteller.Instance?.RefreshThreatLevel();
     }
 
     // --- Movement API ---

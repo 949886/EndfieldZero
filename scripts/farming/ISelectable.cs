@@ -1,4 +1,4 @@
-namespace EndfieldZero.Farming;
+namespace Cherry.Farming;
 
 /// <summary>
 /// Interface for entities that can be selected by the player.

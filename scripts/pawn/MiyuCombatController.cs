@@ -1,8 +1,8 @@
-using EndfieldZero.Combat;
-using EndfieldZero.Core;
+using Cherry.Combat;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 public sealed class MiyuCombatController : CharacterCombatController
 {

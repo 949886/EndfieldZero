@@ -1,12 +1,12 @@
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.Pathfinding;
-using EndfieldZero.Pawn;
-using EndfieldZero.Research;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.Pathfinding;
+using Cherry.Pawn;
+using Cherry.Research;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.AI.Actions;
+namespace Cherry.AI.Actions;
 
 /// <summary>
 /// Claims and executes a job from the JobSystem.

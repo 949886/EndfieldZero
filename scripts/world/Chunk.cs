@@ -1,7 +1,7 @@
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 /// <summary>
 /// Stores data for a single chunk (ChunkSize × ChunkSize × MaxLayers blocks).

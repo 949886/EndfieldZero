@@ -1,7 +1,7 @@
 using System.Reflection;
 using Godot;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 /// <summary>
 /// Editable game settings stored as a Godot Resource.

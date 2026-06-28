@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Building;
-using EndfieldZero.Research;
+using Cherry.Building;
+using Cherry.Research;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Bottom-of-screen building selection menu.

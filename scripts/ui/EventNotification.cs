@@ -1,8 +1,8 @@
 using System;
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Top-of-screen event notification system.

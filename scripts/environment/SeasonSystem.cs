@@ -1,6 +1,6 @@
-using EndfieldZero.Core;
+using Cherry.Core;
 
-namespace EndfieldZero.Environment;
+namespace Cherry.Environment;
 
 /// <summary>
 /// Season enum — Spring → Summer → Autumn → Winter cycle.

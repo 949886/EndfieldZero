@@ -1,9 +1,9 @@
 using System;
-using EndfieldZero.Core;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Storyteller.Incidents;
+namespace Cherry.Storyteller.Incidents;
 
 /// <summary>
 /// Natural disaster: fire or earthquake.

@@ -1,4 +1,4 @@
-namespace EndfieldZero.Storyteller;
+namespace Cherry.Storyteller;
 
 /// <summary>
 /// Static definition for a story event / incident.

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace EndfieldZero.Zone;
+namespace Cherry.Zone;
 
 /// <summary>
 /// Represents a player-defined zone — a set of cells with a specific purpose.

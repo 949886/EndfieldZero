@@ -1,8 +1,8 @@
 using Godot;
-using EndfieldZero.UI;
-using EndfieldZero.World;
+using Cherry.UI;
+using Cherry.World;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 public static class UserSettingsStore
 {

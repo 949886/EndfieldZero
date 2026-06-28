@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 public partial class SettingsBootstrap : Node
 {

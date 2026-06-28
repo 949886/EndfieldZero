@@ -1,8 +1,8 @@
 using Godot;
-using EndfieldZero.World;
-using EndfieldZero.UI;
+using Cherry.World;
+using Cherry.UI;
 
-namespace EndfieldZero.Building;
+namespace Cherry.Building;
 
 /// <summary>
 /// Renders blueprint ghost overlays in 3D world.

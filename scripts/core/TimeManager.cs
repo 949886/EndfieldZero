@@ -1,7 +1,7 @@
 using Godot;
-using EndfieldZero.UI;
+using Cherry.UI;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 /// <summary>
 /// Manages game time: tick counting, speed control, and time-of-day.

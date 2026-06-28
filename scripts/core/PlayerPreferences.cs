@@ -1,7 +1,7 @@
-using EndfieldZero.World;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 public enum DisplayModePreference
 {

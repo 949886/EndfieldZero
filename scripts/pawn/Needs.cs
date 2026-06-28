@@ -1,4 +1,4 @@
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>
 /// Tracks a pawn's current need values. All values range 0-100.

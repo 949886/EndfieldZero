@@ -1,4 +1,4 @@
-namespace EndfieldZero.Research;
+namespace Cherry.Research;
 
 public static class TechnologyTreePaths
 {

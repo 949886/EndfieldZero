@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace EndfieldZero.Combat;
+namespace Cherry.Combat;
 
 public partial class CombatBurstVfx : Node3D
 {

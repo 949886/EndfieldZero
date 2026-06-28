@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 public readonly struct ProjectedOverlayPolygon
 {

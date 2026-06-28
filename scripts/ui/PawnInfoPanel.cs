@@ -1,9 +1,9 @@
-using EndfieldZero.Farming;
-using EndfieldZero.Managers;
-using EndfieldZero.Pawn;
+using Cherry.Farming;
+using Cherry.Managers;
+using Cherry.Pawn;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Bottom-left panel showing detailed info about the first selected pawn.

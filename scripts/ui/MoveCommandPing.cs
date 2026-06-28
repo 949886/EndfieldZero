@@ -1,7 +1,7 @@
-using EndfieldZero.World;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Short-lived green ping effect at right-click move target.

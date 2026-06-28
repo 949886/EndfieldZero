@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 /// <summary>
 /// Generates a lightweight blocky mesh for a single chunk.

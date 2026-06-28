@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Building;
+namespace Cherry.Building;
 
 /// <summary>
 /// A blueprint instance — represents a planned building waiting to be constructed.

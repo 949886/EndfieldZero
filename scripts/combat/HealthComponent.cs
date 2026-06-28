@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.Combat;
+namespace Cherry.Combat;
 
 /// <summary>
 /// Health component for a pawn. Tracks HP, wounds, pain.

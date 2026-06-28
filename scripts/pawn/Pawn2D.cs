@@ -1,7 +1,7 @@
 using Godot;
-using EndfieldZero.World;
+using Cherry.World;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 public partial class Pawn2D : Pawn
 {

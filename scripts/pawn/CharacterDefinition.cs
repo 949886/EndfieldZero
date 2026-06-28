@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 [GlobalClass]
 public partial class CharacterDefinition : Resource

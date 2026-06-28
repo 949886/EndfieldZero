@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace EndfieldZero.Farming;
+namespace Cherry.Farming;
 
 /// <summary>
 /// Crop definition resource.

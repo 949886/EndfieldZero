@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-namespace EndfieldZero.Farming;
+namespace Cherry.Farming;
 
 /// <summary>
 /// Registry of all crop definitions.

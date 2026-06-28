@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.Managers;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.Managers;
 using Godot;
 
-namespace EndfieldZero.AI;
+namespace Cherry.AI;
 
 /// <summary>
 /// Attention-mechanism AI controller for a single pawn.

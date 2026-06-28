@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.AI.Actions;
+namespace Cherry.AI.Actions;
 
 /// <summary>
 /// SatisfyNeedAction — attempts to satisfy the pawn's most critical need.

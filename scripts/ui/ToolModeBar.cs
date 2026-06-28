@@ -1,7 +1,7 @@
-using EndfieldZero.World;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Small HUD bar showing the current tool mode with icon indicators.

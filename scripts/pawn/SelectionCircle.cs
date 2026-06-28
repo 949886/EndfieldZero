@@ -1,7 +1,7 @@
-using EndfieldZero.World;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>
 /// Green selection circle rendered on the XZ plane under a pawn.

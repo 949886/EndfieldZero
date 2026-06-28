@@ -1,9 +1,9 @@
-using EndfieldZero.Environment;
-using EndfieldZero.Jobs;
-using EndfieldZero.Managers;
+using Cherry.Environment;
+using Cherry.Jobs;
+using Cherry.Managers;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Debug overlay: FPS, game time, camera, colonists, selection, AI, jobs, tool mode, environment.

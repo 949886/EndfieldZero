@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using EndfieldZero.Core;
-using EndfieldZero.Farming;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Farming;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Building;
+namespace Cherry.Building;
 
 /// <summary>
 /// Runtime building entity for furniture and production buildings.

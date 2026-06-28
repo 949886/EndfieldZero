@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>
 /// Backward-compatible wrapper for legacy sprite pawns (enemy pawns still use this).

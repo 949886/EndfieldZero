@@ -1,9 +1,9 @@
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Farming;
+namespace Cherry.Farming;
 
 /// <summary>
 /// Runtime crop instance — a planted crop in the world.

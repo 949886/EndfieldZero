@@ -1,9 +1,9 @@
-using EndfieldZero.Core;
-using EndfieldZero.Managers;
-using EndfieldZero.Pathfinding;
+using Cherry.Core;
+using Cherry.Managers;
+using Cherry.Pathfinding;
 using Godot;
 
-namespace EndfieldZero.AI.Actions;
+namespace Cherry.AI.Actions;
 
 /// <summary>
 /// FleeAction — flee from combat when HP is critical.

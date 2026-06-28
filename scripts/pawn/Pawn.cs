@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using EndfieldZero.AI;
-using EndfieldZero.Combat;
-using EndfieldZero.Core;
-using EndfieldZero.Research;
-using EndfieldZero.World;
+using Cherry.AI;
+using Cherry.Combat;
+using Cherry.Core;
+using Cherry.Research;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 public enum PawnVisualAction
 {

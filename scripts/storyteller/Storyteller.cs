@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
-using EndfieldZero.Items;
-using EndfieldZero.Managers;
-using EndfieldZero.Pawn;
-using EndfieldZero.Storyteller.Incidents;
+using Cherry.Core;
+using Cherry.Items;
+using Cherry.Managers;
+using Cherry.Pawn;
+using Cherry.Storyteller.Incidents;
 using Godot;
 
-namespace EndfieldZero.Storyteller;
+namespace Cherry.Storyteller;
 
 /// <summary>
 /// AI Director — schedules and fires incidents based on colony wealth,

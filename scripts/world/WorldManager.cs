@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
-using EndfieldZero.Pathfinding;
+using Cherry.Core;
+using Cherry.Pathfinding;
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 public readonly struct SurfaceColumnInfo
 {

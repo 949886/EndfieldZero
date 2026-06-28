@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using EndfieldZero.Building;
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.Pathfinding;
-using EndfieldZero.World;
-using EndfieldZero.Zone;
+using Cherry.Building;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.Pathfinding;
+using Cherry.World;
+using Cherry.Zone;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Manages tool modes and job designation.

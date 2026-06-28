@@ -1,6 +1,6 @@
-using EndfieldZero.Core;
+using Cherry.Core;
 
-namespace EndfieldZero.Environment;
+namespace Cherry.Environment;
 
 /// <summary>
 /// Calculates temperature by combining biome base, season, weather, and time-of-day modifiers.

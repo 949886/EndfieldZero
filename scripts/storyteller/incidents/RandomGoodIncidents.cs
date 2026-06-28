@@ -1,10 +1,10 @@
 using System;
-using EndfieldZero.Core;
-using EndfieldZero.Items;
-using EndfieldZero.Managers;
+using Cherry.Core;
+using Cherry.Items;
+using Cherry.Managers;
 using Godot;
 
-namespace EndfieldZero.Storyteller.Incidents;
+namespace Cherry.Storyteller.Incidents;
 
 /// <summary>
 /// Random positive events:

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 /// <summary>
 /// Registry of all block type definitions. Singleton pattern — initialize once at startup.

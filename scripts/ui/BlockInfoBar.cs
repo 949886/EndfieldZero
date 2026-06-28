@@ -1,7 +1,7 @@
-using EndfieldZero.World;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Small WTHIT-style info bar that shows the block under the mouse cursor.

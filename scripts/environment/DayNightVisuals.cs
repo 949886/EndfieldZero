@@ -1,7 +1,7 @@
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.Environment;
+namespace Cherry.Environment;
 
 /// <summary>
 /// Screen-space overlay that tints the viewport based on time-of-day and weather.

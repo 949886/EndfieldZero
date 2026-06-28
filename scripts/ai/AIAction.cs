@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace EndfieldZero.AI;
+namespace Cherry.AI;
 
 /// <summary>
 /// Base class for all AI actions. Each action can score itself based

@@ -1,4 +1,4 @@
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Available tool modes for player interaction.

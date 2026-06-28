@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace EndfieldZero.Research;
+namespace Cherry.Research;
 
 [GlobalClass]
 public partial class TechnologyTreeDef : Resource

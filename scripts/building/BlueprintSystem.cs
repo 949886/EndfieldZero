@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Building;
+namespace Cherry.Building;
 
 /// <summary>
 /// Manages all blueprints — placement, validation, completion, and cancellation.

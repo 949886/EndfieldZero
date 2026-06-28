@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Jobs;
+namespace Cherry.Jobs;
 
 /// <summary>
 /// Represents a single work job that can be claimed and executed by a pawn.

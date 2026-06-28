@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using EndfieldZero.Core;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Pathfinding;
+namespace Cherry.Pathfinding;
 
 /// <summary>
 /// A* pathfinding service on the block grid.

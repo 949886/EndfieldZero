@@ -2,7 +2,7 @@ using System;
 using Godot;
 using Godot.Collections;
 
-namespace EndfieldZero.Research;
+namespace Cherry.Research;
 
 public static class TechnologyTreeUtils
 {

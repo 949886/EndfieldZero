@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.Jobs;
+namespace Cherry.Jobs;
 
 /// <summary>
 /// Global job queue manager. Jobs are created by game systems (mining designations,

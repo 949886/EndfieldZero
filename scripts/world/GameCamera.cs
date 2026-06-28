@@ -1,8 +1,8 @@
-using EndfieldZero.Core;
-using EndfieldZero.UI;
+using Cherry.Core;
+using Cherry.UI;
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 public enum CameraViewMode
 {

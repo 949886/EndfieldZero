@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>
 /// Trait Resource — a personality trait that modifies a pawn's stats and needs.

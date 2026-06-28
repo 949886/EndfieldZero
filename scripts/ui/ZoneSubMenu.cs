@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Zone type selector shown when in Zone mode.

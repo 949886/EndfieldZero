@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using EndfieldZero.Core;
-using EndfieldZero.Pawn;
+using Cherry.Core;
+using Cherry.Pawn;
 using Godot;
 
-namespace EndfieldZero.Managers;
+namespace Cherry.Managers;
 
 /// <summary>
 /// Manages all pawns: spawning, tracking, and lifecycle.

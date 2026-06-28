@@ -1,7 +1,7 @@
 using Godot;
-using EndfieldZero.World;
+using Cherry.World;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>
 /// Controls AnimatedSprite3D + AnimationPlayer for 2D pawn visuals.

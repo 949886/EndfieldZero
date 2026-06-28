@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// Renders job designation overlays directly on the 3D world.

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Building;
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.World;
+using Cherry.Building;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Research;
+namespace Cherry.Research;
 
 public partial class TechnologyManager : Node
 {

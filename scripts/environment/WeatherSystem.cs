@@ -1,7 +1,7 @@
 using System;
-using EndfieldZero.Core;
+using Cherry.Core;
 
-namespace EndfieldZero.Environment;
+namespace Cherry.Environment;
 
 /// <summary>
 /// Weather types the simulation can produce.

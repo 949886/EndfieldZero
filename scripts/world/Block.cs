@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 /// <summary>
 /// Lightweight value type representing a single block in the world.

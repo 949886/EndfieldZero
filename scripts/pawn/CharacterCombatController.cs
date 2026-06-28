@@ -1,7 +1,7 @@
-using EndfieldZero.Combat;
+using Cherry.Combat;
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 public abstract class CharacterCombatController
 {

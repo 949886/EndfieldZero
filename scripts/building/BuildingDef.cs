@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace EndfieldZero.Building;
+namespace Cherry.Building;
 
 public enum BuildingView3DStyle
 {

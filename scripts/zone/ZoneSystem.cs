@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Jobs;
-using EndfieldZero.World;
+using Cherry.Jobs;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Zone;
+namespace Cherry.Zone;
 
 /// <summary>
 /// Manages all player-defined zones. Handles creation, deletion, expansion,

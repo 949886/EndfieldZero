@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
-using EndfieldZero.Farming;
-using EndfieldZero.Items;
-using EndfieldZero.Managers;
-using EndfieldZero.Pathfinding;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.Farming;
+using Cherry.Items;
+using Cherry.Managers;
+using Cherry.Pathfinding;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 /// <summary>
 /// StarCraft-style unit selection and command system.

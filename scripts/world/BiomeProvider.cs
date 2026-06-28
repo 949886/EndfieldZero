@@ -1,4 +1,4 @@
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 /// <summary>
 /// Biome type enum. Organized by climate zones like Minecraft's biome system.

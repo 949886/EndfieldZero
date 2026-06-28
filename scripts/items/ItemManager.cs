@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.Zone;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.Zone;
 using Godot;
 
-namespace EndfieldZero.Items;
+namespace Cherry.Items;
 
 /// <summary>
 /// Manages all item stacks in the world.

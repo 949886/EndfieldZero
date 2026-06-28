@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Items;
+namespace Cherry.Items;
 
 /// <summary>
 /// Static definition for an item type.

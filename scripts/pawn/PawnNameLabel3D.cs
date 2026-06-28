@@ -1,8 +1,8 @@
-using EndfieldZero.Core;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 internal static class PawnNameLabel3D
 {

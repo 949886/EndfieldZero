@@ -1,7 +1,7 @@
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.Environment;
+namespace Cherry.Environment;
 
 /// <summary>
 /// Central orchestrator for the environment simulation.

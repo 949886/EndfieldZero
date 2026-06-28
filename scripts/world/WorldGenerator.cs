@@ -1,7 +1,7 @@
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 /// <summary>
 /// Procedural world generator using 4 climate noise layers matching

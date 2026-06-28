@@ -1,9 +1,9 @@
-using EndfieldZero.Core;
-using EndfieldZero.Jobs;
-using EndfieldZero.Pathfinding;
+using Cherry.Core;
+using Cherry.Jobs;
+using Cherry.Pathfinding;
 using Godot;
 
-namespace EndfieldZero.AI.Actions;
+namespace Cherry.AI.Actions;
 
 /// <summary>
 /// Wander action — the pawn moves to a random nearby position when idle.

@@ -3,7 +3,7 @@ using System.Linq;
 using Godot;
 using Godot.Collections;
 
-namespace EndfieldZero.Farming;
+namespace Cherry.Farming;
 
 /// <summary>
 /// Manages all planted crop instances.

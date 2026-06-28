@@ -1,8 +1,8 @@
 using System;
-using EndfieldZero.Core;
+using Cherry.Core;
 using Godot;
 
-namespace EndfieldZero.Combat;
+namespace Cherry.Combat;
 
 /// <summary>
 /// Static damage calculation utilities.

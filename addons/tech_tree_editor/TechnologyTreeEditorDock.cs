@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Research;
+using Cherry.Research;
 using Godot;
 
-namespace EndfieldZero.EditorTools;
+namespace Cherry.EditorTools;
 
 [Tool]
 public partial class TechnologyTreeEditorDock : Control

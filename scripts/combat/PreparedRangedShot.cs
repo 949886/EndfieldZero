@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Combat;
+namespace Cherry.Combat;
 
 /// <summary>
 /// Captures a ranged attack outcome at fire time and resolves it on impact.

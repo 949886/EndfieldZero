@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.World;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Building;
+namespace Cherry.Building;
 
 /// <summary>
 /// Registry of all building definitions. Singleton pattern.

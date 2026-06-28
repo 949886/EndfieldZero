@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Godot;
 using Godot.Collections;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 /// <summary>Gender enum for pawn identity.</summary>
 public enum Gender { Male, Female, Other }

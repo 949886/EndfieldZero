@@ -1,11 +1,11 @@
 using System.Linq;
-using EndfieldZero.Combat;
-using EndfieldZero.Core;
-using EndfieldZero.Managers;
-using EndfieldZero.Pathfinding;
+using Cherry.Combat;
+using Cherry.Core;
+using Cherry.Managers;
+using Cherry.Pathfinding;
 using Godot;
 
-namespace EndfieldZero.AI.Actions;
+namespace Cherry.AI.Actions;
 
 /// <summary>
 /// CombatAction • engages in combat with a hostile target.
@@ -120,7 +120,7 @@ public class CombatAction : AIAction
                 var weapon = DamageSystem.GetWeapon(pawn);
                 pawn.SetWorkTarget(
                     _target.GlobalPosition,
-                    weapon.IsRanged ? EndfieldZero.Pawn.PawnVisualAction.Shoot : EndfieldZero.Pawn.PawnVisualAction.Attack);
+                    weapon.IsRanged ? Cherry.Pawn.PawnVisualAction.Shoot : Cherry.Pawn.PawnVisualAction.Attack);
                 DamageSystem.Attack(pawn, _target);
                 _attackCooldown = weapon.CooldownTicks;
             }

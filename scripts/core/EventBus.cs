@@ -1,7 +1,7 @@
 using System;
-using EndfieldZero.Environment;
+using Cherry.Environment;
 
-namespace EndfieldZero.Core;
+namespace Cherry.Core;
 
 /// <summary>
 /// Global event bus for decoupled communication between systems.

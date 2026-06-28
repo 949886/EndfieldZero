@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.Pawn;
+namespace Cherry.Pawn;
 
 public enum EnemyAssaultMode
 {

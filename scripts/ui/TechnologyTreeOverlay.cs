@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EndfieldZero.Core;
-using EndfieldZero.Research;
+using Cherry.Core;
+using Cherry.Research;
 using Godot;
 
-namespace EndfieldZero.UI;
+namespace Cherry.UI;
 
 public partial class TechnologyTreeOverlay : Control
 {

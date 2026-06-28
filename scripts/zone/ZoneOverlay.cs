@@ -1,9 +1,9 @@
-using EndfieldZero.Core;
-using EndfieldZero.UI;
-using EndfieldZero.World;
+using Cherry.Core;
+using Cherry.UI;
+using Cherry.World;
 using Godot;
 
-namespace EndfieldZero.Zone;
+namespace Cherry.Zone;
 
 /// <summary>
 /// Renders zone overlays as semi-transparent colored quads in 3D world.

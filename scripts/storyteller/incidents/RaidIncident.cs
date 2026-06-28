@@ -1,10 +1,10 @@
 using System;
-using EndfieldZero.Core;
-using EndfieldZero.Managers;
-using EndfieldZero.Pawn;
+using Cherry.Core;
+using Cherry.Managers;
+using Cherry.Pawn;
 using Godot;
 
-namespace EndfieldZero.Storyteller.Incidents;
+namespace Cherry.Storyteller.Incidents;
 
 /// <summary>
 /// Raid incident — spawns armed hostiles at map edge.

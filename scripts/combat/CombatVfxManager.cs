@@ -1,7 +1,7 @@
-using EndfieldZero.Pawn;
+using Cherry.Pawn;
 using Godot;
 
-namespace EndfieldZero.Combat;
+namespace Cherry.Combat;
 
 public partial class CombatVfxManager : Node3D
 {

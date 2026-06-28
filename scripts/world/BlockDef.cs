@@ -1,6 +1,6 @@
 using Godot;
 
-namespace EndfieldZero.World;
+namespace Cherry.World;
 
 public enum BlockVisualKind
 {
