@@ -82,6 +82,9 @@ public class BuildingDef
     /// <summary>Optional height override for simple blocky 3D meshes.</summary>
     public float? VisualHeight { get; }
 
+    /// <summary>Whether this building should fade out for mouse/pawn occlusion helpers.</summary>
+    public bool AllowOcclusionFade { get; }
+
     public BuildingDef(
         string id, string displayName, string category,
         Vector2I size, ushort placedBlockId,
@@ -93,7 +96,8 @@ public class BuildingDef
         string satisfiesNeed = null,
         float beautyOffset = 0f, float comfortOffset = 0f,
         BuildingView3DStyle view3DStyle = BuildingView3DStyle.Billboard,
-        float? visualHeight = null)
+        float? visualHeight = null,
+        bool allowOcclusionFade = true)
     {
         Id = id;
         DisplayName = displayName;
@@ -113,5 +117,6 @@ public class BuildingDef
         ComfortOffset = comfortOffset;
         View3DStyle = view3DStyle;
         VisualHeight = visualHeight;
+        AllowOcclusionFade = allowOcclusionFade;
     }
 }

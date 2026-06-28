@@ -166,7 +166,8 @@ public sealed class BuildingRegistry
             requiredSkill: "Construction", minSkillLevel: 3f,
             ghostColor: new Color(0.5f, 0.5f, 0.3f, 0.5f),
             materials: new() { { "Wood", 10 }, { "Stone", 5 } },
-            view3DStyle: BuildingView3DStyle.Workstation
+            view3DStyle: BuildingView3DStyle.Workstation,
+            allowOcclusionFade: false
         ));
 
         reg.Register(new BuildingDef(
@@ -178,7 +179,8 @@ public sealed class BuildingRegistry
             requiredSkill: "Construction", minSkillLevel: 4f,
             ghostColor: new Color(0.7f, 0.3f, 0.2f, 0.5f),
             materials: new() { { "Stone", 15 } },
-            view3DStyle: BuildingView3DStyle.Stove
+            view3DStyle: BuildingView3DStyle.Stove,
+            allowOcclusionFade: false
         ));
 
         reg.Register(new BuildingDef(
@@ -190,7 +192,8 @@ public sealed class BuildingRegistry
             requiredSkill: "Construction", minSkillLevel: 5f,
             ghostColor: new Color(0.3f, 0.5f, 0.7f, 0.5f),
             materials: new() { { "Wood", 10 }, { "Stone", 10 } },
-            view3DStyle: BuildingView3DStyle.Workstation
+            view3DStyle: BuildingView3DStyle.Workstation,
+            allowOcclusionFade: false
         ));
 
         return reg;

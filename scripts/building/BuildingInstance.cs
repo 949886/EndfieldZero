@@ -259,7 +259,8 @@ public partial class BuildingInstance : Node3D, ISelectable
 
     private void UpdateOcclusion()
     {
-        if (_occlusionParts.Count == 0 || GameCamera.Instance == null || _meshRoot == null || !_meshRoot.Visible)
+        if (_occlusionParts.Count == 0 || GameCamera.Instance == null || _meshRoot == null || !_meshRoot.Visible
+            || Def?.AllowOcclusionFade == false)
         {
             foreach (var part in _occlusionParts)
                 part.Transparency = 0f;
