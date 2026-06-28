@@ -7,7 +7,7 @@ public partial class Pawn3D : Pawn
     [Export] public CharacterDefinition CharacterDefinition { get; set; }
     [Export] public NodePath VisualRootPath { get; set; } = new("VisualRoot");
     [Export] public NodePath ModelRootPath { get; set; } = new("VisualRoot/Miyu");
-    [Export] public NodePath AnimationPlayerPath { get; set; } = new("VisualRoot/Miyu/AnimationPlayer2");
+    [Export] public NodePath AnimationPlayerPath { get; set; } = new("VisualRoot/Miyu/AnimationPlayer");
     [Export] public NodePath HeadAnchorPath { get; set; } = new("VisualRoot/HeadAnchor");
     [Export] public NodePath MuzzleAnchorPath { get; set; } = new("VisualRoot/MuzzleAnchor");
     [Export] public Vector3 ModelScale { get; set; } = Vector3.One;
