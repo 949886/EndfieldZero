@@ -23,3 +23,6 @@ bone_idx = 122
 [node name="fire_02" parent="CH0145/bone_root/Bip001/Skeleton3D" parent_id_path=PackedInt32Array(1710828283) index="4" unique_id=1944105579]
 transform = Transform3D(1, -1.1920929e-07, 2.6341755e-08, 1.1920929e-07, 1, -5.7951965e-08, -2.6341748e-08, 5.7951965e-08, 1, -0.038010232, -0.71162224, -0.12368942)
 bone_idx = 122
+
+[node name="Directional Light" parent="CH0145/EX_Root/CH0145_Exs_Cutin_Cam/Camera001" parent_id_path=PackedInt32Array(1574250649) index="2" unique_id=1521362317]
+visible = false
