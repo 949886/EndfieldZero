@@ -20,6 +20,7 @@ public partial class Pawn3D : Pawn
     private Marker3D _muzzleAnchor;
     private AnimationPlayer _animPlayer;
     private CharacterCombatController _combatController;
+    private PawnGroundShadow _groundShadow;
     private Vector3 _desiredDirection = Vector3.Zero;
     private PawnVisualAction _desiredAction = PawnVisualAction.Idle;
 
@@ -36,11 +37,16 @@ public partial class Pawn3D : Pawn
         {
             _modelRoot.Scale = ModelScale;
             _modelRoot.Position = ModelOffset;
+            EnsureModelCastsShadows(_modelRoot);
         }
 
         _animPlayer = GetNodeOrNull<AnimationPlayer>(AnimationPlayerPath) ?? FindFirstChildOfType<AnimationPlayer>(_visualRoot);
         _combatController = CreateController();
         _combatController?.Initialize(this, _visualRoot, _animPlayer, CharacterDefinition);
+
+        _groundShadow ??= new PawnGroundShadow();
+        if (_groundShadow.GetParent() == null)
+            AddChild(_groundShadow);
     }
 
     protected override void UpdateVisualPresentation(double delta)
@@ -123,6 +129,15 @@ public partial class Pawn3D : Pawn
         }
 
         return null;
+    }
+
+    private static void EnsureModelCastsShadows(Node node)
+    {
+        if (node is GeometryInstance3D geometry)
+            geometry.CastShadow = GeometryInstance3D.ShadowCastingSetting.On;
+
+        foreach (Node child in node.GetChildren())
+            EnsureModelCastsShadows(child);
     }
 
     private Vector3 GetMuzzleWorldPosition()

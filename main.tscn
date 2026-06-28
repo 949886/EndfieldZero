@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://c0trvp8euvrry" path="res://scripts/items/ItemManager.cs" id="20_itemmgr"]
 [ext_resource type="Script" uid="uid://dakqwuprjcal4" path="res://scripts/environment/EnvironmentManager.cs" id="21_envmgr"]
 [ext_resource type="Script" uid="uid://cfxtgps42yfq6" path="res://scripts/environment/DayNightVisuals.cs" id="22_daynight"]
+[ext_resource type="Script" path="res://scripts/environment/SceneLightingRig.cs" id="37_lightrig"]
 [ext_resource type="Resource" uid="uid://c7bqy1ldb4kwg" path="res://resources/crops/wheat.tres" id="23_wheat"]
 [ext_resource type="Resource" uid="uid://cmb14q3jdfw0n" path="res://resources/crops/carrot.tres" id="24_carrot"]
 [ext_resource type="Resource" uid="uid://dtr1x2aauxp5v" path="res://resources/crops/tomato.tres" id="25_tomato"]
@@ -53,6 +54,9 @@ script = ExtResource("38_settingsbootstrap")
 
 [node name="EnvironmentManager" type="Node" parent="." unique_id=1200629890]
 script = ExtResource("21_envmgr")
+
+[node name="SceneLightingRig" type="Node3D" parent="." unique_id=165441238]
+script = ExtResource("37_lightrig")
 
 [node name="WorldManager" type="Node3D" parent="." unique_id=198313969]
 script = ExtResource("1_world")
