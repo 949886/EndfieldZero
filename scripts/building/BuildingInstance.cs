@@ -25,15 +25,15 @@ public partial class BuildingInstance : Node3D, ISelectable
     {
         get
         {
-            string info = $"馃摝 绫诲埆: {CategoryName(Def.Category)}";
-            info += $"\n馃搻 灏哄: {Def.Size.X}脳{Def.Size.Y}";
+            string info = $"\U0001F4CC 类别: {CategoryName(Def.Category)}";
+            info += $"\n\U0001F4D0 尺寸: {Def.Size.X}x{Def.Size.Y}";
 
             if (Def.SatisfiesNeed != null)
-                info += $"\n馃挙 婊¤冻闇€姹? {Def.SatisfiesNeed}";
+                info += $"\n\U0001F6CC 满足需求: {Def.SatisfiesNeed}";
             if (Def.ComfortOffset > 0)
-                info += $"\n馃泲锔?鑸掗€? +{Def.ComfortOffset:F0}";
+                info += $"\n\U0001F9F8 舒适度: +{Def.ComfortOffset:F0}";
             if (Def.BeautyOffset > 0)
-                info += $"\n馃尭 缇庢劅: +{Def.BeautyOffset:F0}";
+                info += $"\n✨ 美观度: +{Def.BeautyOffset:F0}";
 
             return info;
         }
@@ -369,9 +369,9 @@ public partial class BuildingInstance : Node3D, ISelectable
 
     private static string CategoryName(string cat) => cat switch
     {
-        "Structure" => "缁撴瀯",
-        "Furniture" => "瀹跺叿",
-        "Production" => "鐢熶骇",
+        "Structure" => "结构",
+        "Furniture" => "家具",
+        "Production" => "生产设施",
         _ => cat,
     };
 }
