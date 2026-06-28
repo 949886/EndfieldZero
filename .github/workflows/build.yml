@@ -115,7 +115,7 @@ jobs:
         with:
           # Version must include major, minor, and patch, and be >= 4.0.0
           # Pre-release label is optional.
-          version: 4.6.1 # also valid: 4.0.0.rc1 or 4.0.0, etc
+          version: 4.7.0 # also valid: 4.0.0.rc1 or 4.0.0, etc
           use-dotnet: ${{ needs.check.outputs.using_dotnet }}
           include-templates: true
 
