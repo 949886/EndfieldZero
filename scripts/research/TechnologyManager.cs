@@ -500,7 +500,7 @@ public partial class TechnologyManager : Node
 
         TechnologyTreeDef sourceTree = TechnologyTree;
         if (sourceTree == null && ResourceLoader.Exists(TechnologyResourcePath))
-            sourceTree = ResourceLoader.Load<TechnologyTreeDef>(TechnologyResourcePath);
+            sourceTree = TechnologyTreeUtils.LoadTreeResource(TechnologyResourcePath);
 
         if (sourceTree == null)
             GD.PushWarning($"Technology tree resource was not found. Expected assignment or fallback path '{TechnologyResourcePath}'.");

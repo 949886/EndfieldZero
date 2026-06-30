@@ -32,7 +32,7 @@ project/assembly_name="RimArchive"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/AS2P/plugin.cfg", "res://addons/tech_tree_editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/AS2P/plugin.cfg")
 
 [rendering]
 

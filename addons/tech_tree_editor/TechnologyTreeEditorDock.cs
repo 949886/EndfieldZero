@@ -397,7 +397,7 @@ public partial class TechnologyTreeEditorDock : Control
         TechnologyTreeDef loadedTree = null;
         bool existed = ResourceLoader.Exists(path);
         if (existed)
-            loadedTree = ResourceLoader.Load<TechnologyTreeDef>(path);
+            loadedTree = TechnologyTreeUtils.LoadTreeResource(path);
 
         _tree = TechnologyTreeUtils.CloneTree(loadedTree ?? TechnologyTreeUtils.CreateEmptyTree());
         TechnologyTreeUtils.NormalizeTree(_tree);
