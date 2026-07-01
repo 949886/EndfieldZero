@@ -27,6 +27,9 @@ public partial class GameSettings : Resource
     public const float DefaultPawnWanderRadiusBlocksValue = 16f;
     public const float DefaultPawnBaseMoveSpeedBlocksPerSecondValue = 3.125f;
     public const float DefaultEnemyBaseMoveSpeedBlocksPerSecondValue = 2.8f;
+    public const bool DefaultSelectionOutlineEnabledValue = true;
+    public const float DefaultSelectionOutlineWidthValue = 0.01f;
+    public const float DefaultSelectionOutlineOffsetValue = 0f;
     public const int DefaultDaysPerSeasonValue = 15;
     public const int DefaultWeatherChangeIntervalHoursValue = 6;
 
@@ -64,6 +67,16 @@ public partial class GameSettings : Resource
     // --- Pawn ---
     [Export] public int AIEvalInterval { get; set; } = DefaultAIEvalIntervalValue;
     [Export] public float PawnWanderRadiusBlocks { get; set; } = DefaultPawnWanderRadiusBlocksValue;
+
+    // --- Selection Outline ---
+    [ExportGroup("Selection Outline")]
+    [Export] public bool EnableSelectionOutline { get; set; } = DefaultSelectionOutlineEnabledValue;
+    [Export(PropertyHint.Range, "0.0001,0.05,0.001")] public float SelectionOutlineWidth { get; set; } = DefaultSelectionOutlineWidthValue;
+    [Export(PropertyHint.Range, "0.0,0.08,0.001")] public float SelectionOutlineOffset { get; set; } = DefaultSelectionOutlineOffsetValue;
+    [Export(PropertyHint.Range, "0.0,1.0,0.01")] public float SelectionOutlineColorR { get; set; } = 1f;
+    [Export(PropertyHint.Range, "0.0,1.0,0.01")] public float SelectionOutlineColorG { get; set; } = 1f;
+    [Export(PropertyHint.Range, "0.0,1.0,0.01")] public float SelectionOutlineColorB { get; set; } = 1f;
+    [Export(PropertyHint.Range, "0.0,1.0,0.01")] public float SelectionOutlineColorA { get; set; } = 1f;
 
     // --- Hostile Balance ---
     [ExportGroup("Hostile Balance")]
@@ -179,8 +192,15 @@ public partial class GameSettings : Resource
         target.CopyFrom(CreateDefaultSnapshot());
         foreach (var spec in SettingsFieldRegistry.AdvancedFields)
             spec.ApplyTo(target, preferences);
+        target.EnableSelectionOutline = preferences.EnableSelectionOutline;
         target.EmitChanged();
     }
+
+    public static Color SelectionOutlineColor => new(
+        Instance.SelectionOutlineColorR,
+        Instance.SelectionOutlineColorG,
+        Instance.SelectionOutlineColorB,
+        Instance.SelectionOutlineColorA);
 }
 
 /// <summary>
@@ -199,6 +219,10 @@ public static class Settings
     public static float TickInterval => 1f / TicksPerSecond;
     public static int AIEvalInterval => GameSettings.Instance.AIEvalInterval;
     public static float PawnWanderRadius => GameSettings.Instance.PawnWanderRadiusBlocks * BlockPixelSize;
+    public static bool EnableSelectionOutline => GameSettings.Instance.EnableSelectionOutline;
+    public static float SelectionOutlineWidth => GameSettings.Instance.SelectionOutlineWidth;
+    public static float SelectionOutlineOffset => GameSettings.Instance.SelectionOutlineOffset;
+    public static Color SelectionOutlineColor => GameSettings.SelectionOutlineColor;
     public static float EnemyBaseMoveSpeed => GameSettings.Instance.EnemyBaseMoveSpeedBlocksPerSecond;
     public static float EnemyDetectionRange => GameSettings.Instance.EnemyDetectionRangeBlocks * BlockPixelSize;
     public static float EnemyFleeHpPercent => GameSettings.Instance.EnemyFleeHpPercent;

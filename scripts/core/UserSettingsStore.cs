@@ -35,6 +35,13 @@ public static class UserSettingsStore
         preferences.TicksPerSecond = defaults.TicksPerSecond;
         preferences.AIEvalInterval = defaults.AIEvalInterval;
         preferences.PawnWanderRadiusBlocks = defaults.PawnWanderRadiusBlocks;
+        preferences.EnableSelectionOutline = defaults.EnableSelectionOutline;
+        preferences.SelectionOutlineWidth = defaults.SelectionOutlineWidth;
+        preferences.SelectionOutlineOffset = defaults.SelectionOutlineOffset;
+        preferences.SelectionOutlineColorR = defaults.SelectionOutlineColorR;
+        preferences.SelectionOutlineColorG = defaults.SelectionOutlineColorG;
+        preferences.SelectionOutlineColorB = defaults.SelectionOutlineColorB;
+        preferences.SelectionOutlineColorA = defaults.SelectionOutlineColorA;
         preferences.EnemyBaseMoveSpeedBlocksPerSecond = defaults.EnemyBaseMoveSpeedBlocksPerSecond;
         preferences.EnemyDetectionRangeBlocks = defaults.EnemyDetectionRangeBlocks;
         preferences.EnemyFleeHpPercent = defaults.EnemyFleeHpPercent;
@@ -79,6 +86,7 @@ public static class UserSettingsStore
         preferences.ShowTutorial = (bool)config.GetValue(GameSection, "show_tutorial", preferences.ShowTutorial);
         preferences.ShowDebugHud = (bool)config.GetValue(GameSection, "show_debug_hud", preferences.ShowDebugHud);
         preferences.ShowAdvancedSettings = (bool)config.GetValue(GameSection, "show_advanced_settings", preferences.ShowAdvancedSettings);
+        preferences.EnableSelectionOutline = (bool)config.GetValue("advanced.selection", "EnableSelectionOutline", preferences.EnableSelectionOutline);
 
         foreach (var spec in SettingsFieldRegistry.AdvancedFields)
         {
@@ -108,6 +116,7 @@ public static class UserSettingsStore
         config.SetValue(GameSection, "show_tutorial", preferences.ShowTutorial);
         config.SetValue(GameSection, "show_debug_hud", preferences.ShowDebugHud);
         config.SetValue(GameSection, "show_advanced_settings", preferences.ShowAdvancedSettings);
+        config.SetValue("advanced.selection", "EnableSelectionOutline", preferences.EnableSelectionOutline);
 
         foreach (var spec in SettingsFieldRegistry.AdvancedFields)
         {

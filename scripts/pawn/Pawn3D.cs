@@ -1,3 +1,4 @@
+using Cherry.Core;
 using Godot;
 
 namespace Cherry.Pawn;
@@ -21,6 +22,7 @@ public partial class Pawn3D : Pawn
     private AnimationPlayer _animPlayer;
     private CharacterCombatController _combatController;
     private PawnGroundShadow _groundShadow;
+    private readonly SelectionOutline3D _selectionOutline = new();
     private Vector3 _desiredDirection = Vector3.Zero;
     private PawnVisualAction _desiredAction = PawnVisualAction.Idle;
 
@@ -40,6 +42,8 @@ public partial class Pawn3D : Pawn
             EnsureModelCastsShadows(_modelRoot);
         }
 
+        _selectionOutline.Bind(_modelRoot);
+
         _animPlayer = GetNodeOrNull<AnimationPlayer>(AnimationPlayerPath) ?? FindFirstChildOfType<AnimationPlayer>(_visualRoot);
         _combatController = CreateController();
         _combatController?.Initialize(this, _visualRoot, _animPlayer, CharacterDefinition);
@@ -58,6 +62,7 @@ public partial class Pawn3D : Pawn
         }
 
         _combatController?.Tick(delta, _desiredDirection, _desiredAction);
+        _selectionOutline.SetEnabled(Settings.EnableSelectionOutline && IsAlive && IsSelected && _modelRoot?.Visible == true);
     }
 
     protected override void UpdateVisualAnimation(Vector3 direction, PawnVisualAction action)

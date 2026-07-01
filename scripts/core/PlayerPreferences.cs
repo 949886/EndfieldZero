@@ -30,6 +30,13 @@ public sealed class PlayerPreferences
     public int TicksPerSecond { get; set; } = GameSettings.DefaultTicksPerSecondValue;
     public int AIEvalInterval { get; set; } = GameSettings.DefaultAIEvalIntervalValue;
     public float PawnWanderRadiusBlocks { get; set; } = GameSettings.DefaultPawnWanderRadiusBlocksValue;
+    public bool EnableSelectionOutline { get; set; } = GameSettings.DefaultSelectionOutlineEnabledValue;
+    public float SelectionOutlineWidth { get; set; } = GameSettings.DefaultSelectionOutlineWidthValue;
+    public float SelectionOutlineOffset { get; set; } = GameSettings.DefaultSelectionOutlineOffsetValue;
+    public float SelectionOutlineColorR { get; set; } = 1f;
+    public float SelectionOutlineColorG { get; set; } = 1f;
+    public float SelectionOutlineColorB { get; set; } = 1f;
+    public float SelectionOutlineColorA { get; set; } = 1f;
 
     public float EnemyBaseMoveSpeedBlocksPerSecond { get; set; } = GameSettings.DefaultEnemyBaseMoveSpeedBlocksPerSecondValue;
     public float EnemyDetectionRangeBlocks { get; set; } = 20f;
@@ -72,6 +79,13 @@ public sealed class PlayerPreferences
             TicksPerSecond = TicksPerSecond,
             AIEvalInterval = AIEvalInterval,
             PawnWanderRadiusBlocks = PawnWanderRadiusBlocks,
+            EnableSelectionOutline = EnableSelectionOutline,
+            SelectionOutlineWidth = SelectionOutlineWidth,
+            SelectionOutlineOffset = SelectionOutlineOffset,
+            SelectionOutlineColorR = SelectionOutlineColorR,
+            SelectionOutlineColorG = SelectionOutlineColorG,
+            SelectionOutlineColorB = SelectionOutlineColorB,
+            SelectionOutlineColorA = SelectionOutlineColorA,
             EnemyBaseMoveSpeedBlocksPerSecond = EnemyBaseMoveSpeedBlocksPerSecond,
             EnemyDetectionRangeBlocks = EnemyDetectionRangeBlocks,
             EnemyFleeHpPercent = EnemyFleeHpPercent,
@@ -113,6 +127,13 @@ public sealed class PlayerPreferences
             && TicksPerSecond == other.TicksPerSecond
             && AIEvalInterval == other.AIEvalInterval
             && Mathf.IsEqualApprox(PawnWanderRadiusBlocks, other.PawnWanderRadiusBlocks)
+            && EnableSelectionOutline == other.EnableSelectionOutline
+            && Mathf.IsEqualApprox(SelectionOutlineWidth, other.SelectionOutlineWidth)
+            && Mathf.IsEqualApprox(SelectionOutlineOffset, other.SelectionOutlineOffset)
+            && Mathf.IsEqualApprox(SelectionOutlineColorR, other.SelectionOutlineColorR)
+            && Mathf.IsEqualApprox(SelectionOutlineColorG, other.SelectionOutlineColorG)
+            && Mathf.IsEqualApprox(SelectionOutlineColorB, other.SelectionOutlineColorB)
+            && Mathf.IsEqualApprox(SelectionOutlineColorA, other.SelectionOutlineColorA)
             && Mathf.IsEqualApprox(EnemyBaseMoveSpeedBlocksPerSecond, other.EnemyBaseMoveSpeedBlocksPerSecond)
             && Mathf.IsEqualApprox(EnemyDetectionRangeBlocks, other.EnemyDetectionRangeBlocks)
             && Mathf.IsEqualApprox(EnemyFleeHpPercent, other.EnemyFleeHpPercent)

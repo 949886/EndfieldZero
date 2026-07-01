@@ -236,13 +236,19 @@ public partial class SettingsOverlay : Control
     {
         RebuildMainTabs();
         RebuildContent();
-        _applyButton.Disabled = _draftPreferences.ContentEquals(_savedPreferences);
+        RefreshActionButtons();
         _subtitleLabel.Text = _activeMainTab switch
         {
             MainSettingsTab.Graphics => "Display, frame pacing, and default camera behavior.",
             MainSettingsTab.Audio => "Bus levels are applied when matching audio buses exist.",
             _ => "Gameplay preferences plus optional advanced runtime tuning.",
         };
+    }
+
+    private void RefreshActionButtons()
+    {
+        if (_applyButton != null)
+            _applyButton.Disabled = _draftPreferences.ContentEquals(_savedPreferences);
     }
 
     private void RebuildMainTabs()
@@ -379,10 +385,20 @@ public partial class SettingsOverlay : Control
         _contentStack.AddChild(advancedTabs);
 
         AddAdvancedTabButton(advancedTabs, "World", AdvancedSettingsTab.World);
+        AddAdvancedTabButton(advancedTabs, "Selection", AdvancedSettingsTab.Selection);
         AddAdvancedTabButton(advancedTabs, "Hostiles", AdvancedSettingsTab.Hostiles);
         AddAdvancedTabButton(advancedTabs, "Raids", AdvancedSettingsTab.Raids);
         AddAdvancedTabButton(advancedTabs, "Weapons", AdvancedSettingsTab.Weapons);
         AddAdvancedTabButton(advancedTabs, "Environment", AdvancedSettingsTab.Environment);
+
+        if (_activeAdvancedTab == AdvancedSettingsTab.Selection)
+        {
+            _contentStack.AddChild(CreateToggleRow(
+                "Enable 3D Outline",
+                _draftPreferences.EnableSelectionOutline,
+                value => _draftPreferences.EnableSelectionOutline = value));
+            _contentStack.AddChild(CreateHintLabel("Selection outline affects pawn 3D models and angled-view building meshes. Outline Offset pushes the shell further along vertex normals."));
+        }
 
         foreach (var spec in SettingsFieldRegistry.AdvancedFields)
         {
@@ -478,6 +494,7 @@ public partial class SettingsOverlay : Control
             button.Text = pressed ? "On" : "Off";
             onChanged(pressed);
             ApplyToggleStyle(button, pressed);
+            RefreshActionButtons();
         };
         ApplyToggleStyle(button, currentValue);
         return CreateRow(label, button, true);
@@ -529,6 +546,7 @@ public partial class SettingsOverlay : Control
         {
             onChanged((float)value);
             valueLabel.Text = formatter((float)value);
+            RefreshActionButtons();
         };
 
         return CreateRow(label, editor, true);

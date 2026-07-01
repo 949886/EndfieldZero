@@ -43,6 +43,7 @@ public partial class BuildingInstance : Node3D, ISelectable
     private Node3D _meshRoot;
     private Sprite3D _billboardSprite;
     private SelectionCircleNode _selectionCircle;
+    private readonly SelectionOutline3D _selectionOutline = new();
     private readonly List<GeometryInstance3D> _occlusionParts = new();
     private bool _hasAuthoredSprite;
 
@@ -81,6 +82,7 @@ public partial class BuildingInstance : Node3D, ISelectable
         AddChild(_meshRoot);
 
         BuildVisual();
+        _selectionOutline.Bind(_meshRoot);
         UpdatePresentationMode();
 
         _selectionCircle = new SelectionCircleNode();
@@ -92,6 +94,7 @@ public partial class BuildingInstance : Node3D, ISelectable
     {
         _selectionCircle.Visible = IsSelected;
         UpdatePresentationMode();
+        _selectionOutline.SetEnabled(Settings.EnableSelectionOutline && IsSelected && _meshRoot?.Visible == true);
         UpdateOcclusion();
     }
 

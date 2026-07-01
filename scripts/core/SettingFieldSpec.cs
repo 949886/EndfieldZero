@@ -8,6 +8,7 @@ namespace Cherry.Core;
 public enum AdvancedSettingsTab
 {
     World,
+    Selection,
     Hostiles,
     Raids,
     Weapons,
@@ -28,7 +29,8 @@ public sealed class SettingFieldSpec
         double minValue,
         double maxValue,
         double step,
-        bool isIntegral)
+        bool isIntegral,
+        int decimalPlaces = 2)
     {
         Tab = tab;
         Label = label;
@@ -39,6 +41,7 @@ public sealed class SettingFieldSpec
         MaxValue = maxValue;
         Step = step;
         IsIntegral = isIntegral;
+        DecimalPlaces = decimalPlaces;
 
         _preferencesProperty = typeof(PlayerPreferences).GetProperty(preferencePropertyName)
             ?? throw new InvalidOperationException($"Unknown PlayerPreferences property: {preferencePropertyName}");
@@ -55,6 +58,7 @@ public sealed class SettingFieldSpec
     public double MaxValue { get; }
     public double Step { get; }
     public bool IsIntegral { get; }
+    public int DecimalPlaces { get; }
 
     public double GetPreferenceValue(PlayerPreferences preferences)
     {
@@ -79,7 +83,7 @@ public sealed class SettingFieldSpec
     public string FormatValue(PlayerPreferences preferences)
     {
         double value = GetPreferenceValue(preferences);
-        return IsIntegral ? $"{Mathf.RoundToInt((float)value)}" : $"{value:0.##}";
+        return IsIntegral ? $"{Mathf.RoundToInt((float)value)}" : value.ToString($"F{DecimalPlaces}");
     }
 }
 
@@ -90,6 +94,13 @@ public static class SettingsFieldRegistry
         new SettingFieldSpec(AdvancedSettingsTab.World, "Tick Rate", "world", nameof(PlayerPreferences.TicksPerSecond), nameof(GameSettings.TicksPerSecond), 30, 120, 5, true),
         new SettingFieldSpec(AdvancedSettingsTab.World, "AI Eval Interval", "world", nameof(PlayerPreferences.AIEvalInterval), nameof(GameSettings.AIEvalInterval), 10, 120, 5, true),
         new SettingFieldSpec(AdvancedSettingsTab.World, "Pawn Wander Radius", "world", nameof(PlayerPreferences.PawnWanderRadiusBlocks), nameof(GameSettings.PawnWanderRadiusBlocks), 8, 32, 1, false),
+
+        new SettingFieldSpec(AdvancedSettingsTab.Selection, "Outline Width", "selection", nameof(PlayerPreferences.SelectionOutlineWidth), nameof(GameSettings.SelectionOutlineWidth), 0.001, 0.05, 0.001, false, 3),
+        new SettingFieldSpec(AdvancedSettingsTab.Selection, "Outline Offset", "selection", nameof(PlayerPreferences.SelectionOutlineOffset), nameof(GameSettings.SelectionOutlineOffset), 0, 0.08, 0.001, false),
+        new SettingFieldSpec(AdvancedSettingsTab.Selection, "Color Red", "selection", nameof(PlayerPreferences.SelectionOutlineColorR), nameof(GameSettings.SelectionOutlineColorR), 0, 1, 0.01, false),
+        new SettingFieldSpec(AdvancedSettingsTab.Selection, "Color Green", "selection", nameof(PlayerPreferences.SelectionOutlineColorG), nameof(GameSettings.SelectionOutlineColorG), 0, 1, 0.01, false),
+        new SettingFieldSpec(AdvancedSettingsTab.Selection, "Color Blue", "selection", nameof(PlayerPreferences.SelectionOutlineColorB), nameof(GameSettings.SelectionOutlineColorB), 0, 1, 0.01, false),
+        new SettingFieldSpec(AdvancedSettingsTab.Selection, "Opacity", "selection", nameof(PlayerPreferences.SelectionOutlineColorA), nameof(GameSettings.SelectionOutlineColorA), 0, 1, 0.01, false),
 
         new SettingFieldSpec(AdvancedSettingsTab.Hostiles, "Enemy Move Speed", "hostiles", nameof(PlayerPreferences.EnemyBaseMoveSpeedBlocksPerSecond), nameof(GameSettings.EnemyBaseMoveSpeedBlocksPerSecond), 1, 6, 0.1, false),
         new SettingFieldSpec(AdvancedSettingsTab.Hostiles, "Enemy Detection Range", "hostiles", nameof(PlayerPreferences.EnemyDetectionRangeBlocks), nameof(GameSettings.EnemyDetectionRangeBlocks), 5, 40, 1, false),
