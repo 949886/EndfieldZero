@@ -42,6 +42,7 @@ public partial class GameCamera : Camera3D
     public Vector2 FocusPointXZ { get; private set; }
     public bool IsAngledView => ViewMode != CameraViewMode.TopDown;
     public bool IsPerspectiveView => ViewMode == CameraViewMode.Perspective3D;
+    public bool IsOcclusionFadeEnabled => Core.SettingsBootstrap.ActivePreferences?.EnableOcclusionFade ?? true;
     public float CurrentYawDegrees => IsAngledView ? 45f + YawIndex * 90f : 0f;
     public Vector3 FocusWorldPosition => new(FocusPointXZ.X, 0f, FocusPointXZ.Y);
 
@@ -442,13 +443,14 @@ public partial class GameCamera : Camera3D
         Vector2 occlusionRadiusUv = new(
             screenSize.X > 0.0001f ? OcclusionScreenRadiusPixels / screenSize.X : 0.1f,
             screenSize.Y > 0.0001f ? OcclusionScreenRadiusPixels / screenSize.Y : 0.1f);
+        bool occlusionEnabled = IsAngledView && IsOcclusionFadeEnabled;
 
         ChunkRenderer.UpdateSharedViewState(
             mouseScreenUv,
             selectedScreenUv,
             occlusionRadiusUv,
-            IsAngledView,
-            hasSelectedPawn,
+            occlusionEnabled,
+            occlusionEnabled && hasSelectedPawn,
             OcclusionAlpha);
     }
 

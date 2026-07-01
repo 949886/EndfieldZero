@@ -17,6 +17,7 @@ public sealed class PlayerPreferences
     public bool VSyncEnabled { get; set; } = true;
     public int FpsLimit { get; set; } = 60;
     public CameraViewMode DefaultViewMode { get; set; } = CameraViewMode.Orthographic3D;
+    public bool EnableOcclusionFade { get; set; } = false;
 
     public float MasterVolume { get; set; } = 1f;
     public float MusicVolume { get; set; } = 1f;
@@ -69,6 +70,7 @@ public sealed class PlayerPreferences
             VSyncEnabled = VSyncEnabled,
             FpsLimit = FpsLimit,
             DefaultViewMode = DefaultViewMode,
+            EnableOcclusionFade = EnableOcclusionFade,
             MasterVolume = MasterVolume,
             MusicVolume = MusicVolume,
             SfxVolume = SfxVolume,
@@ -117,6 +119,7 @@ public sealed class PlayerPreferences
             && VSyncEnabled == other.VSyncEnabled
             && FpsLimit == other.FpsLimit
             && DefaultViewMode == other.DefaultViewMode
+            && EnableOcclusionFade == other.EnableOcclusionFade
             && Mathf.IsEqualApprox(MasterVolume, other.MasterVolume)
             && Mathf.IsEqualApprox(MusicVolume, other.MusicVolume)
             && Mathf.IsEqualApprox(SfxVolume, other.SfxVolume)

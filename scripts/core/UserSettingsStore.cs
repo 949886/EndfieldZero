@@ -26,6 +26,7 @@ public static class UserSettingsStore
         preferences.DefaultViewMode = SettingsBootstrap.ActivePreferences?.DefaultViewMode
             ?? GameCamera.Instance?.ViewMode
             ?? CameraViewMode.Orthographic3D;
+        preferences.EnableOcclusionFade = SettingsBootstrap.ActivePreferences?.EnableOcclusionFade ?? false;
         preferences.MasterVolume = ReadBusVolumeLinear("Master");
         preferences.MusicVolume = ReadBusVolumeLinear("Music");
         preferences.SfxVolume = ReadBusVolumeLinear("SFX");
@@ -77,6 +78,7 @@ public static class UserSettingsStore
         preferences.VSyncEnabled = (bool)config.GetValue(GraphicsSection, "vsync", preferences.VSyncEnabled);
         preferences.FpsLimit = (int)config.GetValue(GraphicsSection, "fps_limit", preferences.FpsLimit);
         preferences.DefaultViewMode = (CameraViewMode)(int)config.GetValue(GraphicsSection, "default_view_mode", (int)preferences.DefaultViewMode);
+        preferences.EnableOcclusionFade = (bool)config.GetValue(GraphicsSection, "enable_occlusion_fade", preferences.EnableOcclusionFade);
 
         preferences.MasterVolume = (float)(double)config.GetValue(AudioSection, "master_volume", preferences.MasterVolume);
         preferences.MusicVolume = (float)(double)config.GetValue(AudioSection, "music_volume", preferences.MusicVolume);
@@ -107,6 +109,7 @@ public static class UserSettingsStore
         config.SetValue(GraphicsSection, "vsync", preferences.VSyncEnabled);
         config.SetValue(GraphicsSection, "fps_limit", preferences.FpsLimit);
         config.SetValue(GraphicsSection, "default_view_mode", (int)preferences.DefaultViewMode);
+        config.SetValue(GraphicsSection, "enable_occlusion_fade", preferences.EnableOcclusionFade);
 
         config.SetValue(AudioSection, "master_volume", preferences.MasterVolume);
         config.SetValue(AudioSection, "music_volume", preferences.MusicVolume);

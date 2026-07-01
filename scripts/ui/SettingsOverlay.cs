@@ -315,6 +315,13 @@ public partial class SettingsOverlay : Control
             ViewModes,
             Array.FindIndex(ViewModes, option => option.Value == _draftPreferences.DefaultViewMode),
             index => _draftPreferences.DefaultViewMode = ViewModes[index].Value));
+
+        _contentStack.AddChild(CreateToggleRow(
+            "Occlusion Fade",
+            _draftPreferences.EnableOcclusionFade,
+            value => _draftPreferences.EnableOcclusionFade = value));
+
+        _contentStack.AddChild(CreateHintLabel("When enabled, buildings near the mouse cursor or selected colonists will fade to reduce visual blocking in angled views."));
     }
 
     private void BuildAudioPage()
